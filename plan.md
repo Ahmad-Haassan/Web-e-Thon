@@ -18,6 +18,10 @@
 | QR | qrcode | Verification link |
 | Offline | IndexedDB queue + service worker | Failure resilience |
 | Deploy | Render/Railway/Fly free tier + Neon/Supabase DB | No billing required |
+| Supabase Auth | Login/signup/sessions/JWT (@supabase/supabase-js) | **Frontend** signs in; **Backend** verifies the JWT |
+| Supabase Postgres | Hosted DB, accessed via Prisma | **Backend only** (connection string never in client) |
+| Supabase Storage (optional) | Question images, PDFs | Backend uploads with service-role key |
+| Supabase Realtime (optional) | Live monitor/announcements | Frontend subscribes; skip if short on time |
 
 ## 3. Architecture
 ```
@@ -324,3 +328,4 @@ Person B codes against mocked responses until A's endpoints are merged.
 - Hour 0-0.5: together: repo, contract, schema, keys.
 - Hour 4: first end-to-end test (login -> exam -> offline answers -> sync -> submit -> verify).
 - Hour 5: feature freeze. Last 45 min: rehearse; record a fallback demo video.
+
