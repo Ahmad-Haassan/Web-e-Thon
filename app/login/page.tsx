@@ -137,6 +137,9 @@ function LoginForm() {
       if (!isGoogleProviderEnabled) {
         // Fallback: open instant Gmail Sign-In / Approval Request dialog so ANY Gmail works right away!
         setGoogleLoading(false);
+        setGmailName("");
+        setGmailEmail("");
+        setGmailPassword("");
         setShowGmailModal(true);
         return;
       }
@@ -447,12 +450,14 @@ function LoginForm() {
               </div>
             )}
 
-            <form onSubmit={handleGmailRequestSubmit} className="space-y-3.5">
+            <form onSubmit={handleGmailRequestSubmit} autoComplete="off" className="space-y-3.5">
               <div>
                 <Label htmlFor="gmail-name">Full Name</Label>
                 <Input
                   id="gmail-name"
+                  name="gmail_full_name"
                   type="text"
+                  autoComplete="off"
                   required
                   placeholder="Your full name"
                   value={gmailName}
@@ -463,7 +468,9 @@ function LoginForm() {
                 <Label htmlFor="gmail-email">Gmail Address</Label>
                 <Input
                   id="gmail-email"
+                  name="gmail_custom_address"
                   type="email"
+                  autoComplete="off"
                   required
                   placeholder="yourname@gmail.com"
                   value={gmailEmail}
@@ -474,7 +481,9 @@ function LoginForm() {
                 <Label htmlFor="gmail-password">Password (min 6 characters)</Label>
                 <Input
                   id="gmail-password"
+                  name="gmail_new_pass"
                   type="password"
+                  autoComplete="new-password"
                   required
                   minLength={6}
                   placeholder="Enter or create password"
