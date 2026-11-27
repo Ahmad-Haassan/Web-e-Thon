@@ -87,4 +87,5 @@ All error responses return `{ "error": string, "details"?: unknown }`.
 | `GET` | `/api/verify/[code]` | **Public** | — | Minimal verifiable report: `{ examTitle, maskedName, scoreBand, issuedAt, chainValid, recordCount, verifyCode }` (NO private data!) |
 | `GET` | `/api/verify/attempt/[id]` | **Public** | — | `{ attemptId, answersChain, eventsChain, lockEventsChain, valid }` (tamper demo turns RED if any DB row edited!) |
 | `GET` | `/api/verify/exam/[id]` | **Public** | — | `{ examTitle, seedCommitment, seedReveal, checkpointHash, checkpointValid, attemptsChecked, allChainsValid }` |
+| `GET` | `/api/audit-logs` | `ADMIN`, `EXAMINER` | `?entity=&entityId=&limit=` | `{ logs }` |
 | `POST` | `/api/cron/finalize` | Secret header `x-cron-secret` or Admin | — | `{ finalizedCount }` |

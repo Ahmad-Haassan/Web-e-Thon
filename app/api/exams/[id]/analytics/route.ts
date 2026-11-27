@@ -218,6 +218,74 @@ export async function GET(
       };
     });
 
+    // Written-answer similarity indicator (Section 10.4 — indicator for review, not proof)
+    const tokenize = (s: string) =>
+      new Set(
+        s
+          .toLowerCase()
+          .replace(/[^a-z0-9\s]/g, " ")
+          .split(/\s+/)
+          .filter((w) => w.length >= 3)
+      );
+
+    const writtenByQuestion = new Map<
+      string,
+      { attemptId: string; candidateName: string; tokens: Set<string> }[]
+    >();
+
+    for (const a of completed) {
+      const snap = a.paper_snapshot as ServerPaperSnapshot;
+      const u = (Array.isArray(a.users) ? a.users[0] : a.users) as { name?: string } | null;
+      const candidateName = u?.name ?? a.candidate_id;
+
+      for (const q of snap.questions ?? []) {
+        if (q.type !== "WRITTEN") continue;
+        const sel = latestAns.get(`${a.id}:${q.id}`);
+        if (typeof sel !== "string" || sel.trim().length < 25) continue;
+        const tokens = tokenize(sel);
+        if (tokens.size < 5) continue;
+        const list = writtenByQuestion.get(q.id) ?? [];
+        list.push({ attemptId: a.id, candidateName, tokens });
+        writtenByQuestion.set(q.id, list);
+      }
+    }
+
+    const writtenSimilarityFlags: {
+      questionId: string;
+      attemptA: string;
+      candidateA: string;
+      attemptB: string;
+      candidateB: string;
+      similarityPct: number;
+      disclaimer: string;
+    }[] = [];
+
+    for (const [questionId, entries] of writtenByQuestion.entries()) {
+      for (let i = 0; i < entries.length; i++) {
+        for (let j = i + 1; j < entries.length; j++) {
+          const a = entries[i];
+          const b = entries[j];
+          let intersection = 0;
+          for (const t of a.tokens) {
+            if (b.tokens.has(t)) intersection++;
+          }
+          const union = a.tokens.size + b.tokens.size - intersection;
+          const jaccard = union > 0 ? intersection / union : 0;
+          if (jaccard >= 0.7) {
+            writtenSimilarityFlags.push({
+              questionId,
+              attemptA: a.attemptId,
+              candidateA: a.candidateName,
+              attemptB: b.attemptId,
+              candidateB: b.candidateName,
+              similarityPct: Number((jaccard * 100).toFixed(1)),
+              disclaimer: "Text similarity is an indicator for human review, not proof.",
+            });
+          }
+        }
+      }
+    }
+
     return jsonOk({
       examId,
       examTitle: exam.title,
@@ -232,6 +300,7 @@ export async function GET(
       },
       candidates,
       questionAnalytics,
+      writtenSimilarityFlags,
     });
   } catch (err) {
     return handleRouteError(err);
