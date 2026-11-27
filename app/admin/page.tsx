@@ -138,7 +138,8 @@ export default function AdminDashboardPage() {
     }
   }, [user, loading, router]);
 
-  const isAdmin = Boolean(user && user.role === "ADMIN");
+  const [pendingRoleDrafts, setPendingRoleDrafts] = useState<Record<string, UserRole>>({});
+  const isAdmin = Boolean(user && user.active && user.role === "ADMIN");
 
   // Queries
   const overviewQuery = useQuery({
@@ -326,8 +327,8 @@ export default function AdminDashboardPage() {
         };
       case "user":
         return {
-          dot: "bg-violet-500",
-          box: "bg-violet-50 text-violet-600",
+          dot: "bg-[#1e8e5a]",
+          box: "bg-[#eef5f1] text-[#1b4d3e]",
           Icon: UserPlus,
         };
       case "publish":
@@ -350,6 +351,8 @@ export default function AdminDashboardPage() {
         };
     }
   }
+
+  const pendingUsers = (usersQuery.data?.users ?? []).filter((u) => !u.active);
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -402,11 +405,11 @@ export default function AdminDashboardPage() {
                 }}
                 className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                   active
-                    ? "bg-[var(--portal-chrome-accent)] text-[#241a0b] font-semibold shadow-sm"
+                    ? "bg-[var(--portal-chrome-accent)] text-[#0b2922] font-semibold shadow-sm"
                     : "text-slate-300 hover:bg-surface/5 hover:text-white"
                 }`}
               >
-                <Icon className={`h-4.5 w-4.5 ${active ? "text-[#241a0b]" : "text-[var(--portal-chrome-muted)]"}`} />
+                <Icon className={`h-4.5 w-4.5 ${active ? "text-[#0b2922]" : "text-[var(--portal-chrome-muted)]"}`} />
                 <span>{label}</span>
               </button>
             );
@@ -529,7 +532,7 @@ export default function AdminDashboardPage() {
                 }}
                 className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-surface-muted cursor-pointer"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#312e81] text-xs font-bold text-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1b4d3e] text-xs font-bold text-white">
                   {(user.name?.[0] ?? "A").toUpperCase()}
                 </span>
                 <span className="hidden text-sm font-medium text-ink-muted sm:inline">
@@ -652,7 +655,7 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("users")}
-                  className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-[#eef4ff] to-[#f8faff] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
+                  className="flex items-center gap-4 rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#f5f9f7] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
                 >
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-ink shadow-sm">
                     <Users className="h-6 w-6" />
@@ -696,9 +699,9 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={() => setActiveTab("analytics")}
-                  className="flex items-center gap-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-[#f3f0ff] to-[#faf9ff] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
+                  className="flex items-center gap-4 rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#f4f8f6] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
                 >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1b4d3e] text-white shadow-sm">
                     <Check className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
@@ -707,7 +710,7 @@ export default function AdminDashboardPage() {
                     </p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
                       <span>Total Attempts</span>
-                      <span className="font-semibold text-violet-600">
+                      <span className="font-semibold text-[#1b4d3e]">
                         {stats?.gradedAttempts ?? 0} graded
                       </span>
                     </p>
@@ -791,7 +794,7 @@ export default function AdminDashboardPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <Link
                       href="/examiner/exams/new"
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#46351a] to-[#3730a3] px-4 py-6 text-center text-white shadow-md shadow-indigo-200 transition hover:brightness-110"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#113b32] to-[#143b30] px-4 py-6 text-center text-white shadow-md shadow-[#c7dfd4] transition hover:brightness-110"
                     >
                       <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-surface/15">
                         <Plus className="h-5 w-5" />
@@ -806,7 +809,7 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("users")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#eef5f1] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
                     >
                       <Users className="h-6 w-6 text-accent" />
                       <span className="text-xs font-semibold leading-tight">
@@ -819,7 +822,7 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("exams")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#eef5f1] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
                     >
                       <FileText className="h-6 w-6 text-accent" />
                       <span className="text-xs font-semibold leading-tight">
@@ -832,7 +835,7 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("analytics")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#eef5f1] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
                     >
                       <BarChart3 className="h-6 w-6 text-accent" />
                       <span className="text-xs font-semibold leading-tight">
@@ -878,8 +881,8 @@ export default function AdminDashboardPage() {
                       <AreaChart data={series} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="attemptsGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#46351a" stopOpacity={0.22} />
-                            <stop offset="95%" stopColor="#46351a" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#113b32" stopOpacity={0.22} />
+                            <stop offset="95%" stopColor="#113b32" stopOpacity={0} />
                           </linearGradient>
                           <linearGradient id="usersGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -910,10 +913,10 @@ export default function AdminDashboardPage() {
                           type="monotone"
                           dataKey="examAttempts"
                           name="Exam Attempts"
-                          stroke="#46351a"
+                          stroke="#113b32"
                           strokeWidth={2.5}
                           fill="url(#attemptsGrad)"
-                          dot={{ r: 3, fill: "#ffffff", stroke: "#46351a", strokeWidth: 2 }}
+                          dot={{ r: 3, fill: "#ffffff", stroke: "#113b32", strokeWidth: 2 }}
                         />
                         <Area
                           type="monotone"
@@ -940,7 +943,7 @@ export default function AdminDashboardPage() {
                       className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-3.5 text-left transition hover:border-border-strong hover:bg-accent-soft/50 cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-accent">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e6f1ec] text-accent">
                           {integrityMut.isPending ? (
                             <Spinner className="h-4 w-4 text-accent" />
                           ) : (
@@ -966,9 +969,9 @@ export default function AdminDashboardPage() {
                       className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-3.5 text-left transition hover:border-border-strong hover:bg-accent-soft/50 cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e6f1ec] text-[#1b4d3e]">
                           {exportMut.isPending ? (
-                            <Spinner className="h-4 w-4 text-sky-600" />
+                            <Spinner className="h-4 w-4 text-[#1b4d3e]" />
                           ) : (
                             <CloudDownload className="h-5 w-5" />
                           )}
@@ -987,7 +990,7 @@ export default function AdminDashboardPage() {
                       className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-3.5 text-left transition hover:border-border-strong hover:bg-accent-soft/50 cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-accent">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e6f1ec] text-accent">
                           <Settings className="h-5 w-5" />
                         </span>
                         <div>
@@ -1080,7 +1083,7 @@ export default function AdminDashboardPage() {
                           type="checkbox"
                           checked={invite}
                           onChange={(e) => setInvite(e.target.checked)}
-                          className="h-4 w-4 rounded accent-indigo-600"
+                          className="h-4 w-4 rounded accent-[#1b4d3e]"
                         />
                         Send Supabase invite email instead of setting password now
                       </label>
@@ -1094,6 +1097,67 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
                   </form>
+                </div>
+              )}
+
+              {pendingUsers.length > 0 && (
+                <div className="overflow-hidden rounded-2xl border border-warning/40 bg-warning-soft/40 shadow-2xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-warning/25 bg-warning-soft/70 px-5 py-3.5">
+                    <div>
+                      <h3 className="text-sm font-bold text-foreground">
+                        Waiting for Admin Approval ({pendingUsers.length})
+                      </h3>
+                      <p className="text-xs text-ink-muted">
+                        Select a role (Student, Examiner, or Admin) and approve each pending account to grant portal access.
+                      </p>
+                    </div>
+                    <Badge tone="warning">{pendingUsers.length} Pending</Badge>
+                  </div>
+                  <div className="divide-y divide-border bg-surface">
+                    {pendingUsers.map((u) => {
+                      const chosenRole = pendingRoleDrafts[u.id] ?? u.role ?? "CANDIDATE";
+                      return (
+                        <div
+                          key={u.id}
+                          className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5"
+                        >
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{u.name}</p>
+                            <p className="text-xs text-ink-subtle font-mono">{u.email}</p>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Select
+                              aria-label={`Assign role for ${u.email}`}
+                              value={chosenRole}
+                              onChange={(e) =>
+                                setPendingRoleDrafts((prev) => ({
+                                  ...prev,
+                                  [u.id]: e.target.value as UserRole,
+                                }))
+                              }
+                              className="h-9 w-44 text-xs"
+                            >
+                              <option value="CANDIDATE">Student (CANDIDATE)</option>
+                              <option value="EXAMINER">Examiner (EXAMINER)</option>
+                              <option value="ADMIN">Admin (ADMIN)</option>
+                            </Select>
+                            <Button
+                              size="sm"
+                              disabled={updateUserMut.isPending}
+                              onClick={() =>
+                                updateUserMut.mutate({
+                                  id: u.id,
+                                  body: { role: chosenRole, active: true },
+                                })
+                              }
+                            >
+                              <UserCheck className="h-3.5 w-3.5" /> Approve &amp; Assign
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -1162,8 +1226,8 @@ export default function AdminDashboardPage() {
                               </Select>
                             </td>
                             <td className="px-5 py-3.5">
-                              <Badge tone={u.active ? "verified" : "danger"}>
-                                {u.active ? "Active" : "Deactivated"}
+                              <Badge tone={u.active ? "verified" : "warning"}>
+                                {u.active ? "Active" : "Waiting Approval"}
                               </Badge>
                             </td>
                             <td className="px-5 py-3.5 text-right">
@@ -1437,8 +1501,8 @@ export default function AdminDashboardPage() {
                           type="monotone"
                           dataKey="examAttempts"
                           name="Exam Attempts"
-                          stroke="#46351a"
-                          fill="#dbeafe"
+                          stroke="#113b32"
+                          fill="#d1e7dd"
                           strokeWidth={2}
                         />
                         <Area
@@ -1472,7 +1536,7 @@ export default function AdminDashboardPage() {
                         <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} />
                         <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
                         <Tooltip />
-                        <Bar dataKey="avgPct" name="Avg Score %" fill="#46351a" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="avgPct" name="Avg Score %" fill="#113b32" radius={[6, 6, 0, 0]} />
                         <Bar dataKey="passRate" name="Pass Rate %" fill="#10b981" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -1677,7 +1741,7 @@ export default function AdminDashboardPage() {
                           updatePrefs({ highContrast: e.target.checked });
                           toast.success("Contrast preference saved");
                         }}
-                        className="h-4 w-4 rounded accent-indigo-600"
+                        className="h-4 w-4 rounded accent-[#1b4d3e]"
                       />
                       High Contrast Mode
                     </label>

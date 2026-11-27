@@ -328,7 +328,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
                 onClick={() => setCategoryId((prev) => (prev === c.id ? "" : c.id))}
                 className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors cursor-pointer ${
                   categoryId === c.id
-                    ? "border-blue-600 bg-accent-soft text-accent"
+                    ? "border-[#1b4d3e] bg-accent-soft text-accent"
                     : "border-border bg-surface-subtle text-ink-muted hover:text-foreground"
                 }`}
               >

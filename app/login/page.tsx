@@ -76,7 +76,11 @@ function LoginForm() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace(nextPath && nextPath.startsWith("/") ? nextPath : roleHomePath(user.role));
+      if (!user.active) {
+        router.replace("/pending-approval");
+      } else {
+        router.replace(nextPath && nextPath.startsWith("/") ? nextPath : roleHomePath(user.role));
+      }
     }
   }, [user, loading, router, nextPath]);
 
@@ -146,6 +150,12 @@ function LoginForm() {
       if (!appUser) {
         setError("Signed in, but could not load your profile from /api/me.");
         setSubmitting(false);
+        return;
+      }
+
+      if (!appUser.active) {
+        toast.info("Your account is in the Waiting Approval queue.");
+        router.replace("/pending-approval");
         return;
       }
 

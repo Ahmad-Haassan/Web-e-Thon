@@ -18,12 +18,18 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 
 const DEMO_USERS = [
   { email: "admin@exam.edu.pk", password: "Password123!", name: "Dr. Tariq Mehmood (Admin)", role: "ADMIN" as const, phone: "+92 300 0000001", className: null, section: null },
-  { email: "examiner@exam.edu.pk", password: "Password123!", name: "Prof. Ayesha Siddiqui", role: "EXAMINER" as const, phone: "+92 300 0000002", className: null, section: null },
-  { email: "student1@exam.edu.pk", password: "Password123!", name: "Ali Raza", role: "CANDIDATE" as const, phone: "+92 300 1111101", className: "BSCS-4", section: "A" },
-  { email: "student2@exam.edu.pk", password: "Password123!", name: "Fatima Noor", role: "CANDIDATE" as const, phone: "+92 300 1111102", className: "BSCS-4", section: "A" },
-  { email: "student3@exam.edu.pk", password: "Password123!", name: "Bilal Ahmed", role: "CANDIDATE" as const, phone: "+92 300 1111103", className: "BSCS-4", section: "B" },
-  { email: "student4@exam.edu.pk", password: "Password123!", name: "Zainab Malik", role: "CANDIDATE" as const, phone: "+92 300 1111104", className: "IX", section: "A" },
-  { email: "student5@exam.edu.pk", password: "Password123!", name: "Usman Farooq", role: "CANDIDATE" as const, phone: "+92 300 1111105", className: "IX", section: "B" },
+  { email: "examiner1@exam.edu.pk", password: "12345678", name: "Prof. Ayesha Siddiqui (Examiner 1)", role: "EXAMINER" as const, phone: "+92 300 0000002", className: null, section: null },
+  { email: "examiner2@exam.edu.pk", password: "12345678", name: "Dr. Kamran Qureshi (Examiner 2)", role: "EXAMINER" as const, phone: "+92 300 0000003", className: null, section: null },
+  { email: "student1@exam.edu.pk", password: "12345678", name: "Ali Raza", role: "CANDIDATE" as const, phone: "+92 300 1111101", className: "BSCS-4", section: "A" },
+  { email: "student2@exam.edu.pk", password: "12345678", name: "Fatima Noor", role: "CANDIDATE" as const, phone: "+92 300 1111102", className: "BSCS-4", section: "A" },
+  { email: "student3@exam.edu.pk", password: "12345678", name: "Bilal Ahmed", role: "CANDIDATE" as const, phone: "+92 300 1111103", className: "BSCS-4", section: "A" },
+  { email: "student4@exam.edu.pk", password: "12345678", name: "Zainab Malik", role: "CANDIDATE" as const, phone: "+92 300 1111104", className: "BSCS-4", section: "A" },
+  { email: "student5@exam.edu.pk", password: "12345678", name: "Usman Farooq", role: "CANDIDATE" as const, phone: "+92 300 1111105", className: "BSCS-4", section: "A" },
+  { email: "student6@exam.edu.pk", password: "12345678", name: "Hira Tariq", role: "CANDIDATE" as const, phone: "+92 300 1111106", className: "BSCS-4", section: "B" },
+  { email: "student7@exam.edu.pk", password: "12345678", name: "Hamza Sheikh", role: "CANDIDATE" as const, phone: "+92 300 1111107", className: "BSCS-4", section: "B" },
+  { email: "student8@exam.edu.pk", password: "12345678", name: "Areeba Khan", role: "CANDIDATE" as const, phone: "+92 300 1111108", className: "BSCS-4", section: "B" },
+  { email: "student9@exam.edu.pk", password: "12345678", name: "Saad Mahmood", role: "CANDIDATE" as const, phone: "+92 300 1111109", className: "BSCS-4", section: "B" },
+  { email: "student10@exam.edu.pk", password: "12345678", name: "Maham Javed", role: "CANDIDATE" as const, phone: "+92 300 1111110", className: "BSCS-4", section: "B" },
 ];
 
 async function upsertDemoUser(u: (typeof DEMO_USERS)[number]) {
@@ -43,12 +49,14 @@ async function upsertDemoUser(u: (typeof DEMO_USERS)[number]) {
     authUser = data.user;
   } else {
     await supabase.auth.admin.updateUserById(authUser.id, {
+      password: u.password,
+      user_metadata: { name: u.name },
       app_metadata: { role: u.role },
       email_confirm: true,
     });
   }
 
-  const { data: appUser, error: userErr } = await supabase
+  let { data: appUser, error: userErr } = await supabase
     .from("users")
     .upsert(
       {
@@ -67,7 +75,27 @@ async function upsertDemoUser(u: (typeof DEMO_USERS)[number]) {
     .select()
     .single();
 
-  if (userErr) throw new Error(`Failed upserting public.users for ${u.email}: ${userErr.message}`);
+  if (userErr) {
+    // Fallback if migration 0003 columns are not yet applied
+    const fallback = await supabase
+      .from("users")
+      .upsert(
+        {
+          supabase_user_id: authUser.id,
+          email: u.email,
+          name: u.name,
+          role: u.role,
+          active: true,
+        },
+        { onConflict: "supabase_user_id" }
+      )
+      .select()
+      .single();
+    appUser = fallback.data;
+    userErr = fallback.error;
+  }
+
+  if (userErr || !appUser) throw new Error(`Failed upserting public.users for ${u.email}: ${userErr?.message}`);
   return appUser;
 }
 
@@ -81,7 +109,7 @@ async function seed() {
     console.log(`  User ready: ${u.email} (${u.role})`);
   }
 
-  const examiner = usersByEmail["examiner@exam.edu.pk"];
+  const examiner = usersByEmail["examiner1@exam.edu.pk"];
 
   // Categories
   const categoryNames = ["Algorithms & DS", "Database Systems", "Computer Networks"];
@@ -365,10 +393,11 @@ async function seed() {
     console.log(`  Demo exam already exists: ${examId}`);
   }
 
-  console.log("\nDemo credentials (password for all: Password123!):");
-  console.log("  Admin:     admin@exam.edu.pk");
-  console.log("  Examiner:  examiner@exam.edu.pk");
-  console.log("  Students:  student1@exam.edu.pk .. student5@exam.edu.pk");
+  console.log("\nDemo credentials:");
+  console.log("  Admin:      admin@exam.edu.pk (password: Password123!)");
+  console.log("  Examiners:  examiner1@exam.edu.pk, examiner2@exam.edu.pk (password: 12345678)");
+  console.log("  Students:   student1@exam.edu.pk .. student10@exam.edu.pk (password: 12345678)");
+  console.log("  Auto-approved Student Gmails: ahmadd557125@gmail.com, noman4arshad@gmail.com");
 }
 
 seed().catch((err) => {

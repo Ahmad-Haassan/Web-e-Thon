@@ -154,8 +154,8 @@ export function AnalyticsPanel({
                   type="monotone"
                   dataKey="attempts"
                   name="Attempts"
-                  stroke="#46351a"
-                  fill="#dbeafe"
+                  stroke="#113b32"
+                  fill="#d1e7dd"
                   strokeWidth={2}
                 />
                 <Area
@@ -188,7 +188,7 @@ export function AnalyticsPanel({
                   <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "#64748b" }} />
                   <Tooltip />
-                  <Bar dataKey="avgPct" name="Avg Score %" fill="#46351a" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="avgPct" name="Avg Score %" fill="#113b32" radius={[6, 6, 0, 0]} />
                   <Bar dataKey="passRate" name="Pass Rate %" fill="#10b981" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>

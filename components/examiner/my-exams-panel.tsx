@@ -154,7 +154,7 @@ export function MyExamsPanel({
             onClick={() => setFilter(tab.id)}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
               filter === tab.id
-                ? "border-blue-600 bg-accent text-accent-ink"
+                ? "border-[#1b4d3e] bg-accent text-accent-ink"
                 : "border-border bg-surface text-ink-muted hover:bg-surface-subtle"
             }`}
           >

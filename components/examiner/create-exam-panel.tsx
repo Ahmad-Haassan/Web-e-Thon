@@ -326,7 +326,7 @@ function CreateExamFormInner({
       </div>
 
       {!isEditing && onApplyTemplate && (
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-blue-100 bg-surface p-3.5 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#e6f1ec] bg-surface p-3.5 shadow-2xs">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent mr-1">
             <Sparkles className="h-3.5 w-3.5" /> Quick Templates:
           </span>
@@ -339,7 +339,7 @@ function CreateExamFormInner({
                 onClick={() => onApplyTemplate(tpl)}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition cursor-pointer ${
                   active
-                    ? "border-blue-600 bg-accent-soft text-accent"
+                    ? "border-[#1b4d3e] bg-accent-soft text-accent"
                     : "border-border bg-surface-subtle text-ink-muted hover:border-blue-300 hover:text-foreground"
                 }`}
               >
@@ -363,7 +363,7 @@ function CreateExamFormInner({
               onClick={() => setStep(s.num)}
               className={`flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
                 step === s.num
-                  ? "border-blue-600 bg-accent-soft text-accent"
+                  ? "border-[#1b4d3e] bg-accent-soft text-accent"
                   : step > s.num
                     ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                     : "border-border bg-surface text-ink-subtle"
@@ -454,7 +454,7 @@ function CreateExamFormInner({
                   type="checkbox"
                   checked={shuffleQuestions}
                   onChange={(e) => setShuffleQuestions(e.target.checked)}
-                  className="h-4 w-4 accent-blue-600"
+                  className="h-4 w-4 accent-[#1b4d3e]"
                 />
                 <span>Shuffle question order per candidate</span>
               </label>
@@ -463,7 +463,7 @@ function CreateExamFormInner({
                   type="checkbox"
                   checked={shuffleOptions}
                   onChange={(e) => setShuffleOptions(e.target.checked)}
-                  className="h-4 w-4 accent-blue-600"
+                  className="h-4 w-4 accent-[#1b4d3e]"
                 />
                 <span>Shuffle option order per candidate</span>
               </label>
@@ -472,7 +472,7 @@ function CreateExamFormInner({
                   type="checkbox"
                   checked={partialEnabled}
                   onChange={(e) => setPartialEnabled(e.target.checked)}
-                  className="h-4 w-4 accent-blue-600"
+                  className="h-4 w-4 accent-[#1b4d3e]"
                 />
                 <span>Enable multi-select partial credit (+correct/n)</span>
               </label>
@@ -481,7 +481,7 @@ function CreateExamFormInner({
                   type="checkbox"
                   checked={wrongPenalty}
                   onChange={(e) => setWrongPenalty(e.target.checked)}
-                  className="h-4 w-4 accent-blue-600"
+                  className="h-4 w-4 accent-[#1b4d3e]"
                 />
                 <span>Deduct wrong multi-select choices (−wrong/n, min 0)</span>
               </label>
@@ -490,7 +490,7 @@ function CreateExamFormInner({
                   type="checkbox"
                   checked={noBacktrack}
                   onChange={(e) => setNoBacktrack(e.target.checked)}
-                  className="h-4 w-4 accent-blue-600"
+                  className="h-4 w-4 accent-[#1b4d3e]"
                 />
                 <span>No-backtrack mode (one-way progression)</span>
               </label>
@@ -536,7 +536,7 @@ function CreateExamFormInner({
                     type="checkbox"
                     checked={useBlueprint}
                     onChange={(e) => setUseBlueprint(e.target.checked)}
-                    className="h-4 w-4 accent-blue-600"
+                    className="h-4 w-4 accent-[#1b4d3e]"
                   />
                   Enable Blueprint
                 </label>
@@ -723,7 +723,7 @@ function CreateExamFormInner({
                         key={q.id}
                         className={`flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors ${
                           checked
-                            ? "border-blue-500 bg-accent-soft/50"
+                            ? "border-[#1e8e5a] bg-accent-soft/50"
                             : "border-border bg-surface-subtle"
                         }`}
                       >
@@ -732,7 +732,7 @@ function CreateExamFormInner({
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleQuestion(q.id, q.marks)}
-                            className="mt-1 h-4 w-4 accent-blue-600"
+                            className="mt-1 h-4 w-4 accent-[#1b4d3e]"
                           />
                           <div className="space-y-1">
                             <p className="text-sm font-medium text-foreground">{q.text}</p>

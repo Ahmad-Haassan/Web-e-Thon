@@ -8,8 +8,8 @@ export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   try {
-    const user = await requireAuth(req);
-    return jsonOk({ user });
+    const user = await requireAuth(req, { allowInactive: true });
+    return jsonOk({ user, pendingApproval: !user.active });
   } catch (err) {
     return handleRouteError(err);
   }

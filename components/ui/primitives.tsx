@@ -15,7 +15,7 @@ export function cn(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(" ");
 }
 
-/** Circular institutional NIIT EMS crest mark harmonized with #FBE9C7 / #46351A palette. */
+/** Circular institutional NIIT EMS crest mark harmonized with #f5f8f6 / #113b32 palette. */
 export function BrandMark({
   className,
   variant = "crest",
@@ -27,7 +27,7 @@ export function BrandMark({
     <span
       aria-hidden="true"
       className={cn(
-        "inline-flex h-9 w-9 shrink-0 items-center justify-center border border-[#f3c874]/45 bg-[#312411] text-[#f3c874]",
+        "inline-flex h-9 w-9 shrink-0 items-center justify-center border border-[#6ee7b7]/45 bg-[#0b2922] text-[#6ee7b7]",
         variant === "crest" ? "rounded-full" : "rounded-[2px]",
         className
       )}
@@ -41,13 +41,13 @@ export function BrandMark({
         <circle cx="12" cy="12" r="9.5" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.45" />
         <path
           d="M12 4.5L18 7V11.8C18 15.6 15.45 18.65 12 19.8C8.55 18.65 6 15.6 6 11.8V7L12 4.5Z"
-          stroke="#fbe9c7"
+          stroke="#f5f8f6"
           strokeWidth="1.5"
           strokeLinejoin="round"
         />
         <path
           d="M9.2 12.1L11.1 14L15 9.9"
-          stroke="#f3c874"
+          stroke="#6ee7b7"
           strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -57,7 +57,7 @@ export function BrandMark({
   );
 }
 
-/** One-click Light (#FBE9C7) <-> Dark (#46351A) theme toggle button usable anywhere. */
+/** One-click Light (#f5f8f6) <-> Dark (#113b32) theme toggle button usable anywhere. */
 export function ThemeToggleButton({
   className,
   showLabel = false,
@@ -73,7 +73,7 @@ export function ThemeToggleButton({
       type="button"
       onClick={() => updatePrefs({ theme: isDark ? "light" : "dark" })}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      title={isDark ? "Switch to Light Mode (#FBE9C7)" : "Switch to Dark Mode (#46351A)"}
+      title={isDark ? "Switch to Light Mode (#f5f8f6)" : "Switch to Dark Mode (#113b32)"}
       className={cn(
         "inline-flex h-9 items-center justify-center gap-1.5 rounded-[2px] border border-border bg-surface px-2.5 text-xs font-medium text-foreground hover:bg-surface-muted transition-colors cursor-pointer",
         className

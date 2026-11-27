@@ -91,6 +91,10 @@ export function ExaminerShell({
       router.replace("/login?next=/examiner");
       return;
     }
+    if (!user.active) {
+      router.replace("/pending-approval");
+      return;
+    }
     if (user.role !== "EXAMINER" && user.role !== "ADMIN") {
       router.replace(roleHomePath(user.role));
     }
@@ -181,13 +185,13 @@ export function ExaminerShell({
                 }}
                 className={`flex w-full items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                   active
-                    ? "bg-[var(--portal-chrome-accent)] text-[#241a0b] font-semibold shadow-sm"
+                    ? "bg-[var(--portal-chrome-accent)] text-[#0b2922] font-semibold shadow-sm"
                     : "text-slate-300 hover:bg-surface/5 hover:text-white"
                 }`}
               >
                 <span className="flex items-center gap-3 min-w-0">
                   <Icon
-                    className={`h-4.5 w-4.5 shrink-0 ${active ? "text-[#241a0b]" : "text-[var(--portal-chrome-muted)]"}`}
+                    className={`h-4.5 w-4.5 shrink-0 ${active ? "text-[#0b2922]" : "text-[var(--portal-chrome-muted)]"}`}
                   />
                   <span className="truncate">{label}</span>
                 </span>
@@ -448,7 +452,7 @@ export function ExaminerShell({
                       <Link
                         href="/disputes"
                         onClick={() => setShowNotifications(false)}
-                        className="rounded-xl bg-accent-soft p-2 text-accent hover:bg-blue-100"
+                        className="rounded-xl bg-accent-soft p-2 text-accent hover:bg-[#e6f1ec]"
                       >
                         <p className="text-sm font-bold">
                           {overview?.notifications.openDisputes ?? 0}
@@ -481,7 +485,7 @@ export function ExaminerShell({
                                   ? "bg-rose-100 text-rose-600"
                                   : n.kind === "grading"
                                     ? "bg-amber-100 text-amber-600"
-                                    : "bg-blue-100 text-accent"
+                                    : "bg-[#e6f1ec] text-accent"
                               }`}
                             >
                               {n.kind === "flag" ? (
@@ -519,7 +523,7 @@ export function ExaminerShell({
                 }}
                 className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-surface-muted cursor-pointer"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1e3a8a] text-xs font-bold text-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1b4d3e] text-xs font-bold text-white">
                   {initial}
                 </span>
                 <span className="hidden text-sm font-medium text-ink-muted sm:inline max-w-36 truncate">

@@ -133,7 +133,7 @@ export function SettingsPanel({
                   void updatePrefs({ highContrast: e.target.checked });
                   toast.success("Contrast preference saved");
                 }}
-                className="h-4 w-4 rounded accent-blue-600"
+                className="h-4 w-4 rounded accent-[#1b4d3e]"
               />
               High Contrast Mode
             </label>
@@ -145,7 +145,7 @@ export function SettingsPanel({
       {user && (
         <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-surface p-5 shadow-2xs">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-accent">
+            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e6f1ec] text-accent">
               <UserCheck className="h-5 w-5" />
             </span>
             <div>

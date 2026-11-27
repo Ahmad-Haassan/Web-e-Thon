@@ -147,6 +147,11 @@ export default function RegisterPage() {
       }
 
       const appUser = await refreshUser();
+      if (appUser && !appUser.active) {
+        toast.info("Account created! Waiting for Administrator approval.");
+        router.replace("/pending-approval");
+        return;
+      }
       toast.success("Candidate account created");
       router.replace(appUser ? roleHomePath(appUser.role) : "/candidate");
     } catch (err) {

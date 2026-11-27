@@ -119,6 +119,10 @@ export default function CandidateDashboardPage() {
       router.replace("/login?next=/candidate");
       return;
     }
+    if (!user.active) {
+      router.replace("/pending-approval");
+      return;
+    }
     if (!["CANDIDATE", "ADMIN", "EXAMINER"].includes(user.role)) {
       router.replace(roleHomePath(user.role));
     }
@@ -127,7 +131,7 @@ export default function CandidateDashboardPage() {
   const examsQuery = useQuery({
     queryKey: ["candidate-exams"],
     queryFn: () => api.exams.list(),
-    enabled: Boolean(user),
+    enabled: Boolean(user && user.active),
     refetchOnWindowFocus: true,
   });
 
@@ -267,11 +271,11 @@ export default function CandidateDashboardPage() {
                 }}
                 className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                   active
-                    ? "bg-[var(--portal-chrome-accent)] text-[#241a0b] font-semibold shadow-sm"
+                    ? "bg-[var(--portal-chrome-accent)] text-[#0b2922] font-semibold shadow-sm"
                     : "text-slate-300 hover:bg-surface/5 hover:text-white"
                 }`}
               >
-                <Icon className={`h-4.5 w-4.5 ${active ? "text-[#241a0b]" : "text-[var(--portal-chrome-muted)]"}`} />
+                <Icon className={`h-4.5 w-4.5 ${active ? "text-[#0b2922]" : "text-[var(--portal-chrome-muted)]"}`} />
                 <span>{label}</span>
               </button>
             );
@@ -407,7 +411,7 @@ export default function CandidateDashboardPage() {
                 }}
                 className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-surface-muted cursor-pointer"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#312e81] text-xs font-bold text-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1b4d3e] text-xs font-bold text-white">
                   {initialsOf(user.name)}
                 </span>
                 <span className="hidden text-sm font-medium text-ink-muted sm:inline">
@@ -462,7 +466,7 @@ export default function CandidateDashboardPage() {
           ) : activeTab === "dashboard" ? (
             <div className="mx-auto max-w-6xl space-y-6">
               {/* Hero Welcome Banner */}
-              <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-r from-[#e8f0ff] via-[#dfe9ff] to-[#d6e4ff] px-6 py-7 sm:px-9 sm:py-8">
+              <div className="relative overflow-hidden rounded-3xl border border-[#e6f1ec] bg-gradient-to-r from-[#e6f1ec] via-[#edf5f1] to-[#dcebe4] px-6 py-7 sm:px-9 sm:py-8">
                 <div className="relative z-10 max-w-xl">
                   <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                     Welcome back, {firstName}!
@@ -521,7 +525,7 @@ export default function CandidateDashboardPage() {
                               className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-subtle/60 p-4 sm:flex-row sm:items-center sm:justify-between"
                             >
                               <div className="flex items-start gap-4">
-                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-accent">
+                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e6f1ec] to-[#e6f1ec] text-accent">
                                   <Laptop className="h-8 w-8" />
                                 </div>
                                 <div>
@@ -565,7 +569,7 @@ export default function CandidateDashboardPage() {
                                       setAckExam(exam);
                                       setAckChecked(false);
                                     }}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-accent-hover cursor-pointer"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-[#c7dfd4] transition hover:bg-accent-hover cursor-pointer"
                                   >
                                     <Play className="h-4 w-4 fill-current" /> Start Exam
                                   </button>
@@ -594,7 +598,7 @@ export default function CandidateDashboardPage() {
                             className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle/60 p-3.5"
                           >
                             <div className="flex items-center gap-3.5">
-                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-accent">
+                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e6f1ec] text-accent">
                                 <FileText className="h-5 w-5" />
                               </span>
                               <div>
@@ -605,7 +609,7 @@ export default function CandidateDashboardPage() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#eef5f1] px-3 py-1 text-xs font-semibold text-[#143b30]">
                                 <Calendar className="h-3.5 w-3.5" />
                                 Starts {formatDistanceToNow(new Date(examStartAt(exam)), { addSuffix: true })}
                               </span>
@@ -773,7 +777,7 @@ export default function CandidateDashboardPage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1.5 text-ink-muted">
-                            <span className="h-2 w-2 rounded-full bg-violet-500" /> Average Score
+                            <span className="h-2 w-2 rounded-full bg-[#1e8e5a]" /> Average Score
                           </span>
                           <span className="font-bold text-foreground">
                             {pctList.length > 0 ? `${avgPct}%` : "Pending"}
@@ -784,7 +788,7 @@ export default function CandidateDashboardPage() {
                   </div>
 
                   {/* Verify Your Result Card with Real QR */}
-                  <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-[#f3f0ff] to-[#ebe8ff] p-5">
+                  <div className="rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#dcebe4] p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
@@ -1011,7 +1015,7 @@ export default function CandidateDashboardPage() {
             </div>
           ) : activeTab === "verify" ? (
             <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-7 text-center shadow-2xs space-y-4">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-accent">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e6f1ec] text-accent">
                 <ShieldCheck className="h-7 w-7" />
               </div>
               <h1 className="text-xl font-bold text-foreground">Public Cryptographic Verifier</h1>
@@ -1074,7 +1078,7 @@ export default function CandidateDashboardPage() {
                       updatePrefs({ highContrast: e.target.checked });
                       toast.success("Contrast preference saved");
                     }}
-                    className="h-4 w-4 accent-blue-600"
+                    className="h-4 w-4 accent-[#1b4d3e]"
                   />
                   High Contrast Mode
                 </label>
@@ -1086,7 +1090,7 @@ export default function CandidateDashboardPage() {
                       updatePrefs({ splitLayout: e.target.checked });
                       toast.success("Split layout saved");
                     }}
-                    className="h-4 w-4 accent-blue-600"
+                    className="h-4 w-4 accent-[#1b4d3e]"
                   />
                   Enable Split Scratchpad Layout
                 </label>
@@ -1139,7 +1143,7 @@ export default function CandidateDashboardPage() {
                   type="checkbox"
                   checked={ackChecked}
                   onChange={(e) => setAckChecked(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-blue-600"
+                  className="mt-0.5 h-4 w-4 accent-[#1b4d3e]"
                 />
                 <span>
                   I understand the server deadline policy and acknowledge the privacy-first integrity indicators.

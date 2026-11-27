@@ -74,15 +74,15 @@ interface DashboardOverviewTabProps {
 function getExamTileVisual(exam: ExaminerExamSummary, idx: number) {
   const t = exam.title.toLowerCase();
   if (t.includes("calc") || t.includes("math") || t.includes("stat")) {
-    return { Icon: Calculator, bg: "bg-indigo-100 text-accent" };
+    return { Icon: Calculator, bg: "bg-[#e6f1ec] text-accent" };
   }
   if (t.includes("web") || t.includes("net") || t.includes("cloud")) {
-    return { Icon: Globe, bg: "bg-sky-100 text-sky-600" };
+    return { Icon: Globe, bg: "bg-[#e6f1ec] text-[#1b4d3e]" };
   }
   if (t.includes("data") || t.includes("algo") || t.includes("cs-") || idx === 0) {
-    return { Icon: Laptop, bg: "bg-blue-100 text-accent" };
+    return { Icon: Laptop, bg: "bg-[#e6f1ec] text-accent" };
   }
-  return { Icon: BookOpen, bg: "bg-violet-100 text-violet-600" };
+  return { Icon: BookOpen, bg: "bg-[#e6f1ec] text-[#1b4d3e]" };
 }
 
 function getLifecyclePill(lifecycle: ExaminerExamSummary["lifecycle"]) {
@@ -215,7 +215,7 @@ export function DashboardOverviewTab({
   const donutData = hasDonutData
     ? [
         { name: "In Progress", value: inProgressCount, color: "#16a34a" },
-        { name: "Submitted", value: submittedCount, color: "#46351a" },
+        { name: "Submitted", value: submittedCount, color: "#113b32" },
         { name: "Not Started", value: notStartedCount, color: "#cbd5e1" },
       ].filter((d) => d.value > 0)
     : [{ name: "No Activity", value: 1, color: "#e2e8f0" }];
@@ -262,7 +262,7 @@ export function DashboardOverviewTab({
         <button
           type="button"
           onClick={() => onNavigateTab("exams")}
-          className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-[#edf4ff] to-[#f8faff] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
+          className="flex items-center gap-4 rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#edf4ff] to-[#f5f9f7] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
         >
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-ink shadow-sm">
             <FileText className="h-6 w-6" />
@@ -307,9 +307,9 @@ export function DashboardOverviewTab({
         <button
           type="button"
           onClick={() => onNavigateTab("results")}
-          className="flex items-center gap-4 rounded-2xl border border-violet-100 bg-gradient-to-br from-[#f3f0ff] to-[#faf9ff] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
+          className="flex items-center gap-4 rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#f4f8f6] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-sm">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1b4d3e] text-white shadow-sm">
             <Users className="h-6 w-6" />
           </span>
           <div className="min-w-0">
@@ -393,7 +393,7 @@ export function DashboardOverviewTab({
                 return (
                   <div
                     key={exam.id}
-                    className="relative flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-[#f9fbff] p-3.5 transition hover:border-blue-100"
+                    className="relative flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-[#f9fbff] p-3.5 transition hover:border-[#e6f1ec]"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3.5">
                       <span
@@ -433,7 +433,7 @@ export function DashboardOverviewTab({
                         <button
                           type="button"
                           onClick={() => onMonitorExam(exam.id)}
-                          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#1e3a8a] px-3 text-xs font-semibold text-white transition hover:bg-[#1e40af] cursor-pointer"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#1b4d3e] px-3 text-xs font-semibold text-white transition hover:bg-[#1e40af] cursor-pointer"
                         >
                           <BarChart3 className="h-3.5 w-3.5" /> Monitor
                         </button>
@@ -551,7 +551,7 @@ export function DashboardOverviewTab({
                                 }}
                                 className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
-                                <FlaskConical className="h-3.5 w-3.5 text-violet-600" /> Sandbox Preview
+                                <FlaskConical className="h-3.5 w-3.5 text-[#1b4d3e]" /> Sandbox Preview
                               </button>
                               <button
                                 type="button"
@@ -811,7 +811,7 @@ export function DashboardOverviewTab({
           </div>
 
           <div className="my-4 flex items-center gap-3">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-accent">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e6f1ec] to-[#e6f1ec] text-accent">
               <div className="relative">
                 <ClipboardCheck className="h-10 w-10" />
                 <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface text-accent shadow-xs">
@@ -823,7 +823,7 @@ export function DashboardOverviewTab({
               <button
                 type="button"
                 onClick={onCreateNew}
-                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#1d4ed8] px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1e40af] cursor-pointer"
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#215347] px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-[#1e40af] cursor-pointer"
               >
                 Create Exam <ArrowRight className="h-3.5 w-3.5" />
               </button>
@@ -872,8 +872,8 @@ export function DashboardOverviewTab({
               <AreaChart data={series} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                 <defs>
                   <linearGradient id="examinerAttemptsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#46351a" stopOpacity={0.22} />
-                    <stop offset="95%" stopColor="#46351a" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#113b32" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#113b32" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="examinerPassGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -915,7 +915,7 @@ export function DashboardOverviewTab({
                   type="monotone"
                   dataKey="attempts"
                   name="Attempts"
-                  stroke="#46351a"
+                  stroke="#113b32"
                   strokeWidth={2}
                   fill="url(#examinerAttemptsGrad)"
                 />
@@ -943,7 +943,7 @@ export function DashboardOverviewTab({
             <button
               type="button"
               onClick={() => onNavigateTab("results")}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-[#f0f6ff] px-3 py-4 text-center transition hover:bg-blue-100/60 cursor-pointer"
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#f0f6ff] px-3 py-4 text-center transition hover:bg-[#e6f1ec]/60 cursor-pointer"
             >
               <BarChart3 className="h-5 w-5 text-accent" />
               <span className="text-xs font-semibold text-foreground leading-tight">
@@ -967,7 +967,7 @@ export function DashboardOverviewTab({
             <button
               type="button"
               onClick={() => onNavigateTab("analytics")}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f3f4ff] px-3 py-4 text-center transition hover:bg-indigo-100/60 cursor-pointer"
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#f3f4ff] px-3 py-4 text-center transition hover:bg-[#e6f1ec]/60 cursor-pointer"
             >
               <PieChartIcon className="h-5 w-5 text-accent" />
               <span className="text-xs font-semibold text-foreground leading-tight">
@@ -978,9 +978,9 @@ export function DashboardOverviewTab({
             <button
               type="button"
               onClick={() => onVerifyIntegrity()}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-violet-100 bg-[#f5f3ff] px-3 py-4 text-center transition hover:bg-violet-100/60 cursor-pointer"
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#f5f3ff] px-3 py-4 text-center transition hover:bg-[#e6f1ec]/60 cursor-pointer"
             >
-              <ShieldCheck className="h-5 w-5 text-violet-600" />
+              <ShieldCheck className="h-5 w-5 text-[#1b4d3e]" />
               <span className="text-xs font-semibold text-foreground leading-tight">
                 Verify Records
                 <br />

@@ -161,7 +161,7 @@ export default function HomePage() {
       </header>
 
       <main id="main-content" className="flex-1">
-        {/* NIIT-Inspired Asymmetric Split Hero on #FBE9C7 (Light) / #46351A (Dark) */}
+        {/* NIIT-Inspired Asymmetric Split Hero on #f5f8f6 (Light) / #113b32 (Dark) */}
         <section className="mx-auto max-w-6xl px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-24">
           <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
             <div className="lg:col-span-6 space-y-6 animate-fade-rise">
@@ -286,10 +286,10 @@ export default function HomePage() {
           <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <div className="flex flex-col items-start justify-between gap-6 rounded-[2px] border border-border portal-chrome p-8 sm:flex-row sm:items-center sm:p-10 surface-elevated">
               <div className="max-w-xl space-y-2">
-                <h2 className="font-display text-2xl font-bold uppercase tracking-[0.02em] text-[#fbe9c7]">
+                <h2 className="font-display text-2xl font-bold uppercase tracking-[0.02em] text-[#f5f8f6]">
                   Ready To Enter The Examination Portal?
                 </h2>
-                <p className="text-sm text-[#fbe9c7]/80">
+                <p className="text-sm text-[#f5f8f6]/80">
                   Sign in as an Administrator, Examiner, or Candidate, or register a student account linked to your class and section.
                 </p>
               </div>
@@ -297,7 +297,7 @@ export default function HomePage() {
                 <Link href="/login">
                   <button
                     type="button"
-                    className="inline-flex h-11 items-center gap-2 rounded-[2px] bg-[#fbe9c7] px-5 text-sm font-semibold text-[#2a1f0e] hover:bg-[#f3c874] transition-colors cursor-pointer"
+                    className="inline-flex h-11 items-center gap-2 rounded-[2px] bg-[#f5f8f6] px-5 text-sm font-semibold text-[#15201d] hover:bg-[#6ee7b7] transition-colors cursor-pointer"
                   >
                     Open Portal
                     <ArrowRight className="h-4 w-4" />
@@ -306,7 +306,7 @@ export default function HomePage() {
                 <Link href="/register">
                   <button
                     type="button"
-                    className="inline-flex h-11 items-center gap-2 rounded-[2px] border border-[#fbe9c7]/35 bg-transparent px-5 text-sm font-semibold text-[#fbe9c7] hover:bg-[#fbe9c7]/10 transition-colors cursor-pointer"
+                    className="inline-flex h-11 items-center gap-2 rounded-[2px] border border-[#f5f8f6]/35 bg-transparent px-5 text-sm font-semibold text-[#f5f8f6] hover:bg-[#f5f8f6]/10 transition-colors cursor-pointer"
                   >
                     Student Sign Up
                   </button>

@@ -220,11 +220,11 @@ export function AppShell({
     return (
       <div className="flex min-h-screen bg-background">
         <aside className="hidden lg:flex w-56 shrink-0 flex-col portal-chrome p-4 gap-4 border-r border-[var(--portal-chrome-border)]">
-          <div className="h-9 w-36 rounded-[2px] bg-[#fbe9c7]/15" />
+          <div className="h-9 w-36 rounded-[2px] bg-[#f5f8f6]/15" />
           <div className="space-y-2 pt-4">
-            <div className="h-9 w-full rounded-[2px] bg-[#fbe9c7]/12" />
-            <div className="h-9 w-full rounded-[2px] bg-[#fbe9c7]/12" />
-            <div className="h-9 w-full rounded-[2px] bg-[#fbe9c7]/12" />
+            <div className="h-9 w-full rounded-[2px] bg-[#f5f8f6]/12" />
+            <div className="h-9 w-full rounded-[2px] bg-[#f5f8f6]/12" />
+            <div className="h-9 w-full rounded-[2px] bg-[#f5f8f6]/12" />
           </div>
         </aside>
         <div className="flex-1 p-6 space-y-5">
@@ -286,7 +286,7 @@ export function AppShell({
       {groups.map((grp) => (
         <div key={grp}>
           {!isCompact && (
-            <p className="px-4 mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#fbe9c7]/50">
+            <p className="px-4 mb-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f5f8f6]/50">
               {grp}
             </p>
           )}
@@ -306,8 +306,8 @@ export function AppShell({
                         "flex h-10 items-center gap-3 px-4 text-[13.5px] font-medium transition-[background-color,color,border-color] duration-150",
                         isCompact && "justify-center px-0",
                         active
-                          ? "border-l-[3px] border-[#f3c874] bg-[#fbe9c7]/[0.1] text-[#f3c874]"
-                          : "border-l-[3px] border-transparent text-[#fbe9c7]/75 hover:bg-[#fbe9c7]/[0.05] hover:text-[#fbe9c7]"
+                          ? "border-l-[3px] border-[#6ee7b7] bg-[#f5f8f6]/[0.1] text-[#6ee7b7]"
+                          : "border-l-[3px] border-transparent text-[#f5f8f6]/75 hover:bg-[#f5f8f6]/[0.05] hover:text-[#f5f8f6]"
                       )}
                     >
                       {item.icon}
@@ -343,10 +343,10 @@ export function AppShell({
             <BrandMark className="h-8 w-8" />
             {!collapsed && (
               <div className="leading-tight min-w-0">
-                <p className="font-display text-sm font-bold tracking-wide text-[#fbe9c7] truncate">
+                <p className="font-display text-sm font-bold tracking-wide text-[#f5f8f6] truncate">
                   NIIT EMS
                 </p>
-                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#fbe9c7]/60">
+                <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#f5f8f6]/60">
                   {roleSubLabel}
                 </p>
               </div>
@@ -357,7 +357,7 @@ export function AppShell({
             type="button"
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className="flex h-7 w-7 items-center justify-center rounded-[2px] text-[#fbe9c7]/65 hover:bg-[#fbe9c7]/10 hover:text-[#fbe9c7] transition-colors cursor-pointer"
+            className="flex h-7 w-7 items-center justify-center rounded-[2px] text-[#f5f8f6]/65 hover:bg-[#f5f8f6]/10 hover:text-[#f5f8f6] transition-colors cursor-pointer"
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
@@ -372,19 +372,19 @@ export function AppShell({
           <Link
             href="/profile"
             className={cn(
-              "flex items-center gap-2.5 rounded-[2px] border border-[#fbe9c7]/15 bg-[#fbe9c7]/[0.05] p-2.5 hover:bg-[#fbe9c7]/[0.1] transition-colors",
+              "flex items-center gap-2.5 rounded-[2px] border border-[#f5f8f6]/15 bg-[#f5f8f6]/[0.05] p-2.5 hover:bg-[#f5f8f6]/[0.1] transition-colors",
               collapsed && "justify-center p-2"
             )}
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#f3c874] font-display text-xs font-bold text-[#241a0b]">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#6ee7b7] font-display text-xs font-bold text-[#0b2922]">
               {initial}
             </span>
             {!collapsed && (
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-xs font-semibold uppercase tracking-wide text-[#fbe9c7]">
+                <p className="truncate text-xs font-semibold uppercase tracking-wide text-[#f5f8f6]">
                   {user.name}
                 </p>
-                <p className="truncate text-[11px] text-[#fbe9c7]/60">{user.email}</p>
+                <p className="truncate text-[11px] text-[#f5f8f6]/60">{user.email}</p>
               </div>
             )}
           </Link>
@@ -478,8 +478,8 @@ export function AppShell({
                 >
                   <BrandMark className="h-8 w-8" />
                   <div className="leading-tight">
-                    <p className="font-display text-sm font-bold text-[#fbe9c7]">NIIT EMS</p>
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#fbe9c7]/60">
+                    <p className="font-display text-sm font-bold text-[#f5f8f6]">NIIT EMS</p>
+                    <p className="text-[10px] uppercase tracking-[0.14em] text-[#f5f8f6]/60">
                       {roleSubLabel}
                     </p>
                   </div>
@@ -488,7 +488,7 @@ export function AppShell({
                   type="button"
                   aria-label="Close navigation menu"
                   onClick={() => setDrawerOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center text-[#fbe9c7]/75 hover:text-[#fbe9c7] cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center text-[#f5f8f6]/75 hover:text-[#f5f8f6] cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -503,7 +503,7 @@ export function AppShell({
                     setDrawerOpen(false);
                     signOut();
                   }}
-                  className="flex w-full items-center justify-center gap-2 rounded-[2px] border border-[#fbe9c7]/20 bg-[#fbe9c7]/10 px-3 py-2 text-xs font-medium text-[#fbe9c7] hover:bg-[#fbe9c7]/15 cursor-pointer"
+                  className="flex w-full items-center justify-center gap-2 rounded-[2px] border border-[#f5f8f6]/20 bg-[#f5f8f6]/10 px-3 py-2 text-xs font-medium text-[#f5f8f6] hover:bg-[#f5f8f6]/15 cursor-pointer"
                 >
                   <LogOut className="h-3.5 w-3.5" /> Sign Out
                 </button>

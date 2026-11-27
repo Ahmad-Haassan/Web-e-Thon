@@ -84,13 +84,13 @@ export default function ProfilePage() {
     >
       <div className="mx-auto max-w-3xl space-y-6">
         {/* NIIT AMS Identity Banner */}
-        <section className="portal-chrome rounded-sm border border-[#f3c874]/25 p-5 sm:p-6">
+        <section className="portal-chrome rounded-sm border border-[#6ee7b7]/25 p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#f3c874] bg-[#fbe9c7]/15 font-display text-xl font-bold text-[#fbe9c7]">
+            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#6ee7b7] bg-[#f5f8f6]/15 font-display text-xl font-bold text-[#f5f8f6]">
               {initials}
               <span
                 title={user?.email_verified ? "Email Verified" : "Email Pending Verification"}
-                className={`absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#312411] ${
+                className={`absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#0b2922] ${
                   user?.email_verified
                     ? "bg-verified text-white"
                     : "bg-warning text-white"
@@ -105,18 +105,18 @@ export default function ProfilePage() {
             </div>
 
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#f3c874]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6ee7b7]">
                 NIIT Institutional Identity
               </p>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="font-display text-xl font-bold uppercase tracking-wide text-[#fbe9c7] truncate">
+                <h2 className="font-display text-xl font-bold uppercase tracking-wide text-[#f5f8f6] truncate">
                   {user?.name ?? "Loading…"}
                 </h2>
-                <span className="rounded-full border border-[#f3c874]/40 bg-[#f3c874]/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#f3c874]">
+                <span className="rounded-full border border-[#6ee7b7]/40 bg-[#6ee7b7]/15 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em] text-[#6ee7b7]">
                   {user?.role}
                 </span>
               </div>
-              <p className="font-mono text-xs text-[#fbe9c7]/80 truncate">{user?.email}</p>
+              <p className="font-mono text-xs text-[#f5f8f6]/80 truncate">{user?.email}</p>
             </div>
           </div>
         </section>

@@ -78,7 +78,7 @@ export function LiveMonitoringPanel({
                 <Badge tone="verified">Live</Badge>
               </div>
             </div>
-            <div className="rounded-2xl border border-blue-100 bg-surface p-4 shadow-2xs">
+            <div className="rounded-2xl border border-[#e6f1ec] bg-surface p-4 shadow-2xs">
               <p className="text-xs font-semibold uppercase text-slate-400">Submitted</p>
               <p className="mt-1 text-2xl font-bold text-accent">{activeExam.submittedCount}</p>
             </div>

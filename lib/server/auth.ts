@@ -28,11 +28,26 @@ export function handleRouteError(err: unknown) {
 }
 
 /**
- * Verifies the Supabase session (via Authorization Bearer token OR SSR cookies),
- * resolves the app user in public.users, lazily creates CANDIDATE row on first login,
- * and blocks deactivated users (active = false).
+ * Emails that are automatically approved as active CANDIDATE (Student) on first login/signup
+ * (both Gmail OAuth and email/password). All other newly registered emails enter the
+ * Waiting Approval queue (`active = false`) until an Admin approves and assigns their role.
  */
-export async function requireAuth(req: NextRequest): Promise<AppUser> {
+export const AUTO_APPROVED_STUDENT_EMAILS = new Set([
+  "ahmadd557125@gmail.com",
+  "noman4arshad@gmail.com",
+]);
+
+/**
+ * Verifies the Supabase session (via Authorization Bearer token OR SSR cookies),
+ * resolves the app user in public.users, lazily creates a CANDIDATE row on first login
+ * (active = true only for AUTO_APPROVED_STUDENT_EMAILS; active = false for all other
+ * new accounts so they enter the Admin Waiting Approval queue),
+ * and blocks pending/deactivated users (active = false) unless `allowInactive` is true.
+ */
+export async function requireAuth(
+  req: NextRequest,
+  options?: { allowInactive?: boolean }
+): Promise<AppUser> {
   const service = getServiceSupabase();
   const authHeader = req.headers.get("authorization");
   const bearerToken = authHeader?.startsWith("Bearer ")
@@ -117,6 +132,7 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
     }
 
     if (!appUser) {
+      const isAutoApproved = AUTO_APPROVED_STUDENT_EMAILS.has(normalizedEmail);
       const { data: created, error: createErr } = await service
         .from("users")
         .insert({
@@ -124,7 +140,7 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
           email: normalizedEmail,
           name: rawName,
           role: "CANDIDATE",
-          active: true,
+          active: isAutoApproved,
           phone: metaPhone,
           class_name: metaClass,
           section: metaSection,
@@ -142,7 +158,7 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
             email: normalizedEmail,
             name: rawName,
             role: "CANDIDATE",
-            active: true,
+            active: isAutoApproved,
           })
           .select("*")
           .single();
@@ -157,8 +173,11 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
     }
   }
 
-  if (!appUser.active) {
-    throw new HttpError(403, "Account is deactivated");
+  if (!appUser.active && !options?.allowInactive) {
+    throw new HttpError(
+      403,
+      "Your account is in the Waiting Approval queue. An Administrator will approve and assign your role."
+    );
   }
 
   return {

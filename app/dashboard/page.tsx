@@ -13,6 +13,8 @@ export default function DashboardRedirectPage() {
     if (loading) return;
     if (!user) {
       router.replace("/login");
+    } else if (!user.active) {
+      router.replace("/pending-approval");
     } else {
       router.replace(roleHomePath(user.role));
     }

@@ -134,9 +134,9 @@ export default function ExaminerDashboardPage() {
 
   if (loading || !user || !isAllowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f6fb]">
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f6f5]">
         <div className="flex items-center gap-3 text-sm text-slate-600">
-          <Spinner className="h-5 w-5 text-blue-600" />
+          <Spinner className="h-5 w-5 text-[#1b4d3e]" />
           Loading Examiner Portal…
         </div>
       </div>
@@ -177,7 +177,7 @@ export default function ExaminerDashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f4f6fb] text-slate-900">
+    <div className="flex min-h-screen bg-[#f5f6f5] text-slate-900">
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 bg-slate-950/60 lg:hidden"
@@ -187,7 +187,7 @@ export default function ExaminerDashboardPage() {
 
       {/* Left Dark Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#141824] text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#113b32] text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -220,7 +220,7 @@ export default function ExaminerDashboardPage() {
             }}
             className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
               activeTab === "dashboard"
-                ? "bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white shadow-md shadow-blue-950/40"
+                ? "bg-gradient-to-r from-[#1b4d3e] to-[#215347] text-white shadow-md shadow-emerald-950/40"
                 : "text-slate-300 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -236,7 +236,7 @@ export default function ExaminerDashboardPage() {
             }}
             className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
               activeTab === "exams"
-                ? "bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white shadow-md shadow-blue-950/40"
+                ? "bg-gradient-to-r from-[#1b4d3e] to-[#215347] text-white shadow-md shadow-emerald-950/40"
                 : "text-slate-300 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -291,7 +291,7 @@ export default function ExaminerDashboardPage() {
             }}
             className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
               activeTab === "settings"
-                ? "bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white shadow-md shadow-blue-950/40"
+                ? "bg-gradient-to-r from-[#1b4d3e] to-[#215347] text-white shadow-md shadow-emerald-950/40"
                 : "text-slate-300 hover:bg-white/5 hover:text-white"
             }`}
           >
@@ -301,7 +301,7 @@ export default function ExaminerDashboardPage() {
         </nav>
 
         <div className="space-y-2.5 p-4">
-          <div className="rounded-xl border border-white/10 bg-[#1d2233] p-3.5">
+          <div className="rounded-xl border border-white/10 bg-[#1a4a3f] p-3.5">
             <div className="flex items-center gap-2 text-xs font-semibold">
               <span
                 className={`h-2.5 w-2.5 rounded-full ${isOnline ? "bg-emerald-400" : "bg-amber-400"}`}
@@ -318,7 +318,7 @@ export default function ExaminerDashboardPage() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#1d2233] px-3.5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#1a4a3f] px-3.5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white cursor-pointer"
           >
             <LogOut className="h-4 w-4 text-slate-400" />
             <span>Logout</span>
@@ -347,7 +347,7 @@ export default function ExaminerDashboardPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search exams..."
-                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#1e8e5a] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e6f1ec]"
               />
             </div>
           </div>
@@ -385,7 +385,7 @@ export default function ExaminerDashboardPage() {
                     </p>
                     <Link
                       href="/disputes"
-                      className="inline-flex items-center gap-1 pt-1 font-semibold text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-1 pt-1 font-semibold text-[#1b4d3e] hover:underline"
                     >
                       Review disputes <ArrowRight className="h-3 w-3" />
                     </Link>
@@ -404,7 +404,7 @@ export default function ExaminerDashboardPage() {
                 }}
                 className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-slate-100 cursor-pointer"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#312e81] text-xs font-bold text-white">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1b4d3e] text-xs font-bold text-white">
                   {initialsOf(user.name)}
                 </span>
                 <span className="hidden text-sm font-medium text-slate-700 sm:inline">
@@ -423,7 +423,7 @@ export default function ExaminerDashboardPage() {
                     {user.role === "ADMIN" && (
                       <Link
                         href="/admin"
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#143b30] hover:bg-[#eef5f1]"
                       >
                         <ShieldCheck className="h-4 w-4" /> Admin Panel
                       </Link>
@@ -458,7 +458,7 @@ export default function ExaminerDashboardPage() {
         <main className="flex-1 p-4 sm:p-7">
           {examsQuery.isLoading ? (
             <div className="flex items-center justify-center gap-2 py-20 text-sm text-slate-500">
-              <Spinner className="h-5 w-5 text-blue-600" /> Loading your exams…
+              <Spinner className="h-5 w-5 text-[#1b4d3e]" /> Loading your exams…
             </div>
           ) : examsQuery.error ? (
             <div className="mx-auto max-w-4xl rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
@@ -467,7 +467,7 @@ export default function ExaminerDashboardPage() {
           ) : activeTab === "dashboard" ? (
             <div className="mx-auto max-w-6xl space-y-6">
               {/* Hero Welcome Banner */}
-              <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-r from-[#e8f0ff] via-[#dfe9ff] to-[#d6e4ff] px-6 py-7 sm:px-9 sm:py-8">
+              <div className="relative overflow-hidden rounded-3xl border border-[#e6f1ec] bg-gradient-to-r from-[#e6f1ec] via-[#edf5f1] to-[#dcebe4] px-6 py-7 sm:px-9 sm:py-8">
                 <div className="relative z-10 max-w-xl">
                   <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                     Welcome back, {firstName}!
@@ -478,13 +478,13 @@ export default function ExaminerDashboardPage() {
                   <div className="mt-4 flex flex-wrap items-center gap-2.5">
                     <Link
                       href="/examiner/exams/new"
-                      className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+                      className="inline-flex items-center gap-2 rounded-xl bg-[#1b4d3e] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#143b30]"
                     >
                       <Plus className="h-4 w-4" /> Create New Exam
                     </Link>
                     <Link
                       href="/examiner/questions"
-                      className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-white/90 px-4 py-2 text-xs font-semibold text-blue-700 hover:bg-white"
+                      className="inline-flex items-center gap-2 rounded-xl border border-[#c7dfd4] bg-white/90 px-4 py-2 text-xs font-semibold text-[#143b30] hover:bg-white"
                     >
                       <BookOpen className="h-4 w-4" /> Question Bank
                     </Link>
@@ -496,9 +496,9 @@ export default function ExaminerDashboardPage() {
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-lg shadow-teal-500/20">
                     <ShieldCheck className="h-9 w-9" />
                   </div>
-                  <div className="flex h-24 w-32 flex-col items-center justify-center rounded-2xl border border-blue-200/70 bg-white/75 backdrop-blur-xs shadow-sm">
-                    <ClipboardList className="h-10 w-10 text-blue-700" />
-                    <span className="mt-1 text-[10px] font-semibold text-blue-700">
+                  <div className="flex h-24 w-32 flex-col items-center justify-center rounded-2xl border border-[#c7dfd4]/70 bg-white/75 backdrop-blur-xs shadow-sm">
+                    <ClipboardList className="h-10 w-10 text-[#143b30]" />
+                    <span className="mt-1 text-[10px] font-semibold text-[#143b30]">
                       Live Monitor
                     </span>
                   </div>
@@ -513,13 +513,13 @@ export default function ExaminerDashboardPage() {
                   <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
                     <div className="mb-4 flex items-center justify-between">
                       <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                        <Activity className="h-4.5 w-4.5 text-blue-600" />
+                        <Activity className="h-4.5 w-4.5 text-[#1b4d3e]" />
                         Active &amp; Live Exams
                       </h2>
                       <button
                         type="button"
                         onClick={() => setActiveTab("exams")}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#1b4d3e] hover:text-[#143b30] cursor-pointer"
                       >
                         View All <ArrowRight className="h-3.5 w-3.5" />
                       </button>
@@ -540,14 +540,14 @@ export default function ExaminerDashboardPage() {
                             >
                               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div className="flex items-start gap-4">
-                                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600">
+                                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e6f1ec] to-[#e6f1ec] text-[#1b4d3e]">
                                     <ClipboardList className="h-8 w-8" />
                                   </div>
                                   <div>
                                     <div className="flex flex-wrap items-center gap-2">
                                       <Link
                                         href={`/examiner/exams/${exam.id}`}
-                                        className="text-base font-bold text-slate-900 hover:text-blue-600"
+                                        className="text-base font-bold text-slate-900 hover:text-[#1b4d3e]"
                                       >
                                         {exam.title}
                                       </Link>
@@ -556,7 +556,7 @@ export default function ExaminerDashboardPage() {
                                         Live Now
                                       </span>
                                       {published && (
-                                        <span className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700">
+                                        <span className="rounded-full bg-[#eef5f1] px-2.5 py-0.5 text-[11px] font-semibold text-[#143b30]">
                                           Results Published
                                         </span>
                                       )}
@@ -583,7 +583,7 @@ export default function ExaminerDashboardPage() {
                                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                                   <Link
                                     href={`/examiner/exams/${exam.id}?tab=monitor`}
-                                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm shadow-blue-200 hover:bg-blue-700"
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#1b4d3e] px-4 py-2.5 text-xs font-semibold text-white shadow-sm shadow-[#c7dfd4] hover:bg-[#143b30]"
                                   >
                                     <Activity className="h-4 w-4" /> Live Monitor
                                   </Link>
@@ -626,7 +626,7 @@ export default function ExaminerDashboardPage() {
                   {/* Upcoming & Draft Exams */}
                   <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
                     <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <Clock className="h-4.5 w-4.5 text-blue-600" />
+                      <Clock className="h-4.5 w-4.5 text-[#1b4d3e]" />
                       Upcoming &amp; Draft Exams
                     </h2>
                     {upcomingOrDraft.length === 0 ? (
@@ -641,10 +641,10 @@ export default function ExaminerDashboardPage() {
                             <Link
                               key={exam.id}
                               href={`/examiner/exams/${exam.id}`}
-                              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3.5 transition hover:border-blue-200 hover:bg-blue-50/40"
+                              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3.5 transition hover:border-[#c7dfd4] hover:bg-[#eef5f1]/40"
                             >
                               <div className="flex items-center gap-3.5">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e6f1ec] text-[#1b4d3e]">
                                   <FileText className="h-5 w-5" />
                                 </span>
                                 <div>
@@ -668,7 +668,7 @@ export default function ExaminerDashboardPage() {
                   {/* Recent Completed / Disputes Activity */}
                   <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
                     <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-blue-600" />
+                      <CheckCircle2 className="h-4.5 w-4.5 text-[#1b4d3e]" />
                       Recent Activity &amp; Disputes
                     </h2>
                     {completedExams.length === 0 && openDisputes.length === 0 ? (
@@ -735,7 +735,7 @@ export default function ExaminerDashboardPage() {
                   {/* Quick Examiner Tools */}
                   <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
                     <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <Zap className="h-4.5 w-4.5 text-blue-600" />
+                      <Zap className="h-4.5 w-4.5 text-[#1b4d3e]" />
                       Examiner Toolkit
                     </h2>
                     <div className="space-y-3">
@@ -743,7 +743,7 @@ export default function ExaminerDashboardPage() {
                         href="/examiner/exams/new"
                         className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-slate-50"
                       >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eef5f1] text-[#1b4d3e]">
                           <Plus className="h-5 w-5" />
                         </span>
                         <div>
@@ -755,7 +755,7 @@ export default function ExaminerDashboardPage() {
                         href="/examiner/questions"
                         className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-slate-50"
                       >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eef5f1] text-[#1b4d3e]">
                           <BookOpen className="h-5 w-5" />
                         </span>
                         <div>
@@ -790,7 +790,7 @@ export default function ExaminerDashboardPage() {
                       <button
                         type="button"
                         onClick={() => setActiveTab("exams")}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#1b4d3e] hover:text-[#143b30] cursor-pointer"
                       >
                         View All <ArrowRight className="h-3.5 w-3.5" />
                       </button>
@@ -834,13 +834,13 @@ export default function ExaminerDashboardPage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1.5 text-slate-600">
-                            <span className="h-2 w-2 rounded-full bg-blue-500" /> Total Exams
+                            <span className="h-2 w-2 rounded-full bg-[#1e8e5a]" /> Total Exams
                           </span>
                           <span className="font-bold text-slate-900">{allExams.length}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1.5 text-slate-600">
-                            <span className="h-2 w-2 rounded-full bg-violet-500" /> Results Published
+                            <span className="h-2 w-2 rounded-full bg-[#1e8e5a]" /> Results Published
                           </span>
                           <span className="font-bold text-slate-900">{resultsPublishedCount}</span>
                         </div>
@@ -849,11 +849,11 @@ export default function ExaminerDashboardPage() {
                   </div>
 
                   {/* Public Audit Verification Card with QR */}
-                  <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-[#f3f0ff] to-[#ebe8ff] p-5">
+                  <div className="rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#dcebe4] p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1b4d3e] text-white">
                             <ShieldCheck className="h-4 w-4" />
                           </span>
                           Verify Exam Audit
@@ -863,7 +863,7 @@ export default function ExaminerDashboardPage() {
                         </p>
                         <Link
                           href={featuredExam ? `/verify?examId=${encodeURIComponent(featuredExam.id)}` : "/verify"}
-                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-indigo-700 shadow-2xs hover:bg-indigo-50"
+                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl border border-[#c7dfd4] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#143b30] shadow-2xs hover:bg-[#eef5f1]"
                         >
                           Verify Now <ArrowRight className="h-3.5 w-3.5" />
                         </Link>
@@ -915,7 +915,7 @@ export default function ExaminerDashboardPage() {
                           </div>
                           <Link
                             href={`/examiner/exams/${exam.id}`}
-                            className="text-base font-bold text-slate-900 hover:text-blue-600"
+                            className="text-base font-bold text-slate-900 hover:text-[#1b4d3e]"
                           >
                             {exam.title}
                           </Link>
