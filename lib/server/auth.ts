@@ -74,11 +74,13 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
   const isEmailConfirmed = Boolean(authUser.email_confirmed_at);
 
   if (!appUser) {
-    // Self-registration ALWAYS creates CANDIDATE only (never trust user_metadata for role)
-    const fallbackName =
-      typeof authUser.user_metadata?.name === "string" && authUser.user_metadata.name.trim()
-        ? authUser.user_metadata.name.trim()
-        : (authUser.email?.split("@")[0] ?? "Candidate");
+    // Self-registration (email or Google OAuth) ALWAYS creates CANDIDATE only
+    const rawName =
+      typeof authUser.user_metadata?.full_name === "string" && authUser.user_metadata.full_name.trim()
+        ? authUser.user_metadata.full_name.trim()
+        : typeof authUser.user_metadata?.name === "string" && authUser.user_metadata.name.trim()
+          ? authUser.user_metadata.name.trim()
+          : (authUser.email?.split("@")[0] ?? "Candidate");
 
     const metaPhone =
       typeof authUser.user_metadata?.phone === "string" && authUser.user_metadata.phone.trim()
@@ -93,26 +95,66 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
         ? authUser.user_metadata.section.trim()
         : null;
 
-    const { data: created, error: createErr } = await service
-      .from("users")
-      .insert({
-        supabase_user_id: authUser.id,
-        email: authUser.email ?? `${authUser.id}@unknown.local`,
-        name: fallbackName,
-        role: "CANDIDATE",
-        active: true,
-        phone: metaPhone,
-        class_name: metaClass,
-        section: metaSection,
-        email_verified: isEmailConfirmed,
-      })
-      .select("*")
-      .single();
+    const normalizedEmail = authUser.email?.trim().toLowerCase() ?? `${authUser.id}@unknown.local`;
 
-    if (createErr || !created) {
-      throw new HttpError(500, "Failed to initialize user profile");
+    // If a user row already exists with this email (e.g. pre-enrolled or seeded), link supabase_user_id
+    if (authUser.email) {
+      const { data: existingByEmail } = await service
+        .from("users")
+        .select("*")
+        .ilike("email", normalizedEmail)
+        .maybeSingle();
+
+      if (existingByEmail) {
+        const { data: linked } = await service
+          .from("users")
+          .update({ supabase_user_id: authUser.id })
+          .eq("id", existingByEmail.id)
+          .select("*")
+          .single();
+        appUser = linked ?? existingByEmail;
+      }
     }
-    appUser = created;
+
+    if (!appUser) {
+      const { data: created, error: createErr } = await service
+        .from("users")
+        .insert({
+          supabase_user_id: authUser.id,
+          email: normalizedEmail,
+          name: rawName,
+          role: "CANDIDATE",
+          active: true,
+          phone: metaPhone,
+          class_name: metaClass,
+          section: metaSection,
+          email_verified: isEmailConfirmed,
+        })
+        .select("*")
+        .single();
+
+      if (createErr || !created) {
+        // Fallback if migration 0003 optional columns are not yet applied in DB
+        const { data: fallbackCreated, error: fallbackErr } = await service
+          .from("users")
+          .insert({
+            supabase_user_id: authUser.id,
+            email: normalizedEmail,
+            name: rawName,
+            role: "CANDIDATE",
+            active: true,
+          })
+          .select("*")
+          .single();
+
+        if (fallbackErr || !fallbackCreated) {
+          throw new HttpError(500, "Failed to initialize user profile");
+        }
+        appUser = fallbackCreated;
+      } else {
+        appUser = created;
+      }
+    }
   }
 
   if (!appUser.active) {

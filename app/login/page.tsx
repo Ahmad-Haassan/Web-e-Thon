@@ -25,29 +25,97 @@ import {
 } from "@/components/ui/primitives";
 
 const PORTAL_FEATURES = [
-  { icon: BookOpen, label: "Courses, classes, question banks & blueprints" },
-  { icon: ClipboardCheck, label: "Examinations, datesheets, admit cards & results" },
-  { icon: ShieldCheck, label: "Offline-resilient saves & SHA-256 receipts" },
-  { icon: GraduationCap, label: "Student, Examiner & Administrator portals" },
+  { icon: BookOpen, label: "Question banks, fair blueprint randomization & frozen paper snapshots" },
+  { icon: ClipboardCheck, label: "Failure-resilient offline answer sync & server-authoritative timing" },
+  { icon: ShieldCheck, label: "Cryptographic SHA-256 receipts, evidence timelines & public QR verification" },
+  { icon: GraduationCap, label: "Role-based Candidate, Examiner & Administrator portals with live monitoring" },
 ];
+
+function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.56-5.16 3.56-8.86z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.07 7.93-2.91l-3.87-3c-1.07.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.1A12 12 0 0 0 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.57.38-2.29V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.1z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.76 0 3.34.61 4.58 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.1c.95-2.84 3.6-4.96 6.72-4.96z"
+      />
+    </svg>
+  );
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next");
+  const oauthErrorParam = searchParams.get("error");
   const { user, loading, refreshUser } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState<string | null>(oauthErrorParam);
+
+  useEffect(() => {
+    if (oauthErrorParam) {
+      setError(oauthErrorParam);
+    }
+  }, [oauthErrorParam]);
 
   useEffect(() => {
     if (!loading && user) {
       router.replace(nextPath && nextPath.startsWith("/") ? nextPath : roleHomePath(user.role));
     }
   }, [user, loading, router, nextPath]);
+
+  async function handleGoogleSignIn() {
+    setError(null);
+    if (!isSupabaseConfigured()) {
+      setError(
+        "Supabase environment variables are missing. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      );
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      const supabase = getBrowserSupabase();
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      if (nextPath && nextPath.startsWith("/")) {
+        callbackUrl.searchParams.set("next", nextPath);
+      }
+
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: callbackUrl.toString(),
+          queryParams: {
+            prompt: "select_account",
+          },
+        },
+      });
+
+      if (oauthError) {
+        setError(oauthError.message);
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to start Google sign-in");
+      setGoogleLoading(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -130,7 +198,7 @@ function LoginForm() {
             </h1>
 
             <p className="max-w-lg text-sm sm:text-base text-ink-muted leading-relaxed">
-              Student lifecycle, courses, offline-resilient exams, datesheets, and verifiable results — every assessment workflow in one institutional portal.
+              The exam system examiners can defend and students can trust — even when the internet fails. Offline-resilient answer sync, fair blueprint randomization, and cryptographically verifiable results.
             </p>
 
             <ul className="space-y-3 pt-1">
@@ -230,7 +298,7 @@ function LoginForm() {
                   </Link>
                 </div>
 
-                <Button type="submit" className="w-full h-11 shadow-md" disabled={submitting}>
+                <Button type="submit" className="w-full h-11 shadow-md" disabled={submitting || googleLoading}>
                   {submitting ? (
                     <>
                       <Spinner /> Signing In…
@@ -240,6 +308,34 @@ function LoginForm() {
                   )}
                 </Button>
               </form>
+
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                  <span className="bg-surface px-3 text-ink-subtle">Or continue with Gmail</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={submitting || googleLoading}
+                className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[2px] border border-border-strong bg-surface-subtle px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
+              >
+                {googleLoading ? (
+                  <>
+                    <Spinner className="h-4 w-4" />
+                    <span>Redirecting to Google…</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon className="h-4 w-4" />
+                    <span>Continue with Google (Gmail)</span>
+                  </>
+                )}
+              </button>
 
               <div className="mt-7 border-t border-border pt-5 text-center space-y-1.5 text-[11px] text-ink-subtle">
                 <p>https://niit.edu.pk</p>

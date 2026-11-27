@@ -28,6 +28,29 @@ import {
 const DEFAULT_CLASSES = ["IX", "X", "XI", "XII", "BSCS-1", "BSCS-2", "BSCS-3", "BSCS-4", "BSSE-4"];
 const DEFAULT_SECTIONS = ["A", "B", "C", "D"];
 
+function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        fill="#4285F4"
+        d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.56-5.16 3.56-8.86z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.95-1.07 7.93-2.91l-3.87-3c-1.07.72-2.45 1.15-4.06 1.15-3.12 0-5.77-2.11-6.72-4.95H1.28v3.1A12 12 0 0 0 12 24z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.28 14.29A7.2 7.2 0 0 1 4.9 12c0-.79.14-1.57.38-2.29V6.61H1.28A12 12 0 0 0 0 12c0 1.94.46 3.77 1.28 5.39l4-3.1z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.75c1.76 0 3.34.61 4.58 1.8l3.44-3.44C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.28 6.61l4 3.1c.95-2.84 3.6-4.96 6.72-4.96z"
+      />
+    </svg>
+  );
+}
+
 export default function RegisterPage() {
   const router = useRouter();
   const { refreshUser } = useAuth();
@@ -40,8 +63,41 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [needsEmailConfirm, setNeedsEmailConfirm] = useState(false);
+
+  async function handleGoogleSignUp() {
+    setError(null);
+    if (!isSupabaseConfigured()) {
+      setError(
+        "Supabase environment variables are missing. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      );
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      const supabase = getBrowserSupabase();
+      const callbackUrl = new URL("/auth/callback", window.location.origin);
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: callbackUrl.toString(),
+          queryParams: {
+            prompt: "select_account",
+          },
+        },
+      });
+      if (oauthError) {
+        setError(oauthError.message);
+        setGoogleLoading(false);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to start Google sign-in");
+      setGoogleLoading(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -294,7 +350,7 @@ export default function RegisterPage() {
                       </div>
                     </div>
 
-                    <Button type="submit" className="w-full h-11 shadow-md" disabled={submitting}>
+                    <Button type="submit" className="w-full h-11 shadow-md" disabled={submitting || googleLoading}>
                       {submitting ? (
                         <>
                           <Spinner /> Creating Account…
@@ -306,6 +362,34 @@ export default function RegisterPage() {
                       )}
                     </Button>
                   </form>
+
+                  <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                      <span className="bg-surface px-3 text-ink-subtle">Or continue with Gmail</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignUp}
+                    disabled={submitting || googleLoading}
+                    className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[2px] border border-border-strong bg-surface-subtle px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
+                  >
+                    {googleLoading ? (
+                      <>
+                        <Spinner className="h-4 w-4" />
+                        <span>Redirecting to Google…</span>
+                      </>
+                    ) : (
+                      <>
+                        <GoogleIcon className="h-4 w-4" />
+                        <span>Continue with Google (Gmail)</span>
+                      </>
+                    )}
+                  </button>
 
                   <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-xs text-ink-muted">
                     <span>Already have a portal account?</span>
