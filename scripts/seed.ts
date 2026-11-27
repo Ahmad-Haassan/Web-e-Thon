@@ -334,11 +334,32 @@ async function seed() {
     const startAt = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
     const endAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
-    const { data: exam, error: exErr } = await supabase
+    const baseExamInsert = {
+      owner_id: examiner.id,
+      title: examTitle,
+      instructions:
+        "Answer all questions. Your answers are saved locally first and cryptographically receipted on sync. Integrity indicators are logged transparently (indicators, not proof).",
+      start_at: startAt,
+      end_at: endAt,
+      duration_min: 30,
+      total_marks: 24,
+      status: "PUBLISHED",
+      shuffle_questions: true,
+      shuffle_options: true,
+      blueprint: [
+        { difficulty: 1, count: 4 },
+        { difficulty: 2, count: 3 },
+        { difficulty: 3, count: 2 },
+      ],
+      grace_sec: 15,
+      seed_secret: seedSecret,
+      seed_commitment: seedCommitment,
+    };
+
+    let { data: exam, error: exErr } = await supabase
       .from("exams")
       .insert({
-        owner_id: examiner.id,
-        title: examTitle,
+        ...baseExamInsert,
         category: "Computer Science",
         class_name: "BSCS-4",
         section: "A",
@@ -348,27 +369,16 @@ async function seed() {
           "Use Flag / Review to revisit uncertain questions or Clear Response to reset a choice.",
           "If Wi-Fi drops, keep answering—responses queue locally in IndexedDB and sync automatically.",
         ],
-        instructions:
-          "Answer all questions. Your answers are saved locally first and cryptographically receipted on sync. Integrity indicators are logged transparently (indicators, not proof).",
-        start_at: startAt,
-        end_at: endAt,
-        duration_min: 30,
-        total_marks: 24,
-        status: "PUBLISHED",
-        shuffle_questions: true,
-        shuffle_options: true,
-        blueprint: [
-          { difficulty: 1, count: 4 },
-          { difficulty: 2, count: 3 },
-          { difficulty: 3, count: 2 },
-        ],
-        grace_sec: 15,
-        seed_secret: seedSecret,
-        seed_commitment: seedCommitment,
       })
       .select()
       .single();
-    if (exErr) throw exErr;
+
+    if (exErr) {
+      const fb = await supabase.from("exams").insert(baseExamInsert).select().single();
+      exam = fb.data;
+      exErr = fb.error;
+    }
+    if (exErr || !exam) throw exErr ?? new Error("Failed creating demo exam");
     examId = exam.id;
 
     // Attach all questions to the exam pool
