@@ -139,6 +139,111 @@ export const api = {
   },
 
   admin: {
+    overview: (days: 7 | 30 = 7) =>
+      apiFetch<{
+        stats: {
+          totalStudents: number;
+          activeStudents: number;
+          totalExaminers: number;
+          totalUsers: number;
+          totalExams: number;
+          publishedExams: number;
+          ongoingExams: number;
+          totalAttempts: number;
+          gradedAttempts: number;
+          inProgressAttempts: number;
+          totalQuestions: number;
+          openDisputes: number;
+          platformHealthPct: number;
+        };
+        recentActivities: Array<{
+          id: string;
+          kind: "exam" | "submit" | "user" | "publish" | "dispute" | "security";
+          title: string;
+          subtitle: string;
+          at: string;
+        }>;
+        analyticsSeries: Array<{
+          label: string;
+          date: string;
+          examAttempts: number;
+          activeUsers: number;
+        }>;
+        examBreakdown: Array<{
+          id: string;
+          title: string;
+          status: string;
+          lifecycle: string;
+          startAt: string;
+          endAt: string;
+          totalMarks: number;
+          resultsPublished: boolean;
+          checkpointHash: string | null;
+          enrolledCount: number;
+          attemptsCount: number;
+          submittedCount: number;
+          avgPct: number;
+          passRate: number;
+        }>;
+        notifications: {
+          unreadCount: number;
+          openDisputes: number;
+          inProgressAttempts: number;
+          recentDisputes: Array<{
+            id: string;
+            type: string;
+            status: string;
+            reason: string;
+            created_at: string;
+          }>;
+        };
+        serverNow: number;
+      }>(`/api/admin/overview?days=${days}`),
+    integrityCheck: () =>
+      apiFetch<{
+        allValid: boolean;
+        checkedAt: string;
+        attemptsChecked: number;
+        examsChecked: number;
+        answersChecked: number;
+        eventsChecked: number;
+        lockEventsChecked: number;
+        tamperedAttempts: Array<{
+          attemptId: string;
+          verifyCode: string;
+          chain: string;
+          brokenAt: number;
+        }>;
+        invalidCheckpoints: Array<{ examId: string; title: string }>;
+      }>("/api/admin/integrity-check", { method: "POST" }),
+    exportData: (format: "json" | "csv" = "json") =>
+      downloadPdf(
+        `/api/admin/export?format=${format}`,
+        `veriexam-${format === "csv" ? "results" : "backup"}-${new Date().toISOString().slice(0, 10)}.${format}`
+      ),
+    auditLogs: (params?: { entity?: string; limit?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.entity) qs.set("entity", params.entity);
+      if (params?.limit) qs.set("limit", String(params.limit));
+      const query = qs.toString() ? `?${qs.toString()}` : "";
+      return apiFetch<{
+        logs: Array<{
+          id: string;
+          actor_id: string | null;
+          action: string;
+          entity: string;
+          entity_id: string | null;
+          before: unknown;
+          after: unknown;
+          at: string;
+          users?: { id: string; name: string; email: string; role: string } | null;
+        }>;
+      }>(`/api/audit-logs${query}`);
+    },
+    finalizeExpired: () =>
+      apiFetch<{ finalizedCount: number; at: string }>("/api/cron/finalize", {
+        method: "POST",
+      }),
     listUsers: (params?: { role?: string; search?: string }) => {
       const qs = new URLSearchParams();
       if (params?.role) qs.set("role", params.role);
