@@ -2,6 +2,8 @@
 
 > *"Don't trust us. Verify us."* — An offline-resilient, cryptographically verifiable examination platform built with **Next.js (App Router) + TypeScript + Supabase**.
 
+**Live Demo:** https://web-e-thon.vercel.app
+
 ## Team Workflow (Read `plan.md` Sections 13–15)
 - **Person A (Backend — branch `person-a/backend`):** `app/api/**`, `lib/server/**`, `supabase/**`, `scripts/**`, `api.md`
 - **Person B (Frontend — branch `person-b/frontend`):** `app/(pages)/**`, `components/**`, `hooks/**`, `lib/offline/**`
