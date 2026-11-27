@@ -275,7 +275,7 @@ function ExaminerExamHubInner() {
                 ) : (
                   questions.map((q, i) => (
                     <div
-                      key={q.id}
+                      key={q.id || i}
                       className="flex items-start justify-between gap-3 rounded-lg border border-border bg-surface-subtle p-3 text-sm"
                     >
                       <div>
