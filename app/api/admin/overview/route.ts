@@ -46,9 +46,29 @@ export async function GET(req: NextRequest) {
     const allDisputes = disputes ?? [];
     const allLogs = auditLogs ?? [];
 
-    const totalStudents = allUsers.filter((u) => u.role === "CANDIDATE").length;
-    const activeStudents = allUsers.filter((u) => u.role === "CANDIDATE" && u.active).length;
+    const allStudents = allUsers.filter((u) => u.role === "CANDIDATE");
+    const totalStudents = allStudents.length;
+    const activeStudents = allStudents.filter((u) => u.active).length;
     const totalExaminers = allUsers.filter((u) => u.role === "EXAMINER").length;
+
+    const thirtyDaysAgoMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const studentsJoinedLast30Days = allStudents.filter(
+      (u) => new Date(u.created_at).getTime() >= thirtyDaysAgoMs
+    ).length;
+
+    const completedAttempts = allAttempts.filter(
+      (a) => a.status !== "IN_PROGRESS" && a.score !== null && Number(a.max_score || 0) > 0
+    );
+    const avgMarksPct = completedAttempts.length
+      ? Number(
+          (
+            completedAttempts.reduce(
+              (sum, a) => sum + (Number(a.score ?? 0) / Number(a.max_score || 1)) * 100,
+              0
+            ) / completedAttempts.length
+          ).toFixed(1)
+        )
+      : 0;
 
     const examsWithLifecycle = allExams.map((ex) => ({
       ...ex,
@@ -65,7 +85,15 @@ export async function GET(req: NextRequest) {
     // Build day-by-day Platform Analytics series (Last 7 or 30 Days)
     const now = new Date();
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const series: { label: string; date: string; examAttempts: number; activeUsers: number }[] = [];
+    const series: {
+      label: string;
+      date: string;
+      examAttempts: number;
+      activeUsers: number;
+      totalStudents: number;
+      joinedStudents: number;
+      avgMarksPct: number;
+    }[] = [];
 
     for (let offset = days - 1; offset >= 0; offset--) {
       const d = new Date(now);
@@ -81,6 +109,29 @@ export async function GET(req: NextRequest) {
         const t = new Date(a.started_at).getTime();
         return t >= dMs && t < nextMs;
       });
+
+      const dayCompleted = dayAttempts.filter(
+        (a) => a.status !== "IN_PROGRESS" && a.score !== null && Number(a.max_score || 0) > 0
+      );
+      const dayAvgMarks = dayCompleted.length
+        ? Number(
+            (
+              dayCompleted.reduce(
+                (sum, a) => sum + (Number(a.score ?? 0) / Number(a.max_score || 1)) * 100,
+                0
+              ) / dayCompleted.length
+            ).toFixed(1)
+          )
+        : avgMarksPct;
+
+      const joinedStudents = allStudents.filter((u) => {
+        const t = new Date(u.created_at).getTime();
+        return t >= dMs && t < nextMs;
+      }).length;
+
+      const cumulativeStudents = allStudents.filter(
+        (u) => new Date(u.created_at).getTime() < nextMs
+      ).length;
 
       const activeUserIds = new Set<string>();
       for (const a of allAttempts) {
@@ -102,6 +153,9 @@ export async function GET(req: NextRequest) {
         date: d.toISOString().slice(0, 10),
         examAttempts: dayAttempts.length,
         activeUsers: activeUserIds.size,
+        totalStudents: cumulativeStudents,
+        joinedStudents,
+        avgMarksPct: dayAvgMarks,
       });
     }
 
@@ -227,6 +281,8 @@ export async function GET(req: NextRequest) {
       stats: {
         totalStudents,
         activeStudents,
+        studentsJoinedLast30Days,
+        avgMarksPct,
         totalExaminers,
         totalUsers: allUsers.length,
         totalExams: allExams.length,

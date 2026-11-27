@@ -157,6 +157,8 @@ export const api = {
         stats: {
           totalStudents: number;
           activeStudents: number;
+          studentsJoinedLast30Days?: number;
+          avgMarksPct?: number;
           totalExaminers: number;
           totalUsers: number;
           totalExams: number;
@@ -181,6 +183,9 @@ export const api = {
           date: string;
           examAttempts: number;
           activeUsers: number;
+          totalStudents?: number;
+          joinedStudents?: number;
+          avgMarksPct?: number;
         }>;
         examBreakdown: Array<{
           id: string;
