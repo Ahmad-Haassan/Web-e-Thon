@@ -20,9 +20,7 @@ export async function GET(req: NextRequest) {
       .select("*, options(*), question_keys(*), categories(id, name)")
       .order("created_at", { ascending: false });
 
-    if (user.role === "EXAMINER") {
-      query = query.eq("owner_id", user.id);
-    }
+    // Institutional shared question bank: all active Examiners and Admins can view and attach questions
     if (categoryId) query = query.eq("category_id", categoryId);
     if (difficulty) query = query.eq("difficulty", Number(difficulty));
     if (type && ["SINGLE", "MULTI", "WRITTEN"].includes(type)) query = query.eq("type", type);

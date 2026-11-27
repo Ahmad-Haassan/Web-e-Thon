@@ -275,6 +275,7 @@ async function seed() {
   for (const sq of sampleQuestions) {
     const found = existingByText.get(sq.text);
     if (found) {
+      await supabase.from("questions").update({ owner_id: examiner.id }).eq("id", found.id);
       questionIds.push({ id: found.id, marks: Number(found.marks) });
       continue;
     }
@@ -390,7 +391,13 @@ async function seed() {
     }
     console.log(`  Created ongoing demo exam: ${examTitle} (${examId})`);
   } else {
-    console.log(`  Demo exam already exists: ${examId}`);
+    const startAt = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const endAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    await supabase
+      .from("exams")
+      .update({ owner_id: examiner.id, start_at: startAt, end_at: endAt, status: "PUBLISHED" })
+      .eq("id", examId);
+    console.log(`  Demo exam updated & active for examiner1: ${examId}`);
   }
 
   console.log("\nDemo credentials:");
