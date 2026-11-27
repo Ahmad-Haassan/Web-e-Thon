@@ -5,8 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { QRCodeSVG } from "qrcode.react";
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import {
   CheckCircle2,
+  Clock,
   ExternalLink,
   FileDown,
   FileWarning,
@@ -63,8 +65,24 @@ export default function AttemptResultPage() {
   const attempt = data?.attempt;
   const verifyCode = data?.verifyCode ?? (attempt ? attemptVerifyCode(attempt) : "");
   const maxScore = attempt ? attemptMaxScore(attempt) : 0;
-  const questions = data?.questionsWithExplanations ?? data?.questions ?? [];
+  const questions = data?.questionsWithExplanations ?? data?.questions ?? data?.breakdown ?? [];
   const receipts = data?.receipts ?? [];
+  const summary = data?.summary;
+  const scorePct =
+    summary?.percentage ??
+    (attempt?.score !== null && attempt?.score !== undefined && maxScore > 0
+      ? Math.round((attempt.score / maxScore) * 100)
+      : 0);
+  const totalQs = summary?.totalQuestions ?? questions.length;
+  const attemptedCount = summary?.attemptedCount ?? 0;
+  const correctCount = summary?.correctCount ?? 0;
+  const wrongCount = summary?.wrongCount ?? 0;
+  const unansweredCount = summary?.unansweredCount ?? Math.max(0, totalQs - attemptedCount);
+  const pieData = [
+    { name: "Correct", value: correctCount, color: "var(--verified)" },
+    { name: "Wrong", value: wrongCount, color: "var(--danger)" },
+    { name: "Unanswered", value: unansweredCount, color: "var(--border-strong)" },
+  ].filter((d) => d.value > 0);
 
   const verifyUrl =
     typeof window !== "undefined" && verifyCode
@@ -136,39 +154,140 @@ export default function AttemptResultPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {/* Score & Verifiable QR Summary */}
+          {/* Score, Donut Chart, Progress Bars & Verifiable QR Summary (EMS ShowResult + VeriExam) */}
           <div className="grid gap-5 lg:grid-cols-3">
             <Card className="lg:col-span-2">
-              <CardContent className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-                <div className="space-y-1.5">
-                  <Badge tone="verified">{attempt.status}</Badge>
-                  <p className="text-3xl font-bold font-mono tracking-tight">
-                    {attempt.score !== null && attempt.score !== undefined
-                      ? `${attempt.score} / ${maxScore}`
-                      : `Pending / ${maxScore}`}
-                  </p>
-                  <p className="text-xs text-ink-muted">
-                    Submitted:{" "}
-                    {attempt.submitted_at ?? attempt.submittedAt
-                      ? new Date(attempt.submitted_at ?? attempt.submittedAt ?? "").toLocaleString()
-                      : "—"}
-                  </p>
-                </div>
+              <CardContent className="space-y-5">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Badge tone="verified">{attempt.status}</Badge>
+                      {summary?.timeTakenMin && (
+                        <Badge tone="neutral">
+                          <Clock className="h-3 w-3" /> {summary.timeTakenMin} min taken
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-3xl font-medium font-mono tabular-nums tracking-tight">
+                      {attempt.score !== null && attempt.score !== undefined
+                        ? `${attempt.score} / ${maxScore}`
+                        : `Pending / ${maxScore}`}
+                      <span className="ml-2 text-lg font-medium text-accent">
+                        ({scorePct}%)
+                      </span>
+                    </p>
+                    <p className="text-xs text-ink-muted">
+                      Submitted:{" "}
+                      {attempt.submitted_at ?? attempt.submittedAt
+                        ? new Date(attempt.submitted_at ?? attempt.submittedAt ?? "").toLocaleString()
+                        : "—"}
+                    </p>
+                  </div>
 
-                <div className="flex flex-wrap gap-2">
-                  {verifyCode && (
-                    <Link href={`/verify/${encodeURIComponent(verifyCode)}`}>
-                      <Button variant="verified" size="sm">
-                        <ShieldCheck className="h-4 w-4" /> Public Certificate
+                  <div className="flex flex-wrap gap-2">
+                    {verifyCode && (
+                      <Link href={`/verify/${encodeURIComponent(verifyCode)}`}>
+                        <Button variant="verified" size="sm">
+                          <ShieldCheck className="h-4 w-4" /> Public Certificate
+                        </Button>
+                      </Link>
+                    )}
+                    <Link href={`/verify?attemptId=${encodeURIComponent(attempt.id)}`}>
+                      <Button variant="secondary" size="sm">
+                        Inspect Hash Chain <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
                     </Link>
-                  )}
-                  <Link href={`/verify?attemptId=${encodeURIComponent(attempt.id)}`}>
-                    <Button variant="secondary" size="sm">
-                      Inspect Hash Chain <ExternalLink className="h-3.5 w-3.5" />
-                    </Button>
-                  </Link>
+                  </div>
                 </div>
+
+                {/* Progress Bars + Marks Distribution Donut */}
+                {totalQs > 0 && (
+                  <div className="grid gap-4 sm:grid-cols-[180px_1fr] items-center border-t border-border pt-4">
+                    <div className="h-36 w-full">
+                      {pieData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={38}
+                              outerRadius={60}
+                              paddingAngle={2}
+                            >
+                              {pieData.map((entry, idx) => (
+                                <Cell key={idx} fill={entry.color} />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                background: "var(--surface)",
+                                borderColor: "var(--border)",
+                                borderRadius: 8,
+                                fontSize: 12,
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-ink-subtle">
+                          No chart data
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-3 text-xs">
+                      <div>
+                        <div className="flex justify-between font-medium mb-1">
+                          <span>Overall Score</span>
+                          <span className="font-mono">{scorePct}%</span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+                          <div
+                            className="h-full rounded-full bg-accent transition-all"
+                            style={{ width: `${Math.min(100, Math.max(0, scorePct))}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between font-medium mb-1">
+                          <span>Attempted Questions</span>
+                          <span className="font-mono">
+                            {attemptedCount} / {totalQs} (
+                            {Math.round((attemptedCount / totalQs) * 100)}%)
+                          </span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+                          <div
+                            className="h-full rounded-full bg-warning transition-all"
+                            style={{
+                              width: `${Math.round((attemptedCount / totalQs) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between font-medium mb-1">
+                          <span>Correct Answers</span>
+                          <span className="font-mono text-verified">
+                            {correctCount} / {totalQs} (
+                            {Math.round((correctCount / totalQs) * 100)}%)
+                          </span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+                          <div
+                            className="h-full rounded-full bg-verified transition-all"
+                            style={{
+                              width: `${Math.round((correctCount / totalQs) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -197,7 +316,7 @@ export default function AttemptResultPage() {
           {/* Question-by-Question Review */}
           <Card>
             <CardHeader>
-              <h2 className="text-base font-semibold">
+              <h2 className="font-display text-sm font-semibold uppercase tracking-[0.05em]">
                 Question Breakdown ({questions.length})
               </h2>
             </CardHeader>
@@ -218,7 +337,7 @@ export default function AttemptResultPage() {
                 return (
                   <div
                     key={q.id}
-                    className="rounded-xl border border-border bg-surface-subtle p-4 space-y-3"
+                    className="rounded-sm border border-border bg-surface-subtle p-4 space-y-3"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -308,7 +427,7 @@ export default function AttemptResultPage() {
           {/* Signed Receipts Audit Ledger */}
           <Card>
             <CardHeader>
-              <h2 className="flex items-center gap-2 text-base font-semibold">
+              <h2 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-[0.05em]">
                 <ShieldCheck className="h-4 w-4 text-verified" />
                 Signed Cryptographic Receipts ({receipts.length})
               </h2>
@@ -319,7 +438,7 @@ export default function AttemptResultPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
-                    <thead className="border-b border-border bg-surface-subtle uppercase tracking-wide text-ink-muted">
+                    <thead className="border-b border-border bg-surface-subtle text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
                       <tr>
                         <th className="px-4 py-2.5">Seq</th>
                         <th className="px-4 py-2.5">Server Time</th>

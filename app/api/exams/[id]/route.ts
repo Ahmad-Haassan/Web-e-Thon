@@ -37,6 +37,19 @@ export async function GET(
     const { seed_secret: _secret, ...safeExam } = exam;
     void _secret;
 
+    const { count: qCount } = await supabase
+      .from("exam_questions")
+      .select("*", { count: "exact", head: true })
+      .eq("exam_id", id);
+
+    const blueprintRules = Array.isArray(exam.blueprint)
+      ? (exam.blueprint as Array<{ count?: number }>)
+      : null;
+    const blueprintCount = blueprintRules
+      ? blueprintRules.reduce((s, r) => s + Number(r.count ?? 0), 0)
+      : 0;
+    const questionCount = (qCount ?? 0) > 0 ? (qCount ?? 0) : blueprintCount;
+
     if (user.role === "CANDIDATE") {
       // Must be enrolled and exam must be published
       const { data: enrollment } = await supabase
@@ -50,8 +63,35 @@ export async function GET(
         throw new HttpError(403, "You are not enrolled in this exam");
       }
 
+      const { data: myAttempt } = await supabase
+        .from("attempts")
+        .select("id, status, started_at, deadline_at, submitted_at, score, max_score, verify_code")
+        .eq("exam_id", id)
+        .eq("candidate_id", user.id)
+        .eq("is_sandbox", false)
+        .maybeSingle();
+
       return jsonOk({
-        exam: { ...safeExam, total_marks: Number(safeExam.total_marks), lifecycle },
+        exam: {
+          ...safeExam,
+          rules: Array.isArray(safeExam.rules) ? safeExam.rules : [],
+          total_marks: Number(safeExam.total_marks),
+          questionCount,
+          lifecycle,
+          attempt: myAttempt
+            ? {
+                id: myAttempt.id,
+                status: myAttempt.status,
+                startedAt: myAttempt.started_at,
+                deadlineAt: myAttempt.deadline_at,
+                submittedAt: myAttempt.submitted_at,
+                score: exam.results_published ? myAttempt.score : null,
+                maxScore: myAttempt.max_score,
+                verifyCode: exam.results_published ? myAttempt.verify_code : null,
+              }
+            : null,
+        },
+        questionCount,
       });
     }
 
@@ -63,6 +103,20 @@ export async function GET(
       .eq("exam_id", id)
       .order("order_index");
 
+    const flattenedQuestions = (attached ?? [])
+      .map((row) => {
+        const q = (Array.isArray(row.questions) ? row.questions[0] : row.questions) as
+          | Record<string, unknown>
+          | null;
+        if (!q) return null;
+        return {
+          ...q,
+          marks: Number(row.marks ?? 0),
+          order_index: row.order_index,
+        };
+      })
+      .filter(Boolean);
+
     const { count: enrollmentCount } = await supabase
       .from("enrollments")
       .select("*", { count: "exact", head: true })
@@ -70,9 +124,16 @@ export async function GET(
       .eq("status", "ENROLLED");
 
     return jsonOk({
-      exam: { ...safeExam, total_marks: Number(safeExam.total_marks), lifecycle },
-      questions: attached ?? [],
+      exam: {
+        ...safeExam,
+        rules: Array.isArray(safeExam.rules) ? safeExam.rules : [],
+        total_marks: Number(safeExam.total_marks),
+        questionCount,
+        lifecycle,
+      },
+      questions: flattenedQuestions,
       enrollmentCount: enrollmentCount ?? 0,
+      questionCount,
     });
   } catch (err) {
     return handleRouteError(err);
@@ -103,6 +164,10 @@ export async function PATCH(
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
     if (d.title !== undefined) patch.title = d.title;
+    if (d.category !== undefined) patch.category = d.category || null;
+    if (d.className !== undefined) patch.class_name = d.className || null;
+    if (d.section !== undefined) patch.section = d.section || null;
+    if (d.rules !== undefined) patch.rules = d.rules;
     if (d.instructions !== undefined) patch.instructions = d.instructions;
     if (d.startAt !== undefined) patch.start_at = d.startAt;
     if (d.endAt !== undefined) patch.end_at = d.endAt;
@@ -132,12 +197,15 @@ export async function PATCH(
     }
 
     if (d.status === "PUBLISHED") {
-      // Review guard: require at least 1 question attached before publishing
+      // Review guard: require at least 1 question attached OR a valid blueprint before publishing
       const { count: qCount } = await supabase
         .from("exam_questions")
         .select("*", { count: "exact", head: true })
         .eq("exam_id", id);
-      if (!qCount || qCount < 1) {
+      const hasBlueprint =
+        Array.isArray(d.blueprint ?? existing.blueprint) &&
+        ((d.blueprint ?? existing.blueprint) as unknown[]).length > 0;
+      if ((!qCount || qCount < 1) && !hasBlueprint) {
         throw new HttpError(400, "Attach at least one question before publishing the exam");
       }
       patch.status = "PUBLISHED";
@@ -172,13 +240,22 @@ export async function PATCH(
       entity: "exams",
       entityId: id,
       before: { status: existing.status, results_published: existing.results_published },
-      after: { status: updated.status, results_published: updated.results_published, seed_revealed: Boolean(updated.seed_reveal) },
+      after: {
+        status: updated.status,
+        results_published: updated.results_published,
+        seed_revealed: Boolean(updated.seed_reveal),
+      },
     });
 
     const { seed_secret: _secret, ...safe } = updated;
     void _secret;
     return jsonOk({
-      exam: { ...safe, total_marks: Number(safe.total_marks), lifecycle: computeExamLifecycle(updated) },
+      exam: {
+        ...safe,
+        rules: Array.isArray(safe.rules) ? safe.rules : [],
+        total_marks: Number(safe.total_marks),
+        lifecycle: computeExamLifecycle(updated),
+      },
     });
   } catch (err) {
     return handleRouteError(err);

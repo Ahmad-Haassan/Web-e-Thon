@@ -15,13 +15,32 @@ import { createExamSchema } from "@/lib/shared/schemas";
 
 export const runtime = "nodejs";
 
+function extractCount(val: unknown): number | undefined {
+  if (Array.isArray(val) && val[0] && typeof val[0] === "object" && "count" in val[0]) {
+    return Number((val[0] as { count: unknown }).count ?? 0);
+  }
+  return undefined;
+}
+
 function sanitizeExamRow(exam: Record<string, unknown>) {
   // NEVER expose seed_secret before reveal!
-  const { seed_secret: _secret, ...safe } = exam;
+  const { seed_secret: _secret, enrollments: enrAgg, exam_questions: eqAgg, ...safe } = exam;
   void _secret;
+  const enrollmentCount = extractCount(enrAgg);
+  const questionCount = extractCount(eqAgg);
+  const blueprintRules = Array.isArray(exam.blueprint)
+    ? (exam.blueprint as Array<{ count?: number }>)
+    : null;
+  const blueprintCount = blueprintRules
+    ? blueprintRules.reduce((s, r) => s + Number(r.count ?? 0), 0)
+    : 0;
+
   return {
     ...safe,
+    rules: Array.isArray(exam.rules) ? exam.rules : [],
     total_marks: Number(exam.total_marks ?? 0),
+    ...(enrollmentCount !== undefined ? { enrollmentCount } : {}),
+    questionCount: questionCount && questionCount > 0 ? questionCount : blueprintCount,
     lifecycle: computeExamLifecycle({
       status: exam.status as "DRAFT" | "PUBLISHED",
       start_at: String(exam.start_at),
@@ -58,7 +77,7 @@ export async function GET(req: NextRequest) {
 
     const { data: enrollments, error: enrErr } = await supabase
       .from("enrollments")
-      .select("status, exams(*)")
+      .select("status, exams(*, exam_questions(count))")
       .eq("candidate_id", user.id)
       .eq("status", "ENROLLED");
 
@@ -138,13 +157,89 @@ export async function POST(req: NextRequest) {
     const supabase = getServiceSupabase();
     const { seedSecret, seedCommitment } = generateSeedPair();
 
-    const totalMarks = (d.questions ?? []).reduce((sum, q) => sum + q.marks, 0);
+    // Optional: create inline questions directly in the Question Bank & collect them to attach
+    const inlineAttached: Array<{ questionId: string; marks: number; orderIndex: number }> = [];
+    const baseOrder = (d.questions ?? []).length;
+
+    if (d.inlineQuestions && d.inlineQuestions.length > 0) {
+      for (let i = 0; i < d.inlineQuestions.length; i++) {
+        const iq = d.inlineQuestions[i];
+        const { data: createdQ, error: qInsErr } = await supabase
+          .from("questions")
+          .insert({
+            owner_id: user.id,
+            category_id: iq.categoryId ?? null,
+            type: iq.type,
+            difficulty: iq.difficulty,
+            text: iq.text,
+            marks: iq.marks,
+            negative_marking: iq.negativeMarking ?? 0,
+            explanation: iq.explanation ?? null,
+          })
+          .select("id")
+          .single();
+
+        if (qInsErr || !createdQ) {
+          throw new HttpError(400, `Failed creating inline question #${i + 1}: ${qInsErr?.message ?? "error"}`);
+        }
+
+        const correctIds: string[] = [];
+        if (iq.type !== "WRITTEN" && iq.options.length > 0) {
+          const optRows = iq.options.map((o, idx) => ({
+            question_id: createdQ.id,
+            text: o.text,
+            order_index: idx,
+          }));
+          const { data: insertedOpts, error: oErr } = await supabase
+            .from("options")
+            .insert(optRows)
+            .select("id, order_index");
+
+          if (oErr || !insertedOpts) {
+            throw new HttpError(400, `Failed creating options for inline question #${i + 1}`);
+          }
+
+          for (const opt of insertedOpts) {
+            if (iq.options[opt.order_index]?.isCorrect) {
+              correctIds.push(opt.id);
+            }
+          }
+        }
+
+        await supabase.from("question_keys").insert({
+          question_id: createdQ.id,
+          correct_option_ids: correctIds,
+          written_rubric: iq.writtenRubric ?? null,
+        });
+
+        inlineAttached.push({
+          questionId: createdQ.id,
+          marks: iq.marks,
+          orderIndex: baseOrder + i,
+        });
+      }
+    }
+
+    const allAttached = [
+      ...(d.questions ?? []).map((q, idx) => ({
+        questionId: q.questionId,
+        marks: q.marks,
+        orderIndex: q.orderIndex ?? idx,
+      })),
+      ...inlineAttached,
+    ];
+
+    const totalMarks = allAttached.reduce((sum, q) => sum + q.marks, 0);
 
     const { data: exam, error } = await supabase
       .from("exams")
       .insert({
         owner_id: user.id,
         title: d.title,
+        category: d.category || null,
+        class_name: d.className || null,
+        section: d.section || null,
+        rules: d.rules ?? [],
         instructions: d.instructions,
         start_at: d.startAt,
         end_at: d.endAt,
@@ -166,15 +261,43 @@ export async function POST(req: NextRequest) {
 
     if (error || !exam) throw new HttpError(500, error?.message ?? "Failed to create exam");
 
-    if (d.questions && d.questions.length > 0) {
-      const attachRows = d.questions.map((q, idx) => ({
+    if (allAttached.length > 0) {
+      const attachRows = allAttached.map((q) => ({
         exam_id: exam.id,
         question_id: q.questionId,
         marks: q.marks,
-        order_index: q.orderIndex ?? idx,
+        order_index: q.orderIndex,
       }));
       const { error: qErr } = await supabase.from("exam_questions").insert(attachRows);
       if (qErr) throw new HttpError(400, `Failed attaching questions: ${qErr.message}`);
+    }
+
+    // Optional: Auto-enroll all candidates matching target class (& section if set)
+    let autoEnrolledCount = 0;
+    if (d.autoEnrollClass && d.className && d.className.trim()) {
+      let stuQuery = supabase
+        .from("users")
+        .select("id")
+        .eq("role", "CANDIDATE")
+        .eq("active", true)
+        .ilike("class_name", d.className.trim());
+
+      if (d.section && d.section.trim()) {
+        stuQuery = stuQuery.ilike("section", d.section.trim());
+      }
+
+      const { data: matchingStudents } = await stuQuery;
+      if (matchingStudents && matchingStudents.length > 0) {
+        const enrollRows = matchingStudents.map((s) => ({
+          exam_id: exam.id,
+          candidate_id: s.id,
+          status: "ENROLLED" as const,
+        }));
+        const { error: eErr } = await supabase
+          .from("enrollments")
+          .upsert(enrollRows, { onConflict: "exam_id,candidate_id" });
+        if (!eErr) autoEnrolledCount = enrollRows.length;
+      }
     }
 
     await logAudit({
@@ -182,10 +305,27 @@ export async function POST(req: NextRequest) {
       action: "EXAM_CREATED",
       entity: "exams",
       entityId: exam.id,
-      after: { title: d.title, seedCommitment },
+      after: {
+        title: d.title,
+        className: d.className ?? null,
+        section: d.section ?? null,
+        inlineQuestionsCount: inlineAttached.length,
+        autoEnrolledCount,
+        seedCommitment,
+      },
     });
 
-    return jsonOk({ exam: sanitizeExamRow(exam) }, 201);
+    return jsonOk(
+      {
+        exam: {
+          ...sanitizeExamRow(exam),
+          enrollmentCount: autoEnrolledCount,
+          questionCount: allAttached.length,
+        },
+        autoEnrolledCount,
+      },
+      201
+    );
   } catch (err) {
     return handleRouteError(err);
   }

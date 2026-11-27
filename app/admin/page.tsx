@@ -15,6 +15,7 @@ import {
   Input,
   Label,
   Select,
+  Skeleton,
   Spinner,
 } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
@@ -218,8 +219,10 @@ export default function AdminUsersPage() {
 
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-muted">
-              <Spinner /> Loading users…
+            <div className="p-5 space-y-3">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
             </div>
           ) : error ? (
             <div className="p-6 text-sm text-danger">
@@ -235,12 +238,12 @@ export default function AdminUsersPage() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-surface-subtle text-xs uppercase tracking-wide text-ink-muted">
+                <thead className="border-b border-border bg-surface-subtle text-xs font-medium text-ink-muted">
                   <tr>
-                    <th className="px-5 py-3">User</th>
-                    <th className="px-5 py-3">Role</th>
-                    <th className="px-5 py-3">Status</th>
-                    <th className="px-5 py-3 text-right">Actions</th>
+                    <th className="px-5 py-3 font-medium">User</th>
+                    <th className="px-5 py-3 font-medium">Role</th>
+                    <th className="px-5 py-3 font-medium">Status</th>
+                    <th className="px-5 py-3 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

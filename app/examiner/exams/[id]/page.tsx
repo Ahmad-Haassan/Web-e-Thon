@@ -14,6 +14,7 @@ import {
   KeyRound,
   Send,
   ShieldCheck,
+  Trash2,
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -89,6 +90,16 @@ function ExaminerExamHubInner() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const deleteMut = useMutation({
+    mutationFn: () => api.exams.delete(examId),
+    onSuccess: () => {
+      toast.success("Exam deleted");
+      qc.invalidateQueries({ queryKey: ["examiner-exams"] });
+      router.replace("/examiner");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const exam = detailQuery.data?.exam;
   const questions = detailQuery.data?.questions ?? [];
   const fairness = fairnessQuery.data ?? detailQuery.data?.fairnessReport;
@@ -139,6 +150,19 @@ function ExaminerExamHubInner() {
                 <Send className="h-3.5 w-3.5" /> Publish Exam
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={deleteMut.isPending}
+              onClick={() => {
+                if (window.confirm(`Delete "${exam.title}" permanently? This cannot be undone.`)) {
+                  deleteMut.mutate();
+                }
+              }}
+              title="Delete exam"
+            >
+              <Trash2 className="h-3.5 w-3.5 text-danger" />
+            </Button>
           </>
         )
       }
@@ -223,6 +247,19 @@ function ExaminerExamHubInner() {
                       Instructions
                     </p>
                     {exam.instructions}
+                  </div>
+                )}
+
+                {Array.isArray(exam.rules) && exam.rules.length > 0 && (
+                  <div className="rounded-lg border border-border bg-surface-subtle p-3.5 text-xs text-ink-muted space-y-1.5">
+                    <p className="font-semibold uppercase text-ink-subtle">
+                      Test Rules ({exam.rules.length})
+                    </p>
+                    <ul className="list-disc pl-4 space-y-1">
+                      {exam.rules.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
                   </div>
                 )}
 

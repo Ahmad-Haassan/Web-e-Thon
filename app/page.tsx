@@ -1,131 +1,323 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   Clock,
   FileCheck2,
+  Menu,
   Scale,
   ShieldCheck,
   WifiOff,
+  X,
 } from "lucide-react";
+import { BrandMark, Button, ThemeToggleButton } from "@/components/ui/primitives";
+import { HeroProductPreview } from "@/components/landing/hero-preview";
+import { TaglineReveal } from "@/components/landing/tagline-reveal";
+import { SiteFooter } from "@/components/site-footer";
+
+const NAV_LINKS = [
+  { href: "#how-it-works", label: "How It Works" },
+  { href: "#architecture", label: "Architecture" },
+  { href: "/verify", label: "Public Verify" },
+];
+
+const STEPS = [
+  {
+    num: "01",
+    title: "Commit the paper before the exam opens",
+    body: "Examiners build blueprint-balanced exams, assign classes or sections, define test rules, and lock a SHA-256 seed commitment so randomization can be audited afterwards.",
+  },
+  {
+    num: "02",
+    title: "Answer without losing a keystroke offline",
+    body: "Every candidate response persists to IndexedDB first with a monotonic sequence number and syncs automatically on reconnect while the server clock enforces deadlines.",
+  },
+  {
+    num: "03",
+    title: "Grade, audit, and verify publicly",
+    body: "Objective items grade atomically, written responses follow rubrics, disputes attach chronological timelines, and every result carries a public QR verification code.",
+  },
+];
+
+const GUARANTEES = [
+  {
+    icon: WifiOff,
+    title: "Survives campus Wi-Fi drops",
+    body: "IndexedDB persistence queues answers with monotonic client sequence numbers and flushes automatically after session refresh on reconnect.",
+  },
+  {
+    icon: Clock,
+    title: "Server-authoritative deadlines",
+    body: "Timers synchronize with /api/time and server deadlines. Local device clock changes never extend an active examination attempt.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Tamper-evident SHA-256 ledger",
+    body: "Answers, events, and lock logs form cryptographic chains backed by HMAC receipts. Silent database edits surface immediately in Public Verify.",
+  },
+  {
+    icon: Scale,
+    title: "Fairness and transparent disputes",
+    body: "Integrity signals assist human review without automated failure. Ambiguous question rulings can re-score every affected candidate fairly.",
+  },
+];
 
 export default function HomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
 
-      <header className="border-b border-border bg-surface/90 backdrop-blur-xs">
+      {/* Institutional Sticky Header */}
+      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-ink">
-              <ShieldCheck className="h-4.5 w-4.5" />
-            </span>
-            <span className="text-base">VeriExam</span>
-          </Link>
-
-          <div className="flex items-center gap-2.5">
-            <Link
-              href="/verify"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-ink-muted hover:bg-surface-muted hover:text-foreground"
-            >
-              Public Verify
+          <div className="flex items-center gap-8">
+            <Link href="/" className="inline-flex items-center gap-2.5 text-foreground">
+              <BrandMark />
+              <div className="leading-tight">
+                <span className="block font-display text-sm font-bold uppercase tracking-[0.06em]">
+                  NIIT EMS
+                </span>
+                <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-ink-subtle">
+                  Examination Portal
+                </span>
+              </div>
             </Link>
+
+            <nav aria-label="Primary" className="hidden md:flex items-center gap-1">
+              {NAV_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-[2px] px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-ink-muted hover:bg-surface-muted hover:text-foreground transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="hidden md:flex items-center gap-3">
+            <ThemeToggleButton showLabel />
             <Link
               href="/login"
-              className="rounded-lg border border-border bg-surface px-3.5 py-2 text-sm font-medium text-foreground hover:bg-surface-muted"
+              className="px-2 text-xs font-semibold uppercase tracking-[0.05em] text-ink-muted hover:text-foreground transition-colors"
             >
               Sign In
             </Link>
-            <Link
-              href="/register"
-              className="rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-ink hover:bg-accent-hover"
-            >
-              Student Sign Up
+            <Link href="/register">
+              <Button size="sm">Open Portal</Button>
             </Link>
           </div>
+
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggleButton />
+            <button
+              type="button"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+              onClick={() => setMobileMenuOpen((v) => !v)}
+              className="flex h-9 w-9 items-center justify-center rounded-[2px] border border-border bg-surface text-foreground cursor-pointer"
+            >
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Drawer */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-x-0 top-16 bottom-0 z-40 bg-background/95 backdrop-blur-md p-6 md:hidden animate-fade-rise">
+            <nav aria-label="Mobile" className="flex flex-col gap-2">
+              {NAV_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-[2px] border border-border bg-surface px-4 py-3 text-sm font-semibold uppercase tracking-[0.04em] text-foreground"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="mt-4 flex flex-col gap-2.5 border-t border-border pt-4">
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="secondary" size="lg" className="w-full">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
+                  <Button size="lg" className="w-full">
+                    Open Portal
+                  </Button>
+                </Link>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
       <main id="main-content" className="flex-1">
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-verified/30 bg-verified-soft px-3 py-1 text-xs font-semibold text-verified">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Cryptographically Verifiable · Offline-First · Privacy-First
-            </div>
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl leading-[1.15]">
-              The exam system examiners can defend and students can trust — even when the internet fails.
-            </h1>
-            <p className="mt-5 text-lg text-ink-muted max-w-2xl">
-              Built for universities operating on real-world connections. Every answer is persisted locally in IndexedDB first, synced with monotonic sequence numbers, chained with SHA-256 hashes, and backed by server-signed receipts.
-            </p>
+        {/* NIIT-Inspired Asymmetric Split Hero on #FBE9C7 (Light) / #46351A (Dark) */}
+        <section className="mx-auto max-w-6xl px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-24">
+          <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-12">
+            <div className="lg:col-span-6 space-y-6 animate-fade-rise">
+              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-foreground">
+                <span className="h-2 w-2 rounded-full bg-portal-live" />
+                NASTP Institute of Information Technology · EMS
+              </div>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link
-                href="/login"
-                className="inline-flex h-11 items-center gap-2 rounded-lg bg-accent px-5 text-sm font-semibold text-accent-ink hover:bg-accent-hover transition-colors"
-              >
-                Open Portal
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/verify"
-                className="inline-flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-5 text-sm font-semibold text-foreground hover:bg-surface-muted transition-colors"
-              >
-                <FileCheck2 className="h-4 w-4 text-verified" />
-                Verify a Receipt / Hash Chain
-              </Link>
+              <h1 className="font-display text-4xl sm:text-5xl font-extrabold uppercase leading-[1.08] tracking-[0.02em] text-foreground">
+                <span className="block">EXAMINATION</span>
+                <span className="block text-accent">MANAGEMENT</span>
+                <span className="block">PORTAL</span>
+              </h1>
+
+              <p className="text-base text-ink-muted max-w-[540px] leading-relaxed">
+                Failure-resilient, cryptographically verifiable examinations built for university campuses. Every answer persists locally in IndexedDB first, syncs in order, chains with SHA-256 hashes, and issues a server-signed receipt.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <Link href="/login">
+                  <Button size="lg">
+                    Open Portal
+                    <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+                  </Button>
+                </Link>
+                <Link href="/verify">
+                  <Button variant="secondary" size="lg">
+                    <FileCheck2 className="h-4 w-4 text-verified" strokeWidth={1.75} />
+                    Verify Receipt
+                  </Button>
+                </Link>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-border pt-5 text-xs text-ink-subtle">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-portal-live" />
+                  System operational · Lahore, Pakistan
+                </span>
+                <span>Zero webcam or screen surveillance</span>
+              </div>
+            </div>
+
+            <div className="lg:col-span-6">
+              <HeroProductPreview />
             </div>
           </div>
+        </section>
 
-          <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-xl border border-border bg-surface p-5">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-warning-soft text-warning">
-                <WifiOff className="h-5 w-5" />
+        {/* Scroll-Driven Tagline Reveal */}
+        <section className="border-y border-border bg-surface-subtle">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+            <TaglineReveal text="A dropped connection should never erase a student's work, and a grade should never require blind trust. Every save, timer tick, and score leaves verifiable cryptographic proof." />
+          </div>
+        </section>
+
+        {/* How It Works — 3-Step Sequence */}
+        <section id="how-it-works" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="max-w-xl">
+            <h2 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-[0.02em] text-foreground">
+              Three Stages From Paper Commit To Public Verification
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-ink-muted">
+              Every examination follows a deterministic institutional lifecycle protecting both academic rigor and student fairness.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-8 md:grid-cols-3">
+            {STEPS.map((s) => (
+              <div key={s.num} className="border-t-2 border-accent pt-5 space-y-2.5">
+                <span className="font-mono text-xs font-bold text-accent tabular-nums">
+                  STEP {s.num}
+                </span>
+                <h3 className="font-display text-lg font-semibold text-foreground">{s.title}</h3>
+                <p className="text-sm leading-relaxed text-ink-muted">{s.body}</p>
               </div>
-              <h2 className="text-base font-semibold">Survives Disconnects</h2>
-              <p className="mt-1.5 text-sm text-ink-muted">
-                IndexedDB-first autosave queues answers with monotonic <code className="font-mono text-xs">clientSeq</code> and syncs seamlessly on reconnect after token refresh.
-              </p>
+            ))}
+          </div>
+        </section>
+
+        {/* Architecture Guarantees — Crisp 2px Hairline Grid */}
+        <section id="architecture" className="border-t border-border bg-surface-subtle">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+              <div className="max-w-xl">
+                <h2 className="font-display text-2xl sm:text-3xl font-bold uppercase tracking-[0.02em] text-foreground">
+                  Designed For Exam-Day Reality
+                </h2>
+                <p className="mt-2 text-sm sm:text-base text-ink-muted">
+                  Operational reliability, class datesheets, admit cards, and cryptographic transparency in one platform.
+                </p>
+              </div>
+              <Link
+                href="/verify"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
+              >
+                Inspect public audit tool
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
 
-            <div className="rounded-xl border border-border bg-surface p-5">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-accent-soft text-accent">
-                <Clock className="h-5 w-5" />
-              </div>
-              <h2 className="text-base font-semibold">Server-Authoritative Clock</h2>
-              <p className="mt-1.5 text-sm text-ink-muted">
-                Timer syncs with <code className="font-mono text-xs">/api/time</code> and server <code className="font-mono text-xs">deadlineAt</code>. Device clock tampering never extends deadlines.
-              </p>
+            <div className="mt-10 grid gap-px overflow-hidden rounded-[2px] border border-border bg-border sm:grid-cols-2">
+              {GUARANTEES.map((g) => {
+                const Icon = g.icon;
+                return (
+                  <div key={g.title} className="bg-surface p-6 sm:p-8 space-y-3">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-[2px] border border-border bg-accent-soft text-accent">
+                      <Icon className="h-4.5 w-4.5" strokeWidth={1.7} />
+                    </span>
+                    <h3 className="font-display text-base font-semibold text-foreground">
+                      {g.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed text-ink-muted">{g.body}</p>
+                  </div>
+                );
+              })}
             </div>
+          </div>
+        </section>
 
-            <div className="rounded-xl border border-border bg-surface p-5">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-verified-soft text-verified">
-                <ShieldCheck className="h-5 w-5" />
+        {/* Final Institutional CTA Banner */}
+        <section className="border-t border-border bg-background">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+            <div className="flex flex-col items-start justify-between gap-6 rounded-[2px] border border-border portal-chrome p-8 sm:flex-row sm:items-center sm:p-10 surface-elevated">
+              <div className="max-w-xl space-y-2">
+                <h2 className="font-display text-2xl font-bold uppercase tracking-[0.02em] text-[#fbe9c7]">
+                  Ready To Enter The Examination Portal?
+                </h2>
+                <p className="text-sm text-[#fbe9c7]/80">
+                  Sign in as an Administrator, Examiner, or Candidate, or register a student account linked to your class and section.
+                </p>
               </div>
-              <h2 className="text-base font-semibold">Tamper-Evident Hash Chain</h2>
-              <p className="mt-1.5 text-sm text-ink-muted">
-                Every saved answer and event is SHA-256 chained with HMAC-signed receipts. Public verification turns red immediately if any row is altered.
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-border bg-surface p-5">
-              <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-surface-muted text-foreground">
-                <Scale className="h-5 w-5" />
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <Link href="/login">
+                  <button
+                    type="button"
+                    className="inline-flex h-11 items-center gap-2 rounded-[2px] bg-[#fbe9c7] px-5 text-sm font-semibold text-[#2a1f0e] hover:bg-[#f3c874] transition-colors cursor-pointer"
+                  >
+                    Open Portal
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </Link>
+                <Link href="/register">
+                  <button
+                    type="button"
+                    className="inline-flex h-11 items-center gap-2 rounded-[2px] border border-[#fbe9c7]/35 bg-transparent px-5 text-sm font-semibold text-[#fbe9c7] hover:bg-[#fbe9c7]/10 transition-colors cursor-pointer"
+                  >
+                    Student Sign Up
+                  </button>
+                </Link>
               </div>
-              <h2 className="text-base font-semibold">Fairness & Disputes</h2>
-              <p className="mt-1.5 text-sm text-ink-muted">
-                Blueprint-balanced question papers, privacy-first indicators (no webcam), and evidence-backed dispute resolution.
-              </p>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border bg-surface-subtle py-6 text-center text-xs text-ink-subtle">
-        VeriExam · Don&apos;t trust us — verify us. Privacy-first academic assessments.
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -27,7 +27,18 @@ export interface AppUser {
   email: string;
   role: UserRole;
   active: boolean;
+  phone?: string | null;
+  class_name?: string | null;
+  section?: string | null;
+  email_verified?: boolean;
   prefs: WorkspacePrefs;
+}
+
+export interface RegisteredClassSummary {
+  className: string;
+  sections: Array<{ section: string; studentCount: number }>;
+  totalStudents: number;
+  examCount: number;
 }
 
 export interface BlueprintRule {

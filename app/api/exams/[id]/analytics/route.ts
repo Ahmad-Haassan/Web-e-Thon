@@ -14,7 +14,7 @@ import type { ServerPaperSnapshot } from "@/lib/shared/types";
 export const runtime = "nodejs";
 
 /**
- * Exam Results & Question Analytics (Section 5.8 + Feature 4.5 + Ambiguity Auto-Detection).
+ * Exam Results & Question Analytics (Section 5.8 + Feature 4.5 + Ambiguity Auto-Detection + EMS Student Marks Breakdown).
  * Strictly excludes sandbox attempts (Feature 4.3).
  */
 export async function GET(
@@ -29,7 +29,7 @@ export async function GET(
     const supabase = getServiceSupabase();
     const { data: exam } = await supabase
       .from("exams")
-      .select("id, owner_id, title, results_published")
+      .select("id, owner_id, title, results_published, class_name, section")
       .eq("id", examId)
       .maybeSingle();
 
@@ -40,7 +40,9 @@ export async function GET(
 
     const { data: attempts } = await supabase
       .from("attempts")
-      .select("id, candidate_id, status, score, max_score, started_at, submitted_at, balance_score, paper_snapshot, verify_code, users(id, name, email)")
+      .select(
+        "id, candidate_id, status, score, max_score, started_at, submitted_at, balance_score, paper_snapshot, verify_code, users(id, name, email, class_name, section)"
+      )
       .eq("exam_id", examId)
       .eq("is_sandbox", false);
 
@@ -92,7 +94,10 @@ export async function GET(
       latestAns.set(`${ans.attempt_id}:${ans.question_id}`, ans.selected);
     }
 
-    const gradeMap = new Map<string, { awarded: number | null; max_marks: number; is_pending_manual: boolean }>();
+    const gradeMap = new Map<
+      string,
+      { awarded: number | null; max_marks: number; is_pending_manual: boolean }
+    >();
     for (const g of grades ?? []) {
       gradeMap.set(`${g.attempt_id}:${g.question_id}`, {
         awarded: g.awarded !== null ? Number(g.awarded) : null,
@@ -171,7 +176,6 @@ export async function GET(
     const questionAnalytics = Array.from(qStats.values()).map((st) => {
       const pctCorrect = st.shownCount ? (st.correctCount / st.shownCount) * 100 : 0;
       const skipRate = st.shownCount ? (st.skipCount / st.shownCount) * 100 : 0;
-      // Empirical difficulty index: 1 - (pctCorrect/100) so higher = harder
       const difficultyIndex = Number((1 - pctCorrect / 100).toFixed(4));
 
       let mostCommonWrong: { optionId: string; text: string; count: number } | null = null;
@@ -181,8 +185,6 @@ export async function GET(
         }
       }
 
-      // Proactive ambiguity auto-detection: flag if >=3 attempts and either <25% got it right
-      // or a single wrong distractor fooled more people than the correct answer!
       const possiblyAmbiguous =
         st.shownCount >= 3 &&
         (pctCorrect < 25 || (mostCommonWrong !== null && mostCommonWrong.count > st.correctCount));
@@ -197,37 +199,91 @@ export async function GET(
         skipRate: Number(skipRate.toFixed(1)),
         difficultyIndex,
         mostCommonWrong,
+        mostCommonWrongOption: mostCommonWrong
+          ? `${mostCommonWrong.text} (${mostCommonWrong.count}x)`
+          : null,
         possiblyAmbiguous,
+        ambiguityFlag: possiblyAmbiguous,
       };
     });
 
     const candidates = realAttempts.map((a) => {
-      const pendingManual = (grades ?? []).filter(
-        (g) => g.attempt_id === a.id && g.is_pending_manual
-      ).length;
+      const snap = a.paper_snapshot as ServerPaperSnapshot;
+      const qs = snap?.questions ?? [];
+      let correctCount = 0;
+      let wrongCount = 0;
+      let unansweredCount = 0;
+      let pendingManual = 0;
+
+      for (const q of qs) {
+        const sel = latestAns.get(`${a.id}:${q.id}`);
+        const isSkipped =
+          sel === undefined ||
+          sel === null ||
+          (Array.isArray(sel) && sel.length === 0) ||
+          (typeof sel === "string" && sel.trim() === "");
+
+        const g = gradeMap.get(`${a.id}:${q.id}`);
+        if (g?.is_pending_manual) pendingManual++;
+
+        if (isSkipped) {
+          unansweredCount++;
+        } else if (g && g.awarded !== null) {
+          if (g.awarded >= g.max_marks - 0.01) {
+            correctCount++;
+          } else {
+            wrongCount++;
+          }
+        }
+      }
+
+      const timeTakenMin =
+        a.started_at && a.submitted_at
+          ? Math.max(
+              1,
+              Math.round(
+                (new Date(a.submitted_at).getTime() - new Date(a.started_at).getTime()) / 60_000
+              )
+            )
+          : null;
+
+      const candidateUser = Array.isArray(a.users) ? a.users[0] : a.users;
+
       return {
         attemptId: a.id,
-        candidate: a.users,
+        candidate: candidateUser,
         status: a.status,
         score: a.score !== null ? Number(a.score) : null,
         maxScore: Number(a.max_score),
         balanceScore: a.balance_score ? Number(a.balance_score) : null,
         submittedAt: a.submitted_at,
+        timeTakenMin,
+        totalQuestions: qs.length,
+        correctCount,
+        wrongCount,
+        unansweredCount,
         pendingManualCount: pendingManual,
         verifyCode: a.verify_code,
       };
     });
 
+    const averageScore = completed.length ? Number((sumScore / completed.length).toFixed(2)) : null;
+    const passRatePct = completed.length ? Number(((passCount / completed.length) * 100).toFixed(1)) : null;
+
     return jsonOk({
       examId,
       examTitle: exam.title,
+      className: exam.class_name ?? null,
+      section: exam.section ?? null,
       resultsPublished: exam.results_published,
       summary: {
         totalAttempts: realAttempts.length,
         totalSubmitted: completed.length,
-        averageScore: completed.length ? Number((sumScore / completed.length).toFixed(2)) : 0,
+        avg: averageScore,
+        averageScore: averageScore ?? 0,
         averagePct: completed.length ? Number((sumPct / completed.length).toFixed(1)) : 0,
-        passRatePct: completed.length ? Number(((passCount / completed.length) * 100).toFixed(1)) : 0,
+        passRate: passRatePct,
+        passRatePct: passRatePct ?? 0,
         distribution,
       },
       candidates,

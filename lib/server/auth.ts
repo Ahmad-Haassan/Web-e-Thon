@@ -39,8 +39,12 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
     ? authHeader.slice(7).trim()
     : null;
 
-  let authUser: { id: string; email?: string; user_metadata?: Record<string, unknown> } | null =
-    null;
+  let authUser: {
+    id: string;
+    email?: string;
+    email_confirmed_at?: string | null;
+    user_metadata?: Record<string, unknown>;
+  } | null = null;
 
   if (bearerToken) {
     const { data, error } = await service.auth.getUser(bearerToken);
@@ -67,12 +71,27 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
     throw new HttpError(500, "Failed to load user profile");
   }
 
+  const isEmailConfirmed = Boolean(authUser.email_confirmed_at);
+
   if (!appUser) {
     // Self-registration ALWAYS creates CANDIDATE only (never trust user_metadata for role)
     const fallbackName =
       typeof authUser.user_metadata?.name === "string" && authUser.user_metadata.name.trim()
         ? authUser.user_metadata.name.trim()
         : (authUser.email?.split("@")[0] ?? "Candidate");
+
+    const metaPhone =
+      typeof authUser.user_metadata?.phone === "string" && authUser.user_metadata.phone.trim()
+        ? authUser.user_metadata.phone.trim()
+        : null;
+    const metaClass =
+      typeof authUser.user_metadata?.className === "string" && authUser.user_metadata.className.trim()
+        ? authUser.user_metadata.className.trim()
+        : null;
+    const metaSection =
+      typeof authUser.user_metadata?.section === "string" && authUser.user_metadata.section.trim()
+        ? authUser.user_metadata.section.trim()
+        : null;
 
     const { data: created, error: createErr } = await service
       .from("users")
@@ -82,6 +101,10 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
         name: fallbackName,
         role: "CANDIDATE",
         active: true,
+        phone: metaPhone,
+        class_name: metaClass,
+        section: metaSection,
+        email_verified: isEmailConfirmed,
       })
       .select("*")
       .single();
@@ -96,7 +119,10 @@ export async function requireAuth(req: NextRequest): Promise<AppUser> {
     throw new HttpError(403, "Account is deactivated");
   }
 
-  return appUser as AppUser;
+  return {
+    ...(appUser as AppUser),
+    email_verified: Boolean(appUser.email_verified ?? isEmailConfirmed),
+  };
 }
 
 export async function requireRole(req: NextRequest, allowed: UserRole[]): Promise<AppUser> {
