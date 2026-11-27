@@ -293,12 +293,116 @@ p {
   animation: skeletonPulse 1.6s var(--ease-out) infinite;
 }
 
+/* ===== Home hero ambient motion: drifting whales, bubbles, ink cursor ===== */
+@keyframes whaleSwim {
+  from {
+    transform: translate3d(112vw, 0, 0);
+  }
+  to {
+    transform: translate3d(-34vw, 0, 0);
+  }
+}
+
+@keyframes whaleSwimReverse {
+  from {
+    transform: translate3d(-34vw, 0, 0) scaleX(-1);
+  }
+  to {
+    transform: translate3d(112vw, 0, 0) scaleX(-1);
+  }
+}
+
+.whale {
+  position: absolute;
+  left: 0;
+  will-change: transform;
+  animation-name: whaleSwim;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.whale--reverse {
+  animation-name: whaleSwimReverse;
+}
+
+.whale__body {
+  animation-name: whaleBob;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes whaleBob {
+  from {
+    transform: translate3d(0, -8px, 0) rotate(-1.4deg);
+  }
+  to {
+    transform: translate3d(0, 8px, 0) rotate(1.4deg);
+  }
+}
+
+.whale-bubble {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px solid rgba(22, 138, 87, 0.16);
+  background: radial-gradient(
+    circle at 32% 28%,
+    rgba(255, 255, 255, 0.95),
+    rgba(110, 231, 183, 0.4) 46%,
+    rgba(22, 138, 87, 0.16) 68%,
+    rgba(22, 138, 87, 0) 72%
+  );
+  animation-name: bubbleRise;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+
+@keyframes bubbleRise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(0.65);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.55;
+  }
+  75% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: translate3d(var(--drift, 12px), -62vh, 0) scale(1.05);
+    opacity: 0;
+  }
+}
+
+.whale-current {
+  animation: currentDrift 18s ease-in-out infinite alternate;
+}
+
+.whale-current--slow {
+  animation-duration: 26s;
+  animation-direction: alternate-reverse;
+}
+
+@keyframes currentDrift {
+  from {
+    transform: translateX(-14px);
+  }
+  to {
+    transform: translateX(14px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .animate-fade-rise,
-  .skeleton-bar {
+  .skeleton-bar,
+  .whale,
+  .whale__body,
+  .whale-bubble,
+  .whale-current {
     animation: none !important;
   }
   *,
