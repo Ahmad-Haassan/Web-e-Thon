@@ -79,8 +79,6 @@ type AdminTab =
 const SIDEBAR_ITEMS: { id: AdminTab; label: string; icon: typeof Home }[] = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "users", label: "User Management", icon: Users },
-  { id: "exams", label: "Exam Management", icon: ClipboardList },
-  { id: "questions", label: "Question Bank", icon: BookOpen },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "logs", label: "System Logs", icon: ScrollText },
   { id: "settings", label: "Settings", icon: Settings },
@@ -139,6 +137,7 @@ export default function AdminDashboardPage() {
   }, [user, loading, router]);
 
   const [pendingRoleDrafts, setPendingRoleDrafts] = useState<Record<string, UserRole>>({});
+  const [ignoredPendingIds, setIgnoredPendingIds] = useState<string[]>([]);
   const isAdmin = Boolean(user && user.active && user.role === "ADMIN");
 
   // Queries
@@ -352,7 +351,9 @@ export default function AdminDashboardPage() {
     }
   }
 
-  const pendingUsers = (usersQuery.data?.users ?? []).filter((u) => !u.active);
+  const pendingUsers = (usersQuery.data?.users ?? []).filter(
+    (u) => !u.active && !ignoredPendingIds.includes(u.id)
+  );
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -633,109 +634,118 @@ export default function AdminDashboardPage() {
           {/* ======================= 1. DASHBOARD TAB ======================= */}
           {activeTab === "dashboard" && (
             <div className="mx-auto max-w-6xl space-y-6">
-              {/* Welcome Row */}
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-foreground">
-                    Welcome, Admin!
-                  </h1>
-                  <p className="mt-1 text-sm text-ink-subtle">
-                    Here&apos;s what&apos;s happening on your examination platform today.
-                  </p>
-                </div>
-                <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-medium text-ink-muted shadow-2xs">
-                  <Calendar className="h-3.5 w-3.5 text-accent" />
-                  <span>{format(nowDisplay, "MMM dd, yyyy • hh:mm a")}</span>
-                </div>
+              {/* Welcome Row (Admin only) */}
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                  Welcome back, Admin
+                </h1>
               </div>
 
-              {/* 4 KPI Stat Cards */}
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {/* Total Students */}
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("users")}
-                  className="flex items-center gap-4 rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#f5f9f7] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-ink shadow-sm">
-                    <Users className="h-6 w-6" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-foreground">
-                      {overviewQuery.isLoading ? "…" : (stats?.totalStudents ?? 0).toLocaleString()}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
-                      <span>Total Students</span>
-                      <span className="font-semibold text-emerald-600">
-                        {stats?.activeStudents ?? 0} active
-                      </span>
+              {/* Box 1: Pending Approvals (Student Registrations & Examiner Applications) */}
+              <div className="overflow-hidden rounded-2xl border border-warning/40 bg-surface shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-warning-soft/50 px-5 py-4">
+                  <div>
+                    <h2 className="text-base font-bold text-foreground">
+                      Pending Approvals (Registrations &amp; Examiner Applications)
+                    </h2>
+                    <p className="mt-0.5 text-xs text-ink-muted">
+                      Accept registered students or examiner applications to grant portal access, or ignore unwanted requests.
                     </p>
                   </div>
-                </button>
+                  <div className="flex items-center gap-2">
+                    <Badge tone={pendingUsers.length > 0 ? "warning" : "verified"}>
+                      {pendingUsers.length} Pending
+                    </Badge>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("users")}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline cursor-pointer"
+                    >
+                      All Users <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
 
-                {/* Total Exams */}
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("exams")}
-                  className="flex items-center gap-4 rounded-2xl border border-emerald-100 bg-gradient-to-br from-[#ecfdf5] to-[#f7fefb] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-sm">
-                    <FileText className="h-6 w-6" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-foreground">
-                      {overviewQuery.isLoading ? "…" : (stats?.totalExams ?? 0).toLocaleString()}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
-                      <span>Total Exams</span>
-                      <span className="font-semibold text-emerald-600">
-                        {stats?.ongoingExams ?? 0} live
-                      </span>
-                    </p>
+                {usersQuery.isLoading ? (
+                  <div className="flex items-center justify-center gap-2 py-8 text-sm text-ink-subtle">
+                    <Spinner /> Loading pending approvals…
                   </div>
-                </button>
-
-                {/* Total Attempts */}
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("analytics")}
-                  className="flex items-center gap-4 rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#f4f8f6] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#1b4d3e] text-white shadow-sm">
-                    <Check className="h-6 w-6" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-foreground">
-                      {overviewQuery.isLoading ? "…" : (stats?.totalAttempts ?? 0).toLocaleString()}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
-                      <span>Total Attempts</span>
-                      <span className="font-semibold text-[#1b4d3e]">
-                        {stats?.gradedAttempts ?? 0} graded
-                      </span>
-                    </p>
+                ) : pendingUsers.length === 0 ? (
+                  <div className="px-5 py-8 text-center text-sm text-ink-subtle">
+                    No pending user registrations or examiner applications right now.
                   </div>
-                </button>
-
-                {/* Platform Uptime / Integrity */}
-                <button
-                  type="button"
-                  onClick={() => integrityMut.mutate()}
-                  className="flex items-center gap-4 rounded-2xl border border-amber-100 bg-gradient-to-br from-[#fff7ed] to-[#fffcf7] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
-                >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-white shadow-sm">
-                    <Activity className="h-6 w-6" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-foreground">
-                      {stats ? `${stats.platformHealthPct}%` : "99.9%"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-ink-muted">Platform Uptime</p>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {pendingUsers.map((u) => (
+                      <div
+                        key={u.id}
+                        className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 hover:bg-surface-subtle/60"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-foreground">{u.name}</p>
+                          <p className="text-xs font-mono text-ink-subtle">{u.email}</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button
+                            size="sm"
+                            disabled={updateUserMut.isPending}
+                            onClick={() => {
+                              updateUserMut.mutate({
+                                id: u.id,
+                                body: { role: "CANDIDATE", active: true },
+                              });
+                              toast.success(`Accepted ${u.name} as Student`);
+                            }}
+                          >
+                            <UserCheck className="h-3.5 w-3.5" /> Accept Student
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={updateUserMut.isPending}
+                            onClick={() => {
+                              updateUserMut.mutate({
+                                id: u.id,
+                                body: { role: "EXAMINER", active: true },
+                              });
+                              toast.success(`Accepted ${u.name} as Examiner`);
+                            }}
+                          >
+                            <UserCheck className="h-3.5 w-3.5" /> Accept Examiner
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={updateUserMut.isPending}
+                            onClick={() => {
+                              updateUserMut.mutate({
+                                id: u.id,
+                                body: { role: "ADMIN", active: true },
+                              });
+                              toast.success(`Accepted ${u.name} as Admin`);
+                            }}
+                          >
+                            Accept Admin
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-rose-600 hover:bg-rose-50"
+                            onClick={() => {
+                              setIgnoredPendingIds((prev) => [...prev, u.id]);
+                              toast.info(`Ignored application from ${u.email}`);
+                            }}
+                          >
+                            <X className="h-3.5 w-3.5" /> Ignore
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </button>
+                )}
               </div>
 
-              {/* Middle Row: Recent Activities + Quick Actions */}
+              {/* Middle Row: Recent Activities + Admin Governance Tools */}
               <div className="grid gap-5 lg:grid-cols-5">
                 {/* Recent Activities */}
                 <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-3">
@@ -788,61 +798,62 @@ export default function AdminDashboardPage() {
                   )}
                 </div>
 
-                {/* Quick Actions */}
+                {/* Admin Quick Summary */}
                 <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-2">
-                  <h2 className="mb-4 text-base font-bold text-foreground">Quick Actions</h2>
+                  <h2 className="mb-4 text-base font-bold text-foreground">Platform Overview</h2>
                   <div className="grid grid-cols-2 gap-3">
-                    <Link
-                      href="/examiner/exams/new"
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#113b32] to-[#143b30] px-4 py-6 text-center text-white shadow-md shadow-[#c7dfd4] transition hover:brightness-110"
-                    >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-surface/15">
-                        <Plus className="h-5 w-5" />
-                      </span>
-                      <span className="text-xs font-semibold leading-tight">
-                        Create
-                        <br />
-                        New Exam
-                      </span>
-                    </Link>
-
                     <button
                       type="button"
                       onClick={() => setActiveTab("users")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#eef5f1] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
+                      className="flex flex-col items-start justify-between gap-2 rounded-2xl border border-border bg-surface-subtle p-4 text-left transition hover:bg-accent-soft cursor-pointer"
                     >
-                      <Users className="h-6 w-6 text-accent" />
-                      <span className="text-xs font-semibold leading-tight">
-                        Manage
-                        <br />
-                        Users
-                      </span>
+                      <Users className="h-5 w-5 text-accent" />
+                      <div>
+                        <p className="text-xl font-bold text-foreground">
+                          {overviewQuery.isLoading ? "…" : (stats?.totalStudents ?? 0).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-ink-muted">Registered Students</p>
+                      </div>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => setActiveTab("exams")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#eef5f1] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
+                      onClick={() => setActiveTab("users")}
+                      className="flex flex-col items-start justify-between gap-2 rounded-2xl border border-warning/30 bg-warning-soft/40 p-4 text-left transition hover:bg-warning-soft cursor-pointer"
                     >
-                      <FileText className="h-6 w-6 text-accent" />
-                      <span className="text-xs font-semibold leading-tight">
-                        View
-                        <br />
-                        Results
-                      </span>
+                      <UserPlus className="h-5 w-5 text-warning" />
+                      <div>
+                        <p className="text-xl font-bold text-foreground">{pendingUsers.length}</p>
+                        <p className="text-xs text-ink-muted">Pending Approvals</p>
+                      </div>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => setActiveTab("analytics")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-[#e6f1ec] bg-[#eef5f1] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
+                      className="flex flex-col items-start justify-between gap-2 rounded-2xl border border-border bg-surface-subtle p-4 text-left transition hover:bg-accent-soft cursor-pointer"
                     >
-                      <BarChart3 className="h-6 w-6 text-accent" />
-                      <span className="text-xs font-semibold leading-tight">
-                        Check
-                        <br />
-                        Analytics
-                      </span>
+                      <BarChart3 className="h-5 w-5 text-accent" />
+                      <div>
+                        <p className="text-xl font-bold text-foreground">
+                          {overviewQuery.isLoading ? "…" : (stats?.totalAttempts ?? 0).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-ink-muted">Total Attempts</p>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => integrityMut.mutate()}
+                      className="flex flex-col items-start justify-between gap-2 rounded-2xl border border-border bg-surface-subtle p-4 text-left transition hover:bg-accent-soft cursor-pointer"
+                    >
+                      <Activity className="h-5 w-5 text-emerald-600" />
+                      <div>
+                        <p className="text-xl font-bold text-foreground">
+                          {stats ? `${stats.platformHealthPct}%` : "99.9%"}
+                        </p>
+                        <p className="text-xs text-ink-muted">Platform Health</p>
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -1152,6 +1163,17 @@ export default function AdminDashboardPage() {
                               }
                             >
                               <UserCheck className="h-3.5 w-3.5" /> Approve &amp; Assign
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-rose-600 hover:bg-rose-50"
+                              onClick={() => {
+                                setIgnoredPendingIds((prev) => [...prev, u.id]);
+                                toast.info(`Ignored application from ${u.email}`);
+                              }}
+                            >
+                              <X className="h-3.5 w-3.5" /> Ignore
                             </Button>
                           </div>
                         </div>
