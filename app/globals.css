@@ -1,26 +1,169 @@
 @import "tailwindcss";
 
 :root {
+  --background: #f7f6f2;
+  --foreground: #0f1c2e;
+  --surface: #ffffff;
+  --surface-muted: #f0eee8;
+  --surface-subtle: #faf9f6;
+  --ink-muted: #4b5563;
+  --ink-subtle: #6b7280;
+  --border: #e2dfd7;
+  --border-strong: #c8c3b8;
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-soft: #eff6ff;
+  --accent-ink: #ffffff;
+  --verified: #047857;
+  --verified-soft: #ecfdf5;
+  --warning: #b45309;
+  --warning-soft: #fffbeb;
+  --danger: #be123c;
+  --danger-soft: #fff1f2;
+  --exam-font-scale: 1;
+}
+
+:root[data-theme="dark"] {
+  --background: #0b1120;
+  --foreground: #f1f5f9;
+  --surface: #111827;
+  --surface-muted: #1e293b;
+  --surface-subtle: #0f172a;
+  --ink-muted: #cbd5e1;
+  --ink-subtle: #94a3b8;
+  --border: #273449;
+  --border-strong: #3b4c68;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-soft: #172554;
+  --accent-ink: #ffffff;
+  --verified: #10b981;
+  --verified-soft: #064e3b;
+  --warning: #f59e0b;
+  --warning-soft: #451a03;
+  --danger: #fb7185;
+  --danger-soft: #4c0519;
+}
+
+:root[data-contrast="high"] {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #000000;
+  --surface: #ffffff;
+  --surface-muted: #f2f2f2;
+  --surface-subtle: #ffffff;
+  --ink-muted: #111111;
+  --ink-subtle: #222222;
+  --border: #000000;
+  --border-strong: #000000;
+  --accent: #0000cc;
+  --accent-hover: #000099;
+  --accent-soft: #e6ecff;
+  --verified: #006633;
+  --verified-soft: #e6ffe6;
+  --warning: #8a4b00;
+  --warning-soft: #fff5cc;
+  --danger: #b30000;
+  --danger-soft: #ffe6e6;
+}
+
+:root[data-theme="dark"][data-contrast="high"] {
+  --background: #000000;
+  --foreground: #ffffff;
+  --surface: #0a0a0a;
+  --surface-muted: #1a1a1a;
+  --surface-subtle: #000000;
+  --ink-muted: #f5f5f5;
+  --ink-subtle: #e5e5e5;
+  --border: #ffffff;
+  --border-strong: #ffffff;
+  --accent: #66b2ff;
+  --accent-hover: #99ccff;
+  --accent-soft: #001f4d;
+  --accent-ink: #000000;
+  --verified: #33ff99;
+  --verified-soft: #003319;
+  --warning: #ffd633;
+  --warning-soft: #332900;
+  --danger: #ff6666;
+  --danger-soft: #330000;
+}
+
+:root[data-font-size="sm"] {
+  --exam-font-scale: 0.9;
+}
+:root[data-font-size="md"] {
+  --exam-font-scale: 1;
+}
+:root[data-font-size="lg"] {
+  --exam-font-scale: 1.125;
+}
+:root[data-font-size="xl"] {
+  --exam-font-scale: 1.25;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-verified: var(--verified);
+  --color-verified-soft: var(--verified-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  font-size: calc(16px * var(--exam-font-scale));
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  line-height: 1.55;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.exam-protected {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }
