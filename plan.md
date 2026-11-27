@@ -273,12 +273,12 @@ Supabase Auth replaces custom bcrypt/JWT. Roles: ADMIN, EXAMINER (teacher), CAND
 4. Update the seed script to create the demo admin, examiner and candidates via the Admin API.
 
 
-## 12. 6-Hour MVP (2 people) - overrides scope above
+## 12. Build Priority (2 people) - NOTHING is removed from the plan; this only sets the ORDER
 **Story:** an exam that survives disconnects and proves nothing was lost or changed.
 
 **Build:** (1) Supabase login + role guard, (2) examiner creates MCQ exam + enrolls, (3) candidate exam page: server timer, autosave, IndexedDB queue synced by clientSeq, (4) signed receipts + hash chain + /verify page, (5) auto-grade + result.
 **If time remains:** fullscreen/tab-blur indicators, simple dispute form.
-**Cut:** sandbox, bulk import, PDF/QR, scratchpad, prefs, analytics, seeded randomization, emergency codes, written grading, invite flow, MFA, RLS.
+**Build last (still in scope, tier 3):** sandbox, bulk import, PDF/QR, scratchpad, prefs, analytics, seeded randomization, emergency codes, written grading, invite flow, MFA, RLS.
 **Auth shortcuts:** email confirmation off; seed 1 admin + 1 examiner; students self-register as CANDIDATE; role in our User table.
 **Split:** A = backend (auth middleware, Prisma, exam/attempt APIs, hash chain, receipts). B = frontend (login, examiner pages, exam page + offline queue, verify page).
 **Demo:** go offline, answer, reconnect, receipts appear, timer unchanged; /verify green; edit a row -> red.
@@ -372,3 +372,56 @@ lib/shared/ (zod schemas, types)   agree together
 4. Exam page (client component): server-offset timer, palette, IndexedDB-first autosave, sync by clientSeq, offline badge, resume, token refresh.
 5. Soft lock + indicators, result page, receipts, `/verify` page.
 6. Polish, demo script, offline rehearsal.
+
+
+## 15. Complete Tech Stack (Next.js + Supabase + TypeScript) - covers EVERY feature in this plan
+Nothing in Sections 1-13 is dropped. Where Section 14 differs (Express/Prisma/bcrypt), the Next.js + Supabase equivalent below applies.
+
+### 15.1 Frontend (Person B)
+| Need | Package |
+|---|---|
+| Framework/UI | Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui, lucide-react |
+| Forms + validation | react-hook-form + Zod (`@hookform/resolvers`) |
+| Server state | TanStack Query |
+| Local UI state | Zustand |
+| Auth client | `@supabase/supabase-js`, `@supabase/ssr` |
+| Offline queue (5.3, 4.1) | `idb-keyval` or Dexie (IndexedDB), Serwist (service worker/PWA) |
+| Network-aware UI (4.1) | `navigator.onLine` + heartbeat hook, sonner (toasts) |
+| Live monitor/announcements (Sec 5.6) | Supabase Realtime (fallback: SWR/polling) |
+| Charts/analytics (5.8, 4.5) | Recharts |
+| QR display (4.6) | qrcode.react |
+| Bulk import UI (4.4) | papaparse (CSV parse + row error table) |
+| Workspace prefs (4.7) | next-themes (theme/high contrast), CSS variables for font size, saved to User.prefs |
+| Scratchpad (4.8) | textarea + perfect-freehand or react-konva canvas, autosave to IndexedDB + server |
+| Soft lock / indicators (Sec 10) | Fullscreen API, Keyboard Lock API, `visibilitychange` (native) |
+| Tables | TanStack Table |
+| Dates | date-fns |
+| Analytics (non-exam pages only) | Microsoft Clarity, GA4 (`@next/third-parties`) |
+
+### 15.2 Backend (Person A)
+| Need | Tool |
+|---|---|
+| Auth + RBAC | Supabase Auth, role in `users` table, route-handler `requireRole`, RLS |
+| Database | Supabase Postgres, SQL migrations (`supabase/migrations`), `supabase gen types typescript` |
+| API | Next.js Route Handlers (`runtime = "nodejs"`) using service-role key |
+| Validation | Zod (shared schemas in `lib/shared`) |
+| Exam expiry finalizer (Sec 5.5) | `pg_cron` in Supabase (or lazy finalize on read) |
+| Atomic submit/grading | Postgres functions (RPC) / transactions |
+| Hash chain, receipts, verifyCode, unlock codes (Sec 10) | Node `crypto` (SHA-256, HMAC) |
+| Fair randomization (5.2) | `seedrandom` (deterministic, seed commitment), blueprint quota generator |
+| PDF reports (4.2) | `pdfkit` (Node runtime) or `@react-pdf/renderer` |
+| QR in PDF/verify (4.6) | `qrcode` |
+| Bulk import (4.4) | `papaparse` / `csv-parse` + Zod per-row validation, Admin API for creating users |
+| Rate limiting | `@upstash/ratelimit` (free) or Supabase auth limits |
+| Security headers/CORS | `next.config.js` headers (helmet equivalent), strict CSP |
+| Storage (optional) | Supabase Storage |
+| Audit log (Sec 4, 11) | `audit_log` table written from route handlers |
+| Sandbox attempts (4.3) | `is_sandbox` flag excluded in all queries/views |
+
+### 15.3 Tooling (both)
+TypeScript strict, ESLint + Prettier, Vitest (unit: chain, grading, randomization), Playwright (offline demo e2e), Husky optional, Vercel (deploy) + Supabase cloud, GitHub (branches per Section 13).
+
+### 15.4 Notes
+- `pdfkit` and `crypto` need the Node runtime, not Edge.
+- Keep the answer key in a table the client cannot read (RLS).
+- Service-role key only in server env (`.env.local`, no `NEXT_PUBLIC_`).
