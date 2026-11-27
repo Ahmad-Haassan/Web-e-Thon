@@ -11,7 +11,13 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/client/api";
-import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/client/supabase";
+import {
+  clearTabSession,
+  getBrowserSupabase,
+  hasTabSession,
+  isSupabaseConfigured,
+  markTabSessionActive,
+} from "@/lib/client/supabase";
 import type { AppUser, UserRole, WorkspacePrefs } from "@/lib/client/api-types";
 
 export const DEFAULT_PREFS: WorkspacePrefs = {
@@ -105,10 +111,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } = await supabase.auth.getSession();
 
       if (!session) {
+        clearTabSession();
         setUser(null);
         setError(null);
         setLoading(false);
         return null;
+      }
+
+      // Enforce per-tab session: if the user closed the tab/browser, opened a fresh tab,
+      // or returned from an external site, force sign-out so they MUST sign in again.
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const justFinishedOAuth = params.get("oauth") === "1";
+        const returnedFromExternal =
+          Boolean(document.referrer) &&
+          !document.referrer.startsWith(window.location.origin) &&
+          !justFinishedOAuth;
+
+        if (justFinishedOAuth) {
+          markTabSessionActive();
+          params.delete("oauth");
+          const clean =
+            window.location.pathname +
+            (params.toString() ? `?${params.toString()}` : "") +
+            window.location.hash;
+          window.history.replaceState({}, "", clean);
+        } else if (!hasTabSession() || returnedFromExternal) {
+          clearTabSession();
+          await supabase.auth.signOut();
+          setUser(null);
+          setError(null);
+          setLoading(false);
+          return null;
+        }
       }
 
       const res = await api.me.get();
@@ -159,9 +194,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event) => {
       if (!active) return;
-      if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+      if (event === "SIGNED_IN") {
+        markTabSessionActive();
+        void refreshUser();
+      } else if (event === "TOKEN_REFRESHED") {
         void refreshUser();
       } else if (event === "SIGNED_OUT") {
+        clearTabSession();
         setUser(null);
         setLoading(false);
       }
@@ -210,6 +249,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
+    clearTabSession();
     if (isSupabaseConfigured()) {
       const supabase = getBrowserSupabase();
       await supabase.auth.signOut();

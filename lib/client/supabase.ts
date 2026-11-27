@@ -5,6 +5,35 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 let browserClient: SupabaseClient | null = null;
 
+export const TAB_SESSION_KEY = "veriexam:tab-session";
+
+export function markTabSessionActive(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(TAB_SESSION_KEY, "1");
+  } catch {
+    // ignore storage errors
+  }
+}
+
+export function hasTabSession(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem(TAB_SESSION_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function clearTabSession(): void {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.removeItem(TAB_SESSION_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function isSupabaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -23,7 +52,12 @@ export function getBrowserSupabase(): SupabaseClient {
     );
   }
 
-  browserClient = createBrowserClient(url, anonKey);
+  // Session-only cookies (no persistent maxAge) so closing the browser always signs out
+  browserClient = createBrowserClient(url, anonKey, {
+    cookieOptions: {
+      maxAge: undefined,
+    },
+  });
   return browserClient;
 }
 

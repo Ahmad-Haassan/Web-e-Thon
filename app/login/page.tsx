@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/client/supabase";
+import { getBrowserSupabase, isSupabaseConfigured, markTabSessionActive } from "@/lib/client/supabase";
 import { useAuth, roleHomePath } from "@/hooks/use-auth";
 import {
   Button,
@@ -218,6 +218,7 @@ function LoginForm() {
         );
       }
 
+      markTabSessionActive();
       const appUser = await refreshUser();
       setShowGmailModal(false);
 
@@ -261,6 +262,7 @@ function LoginForm() {
         return;
       }
 
+      markTabSessionActive();
       const appUser = await refreshUser();
       if (!appUser) {
         setError("Signed in, but could not load your profile from /api/me.");

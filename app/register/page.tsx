@@ -13,7 +13,7 @@ import {
   UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/client/supabase";
+import { getBrowserSupabase, isSupabaseConfigured, markTabSessionActive } from "@/lib/client/supabase";
 import { useAuth, roleHomePath } from "@/hooks/use-auth";
 import {
   BrandMark,
@@ -149,6 +149,7 @@ export default function RegisterPage() {
         return;
       }
 
+      markTabSessionActive();
       const appUser = await refreshUser();
       if (!appUser || !appUser.active || reqData.pendingApproval) {
         toast.info("Account created! Please wait until an Administrator approves your account.");

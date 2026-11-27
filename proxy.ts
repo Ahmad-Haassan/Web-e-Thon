@@ -37,9 +37,13 @@ export async function proxy(request: NextRequest) {
             headers: request.headers,
           },
         });
-        cookiesToSet.forEach(({ name, value, options }) =>
-          response.cookies.set(name, value, options)
-        );
+        cookiesToSet.forEach(({ name, value, options }) => {
+          // Strip maxAge/expires so auth cookies expire automatically when the browser closes
+          const { maxAge: _m, expires: _e, ...sessionOpts } = options ?? {};
+          void _m;
+          void _e;
+          response.cookies.set(name, value, sessionOpts);
+        });
       },
     },
   });

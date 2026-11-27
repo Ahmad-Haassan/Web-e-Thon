@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
           entityId: inserted?.id ?? null,
           after: { email: authUser.email.toLowerCase(), provider: "google" },
         });
-        return NextResponse.redirect(new URL("/pending-approval", url.origin));
+        return NextResponse.redirect(new URL("/pending-approval?oauth=1", url.origin));
       }
 
       if (createdRecently && existing.active) {
@@ -92,15 +92,17 @@ export async function GET(req: NextRequest) {
           entityId: existing.id,
           after: { email: authUser.email.toLowerCase(), provider: "google" },
         });
-        return NextResponse.redirect(new URL("/pending-approval", url.origin));
+        return NextResponse.redirect(new URL("/pending-approval?oauth=1", url.origin));
       }
 
       if (!existing.active) {
-        return NextResponse.redirect(new URL("/pending-approval", url.origin));
+        return NextResponse.redirect(new URL("/pending-approval?oauth=1", url.origin));
       }
     }
 
-    return NextResponse.redirect(new URL(safeNext, url.origin));
+    const dest = new URL(safeNext, url.origin);
+    dest.searchParams.set("oauth", "1");
+    return NextResponse.redirect(dest);
   } catch (err) {
     const loginUrl = new URL("/login", url.origin);
     loginUrl.searchParams.set(
