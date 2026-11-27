@@ -26,7 +26,23 @@ export async function GET(
       .eq("exam_id", id);
 
     if (error) throw new HttpError(500, error.message);
-    return jsonOk({ enrollments: data ?? [] });
+    const enrollments = (data ?? []).map((row) => {
+      const u = (Array.isArray(row.users) ? row.users[0] : row.users) as {
+        id: string;
+        name: string;
+        email: string;
+        active: boolean;
+      } | null;
+      return {
+        ...row,
+        candidate_id: u?.id,
+        user: u,
+        candidate: u,
+        name: u?.name,
+        email: u?.email,
+      };
+    });
+    return jsonOk({ enrollments });
   } catch (err) {
     return handleRouteError(err);
   }

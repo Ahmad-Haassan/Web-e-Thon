@@ -107,6 +107,10 @@ export async function GET(
       attemptsChecked: (attempts ?? []).length,
       allChainsValid,
       tamperedAttempts,
+      seedCommitment: exam.seed_commitment,
+      seedReveal: exam.seed_reveal,
+      checkpointHash: exam.checkpoint_hash,
+      checkpointValid: checkpointMatches && checkpointSigValid,
       checkpoint: {
         publishedHash: exam.checkpoint_hash,
         recomputedHash: recomputed.checkpointHash,

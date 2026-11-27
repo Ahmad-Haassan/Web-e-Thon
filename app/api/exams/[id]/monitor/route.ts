@@ -140,6 +140,7 @@ export async function GET(
       const flagScore = tabBlurs + fullscreenExits + pasteEvents * 2 + lockViolations * 2;
 
       return {
+        id: att.id,
         attemptId: att.id,
         candidate: att.users,
         status: att.status,
@@ -153,6 +154,7 @@ export async function GET(
         maxScore: Number(att.max_score),
         indicators,
         flaggedForReview: flagScore >= 2,
+        flagged: flagScore >= 2,
         recentEvents: evList.slice(-10),
       };
     });

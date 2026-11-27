@@ -189,15 +189,22 @@ export async function GET(
 
       return {
         questionId: st.questionId,
+        id: st.questionId,
         text: st.text,
         type: st.type,
         nominalDifficulty: st.difficulty,
         shownCount: st.shownCount,
         pctCorrect: Number(pctCorrect.toFixed(1)),
+        correctRate: Number(pctCorrect.toFixed(1)),
         skipRate: Number(skipRate.toFixed(1)),
         difficultyIndex,
         mostCommonWrong,
+        mostCommonWrongOption: mostCommonWrong?.text ?? null,
         possiblyAmbiguous,
+        ambiguityFlag: possiblyAmbiguous,
+        ambiguityFlags: possiblyAmbiguous
+          ? [pctCorrect < 25 ? "Low correct rate (<25%)" : "Distractor selected more than correct key"]
+          : [],
       };
     });
 
@@ -294,8 +301,10 @@ export async function GET(
         totalAttempts: realAttempts.length,
         totalSubmitted: completed.length,
         averageScore: completed.length ? Number((sumScore / completed.length).toFixed(2)) : 0,
+        avg: completed.length ? Number((sumScore / completed.length).toFixed(2)) : 0,
         averagePct: completed.length ? Number((sumPct / completed.length).toFixed(1)) : 0,
         passRatePct: completed.length ? Number(((passCount / completed.length) * 100).toFixed(1)) : 0,
+        passRate: completed.length ? Number(((passCount / completed.length) * 100).toFixed(1)) : 0,
         distribution,
       },
       candidates,

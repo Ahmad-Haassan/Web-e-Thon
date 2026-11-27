@@ -117,6 +117,21 @@ export async function GET(
     const score = attempt.score !== null ? Number(attempt.score) : null;
     const maxScore = Number(attempt.max_score);
 
+    const questionsWithExplanations = breakdown.map((b) => ({
+      id: b.questionId,
+      type: b.type,
+      difficulty: b.difficulty,
+      text: b.text,
+      marks: b.maxMarks,
+      options: b.options,
+      correctOptionIds: b.correctOptionIds,
+      explanation: b.explanation,
+      selected: b.selected ?? undefined,
+      awarded: b.awarded,
+      feedback: b.feedback,
+      isPendingManual: b.isPendingManual,
+    }));
+
     return jsonOk({
       attempt: {
         id: attempt.id,
@@ -132,9 +147,18 @@ export async function GET(
         balanceScore: attempt.balance_score ? Number(attempt.balance_score) : null,
         verifyCode: attempt.verify_code,
       },
+      exam: {
+        id: exam.id,
+        title: exam.title,
+        results_published: exam.results_published,
+        resultsPublished: exam.results_published,
+      },
       candidate: attempt.users,
+      grades: grades ?? [],
+      questionsWithExplanations,
       breakdown,
       receipts: receipts ?? [],
+      verifyCode: attempt.verify_code,
       chain,
     });
   } catch (err) {

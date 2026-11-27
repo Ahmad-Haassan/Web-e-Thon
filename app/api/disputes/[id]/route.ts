@@ -83,6 +83,8 @@ export async function GET(
       ...(answers ?? []).map((a) => ({
         at: a.received_at,
         kind: "ANSWER_SYNC",
+        type: a.accepted ? "ANSWER_SAVED" : `ANSWER_REJECTED (${a.reject_reason ?? "LATE"})`,
+        summary: `Seq #${a.client_seq} (${a.accepted ? "Accepted" : a.reject_reason ?? "Rejected"})`,
         questionId: a.question_id,
         clientSeq: a.client_seq,
         accepted: a.accepted,
@@ -93,13 +95,15 @@ export async function GET(
         at: e.at,
         kind: "EVENT",
         type: e.type,
+        summary: e.type,
         meta: e.meta,
         hash: e.hash,
       })),
       ...(lockEvents ?? []).map((l) => ({
         at: l.at,
         kind: "LOCK_EVENT",
-        type: l.type,
+        type: `LOCK_${l.type}`,
+        summary: `Soft-lock: ${l.type}`,
         actorId: l.actor_id,
         meta: l.meta,
         hash: l.hash,
@@ -158,6 +162,17 @@ export async function GET(
           }
         : null,
       candidateAnswer: candidateLatestAnswer?.selected ?? null,
+      answer: candidateLatestAnswer,
+      key:
+        user.role !== "CANDIDATE" && disputedQuestion
+          ? {
+              correctOptionIds: disputedQuestion.correctOptionIds,
+              writtenRubric: disputedQuestion.writtenRubric ?? null,
+              explanation: disputedQuestion.explanation ?? null,
+              questionText: disputedQuestion.text,
+              marks: disputedQuestion.marks,
+            }
+          : null,
       evidenceTimeline: timeline,
       receipts: receipts ?? [],
       chain,
