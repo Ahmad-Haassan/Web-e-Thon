@@ -3,33 +3,17 @@
 import { Suspense, useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  AlertCircle,
-  BookOpen,
-  ClipboardCheck,
-  Eye,
-  EyeOff,
-  GraduationCap,
-  ShieldCheck,
-} from "lucide-react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getBrowserSupabase, isSupabaseConfigured } from "@/lib/client/supabase";
 import { useAuth, roleHomePath } from "@/hooks/use-auth";
 import {
-  BrandMark,
   Button,
   Input,
   Label,
   Spinner,
   ThemeToggleButton,
 } from "@/components/ui/primitives";
-
-const PORTAL_FEATURES = [
-  { icon: BookOpen, label: "Question banks, fair blueprint randomization & frozen paper snapshots" },
-  { icon: ClipboardCheck, label: "Failure-resilient offline answer sync & server-authoritative timing" },
-  { icon: ShieldCheck, label: "Cryptographic SHA-256 receipts, evidence timelines & public QR verification" },
-  { icon: GraduationCap, label: "Role-based Candidate, Examiner & Administrator portals with live monitoring" },
-];
 
 function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -59,9 +43,7 @@ type LoginRoleTab = "admin" | "examiner" | "student";
 const ROLE_CONFIG: Record<
   LoginRoleTab,
   {
-    badge: string;
     heading: string;
-    subtitle: string;
     placeholder: string;
     buttonLabel: string;
     allowRegister: boolean;
@@ -69,27 +51,21 @@ const ROLE_CONFIG: Record<
   }
 > = {
   admin: {
-    badge: "Administrator Portal",
     heading: "Administrator Sign In",
-    subtitle: "Sign in with your institutional administrator credentials",
     placeholder: "admin@exam.edu.pk",
     buttonLabel: "Sign In as Administrator",
     allowRegister: false,
     allowGoogle: false,
   },
   examiner: {
-    badge: "Examiner Portal",
     heading: "Examiner Sign In",
-    subtitle: "Sign in to create exams, manage question banks & monitor sessions",
-    placeholder: "examiner@exam.edu.pk",
+    placeholder: "examiner1@exam.edu.pk",
     buttonLabel: "Sign In as Examiner",
     allowRegister: false,
     allowGoogle: true,
   },
   student: {
-    badge: "Student Portal",
     heading: "Student Sign In",
-    subtitle: "Sign in to take exams, view signed receipts & check published results",
     placeholder: "student1@exam.edu.pk",
     buttonLabel: "Sign In as Student",
     allowRegister: true,
@@ -103,19 +79,12 @@ function LoginForm() {
   const nextPath = searchParams.get("next");
   const oauthErrorParam = searchParams.get("error");
   const rawRoleParam = (searchParams.get("role") ?? "").toLowerCase();
-  const initialRole: LoginRoleTab =
+  const selectedRole: LoginRoleTab =
     rawRoleParam === "admin" || rawRoleParam === "examiner" || rawRoleParam === "student"
       ? rawRoleParam
       : "student";
-  const [selectedRole, setSelectedRole] = useState<LoginRoleTab>(initialRole);
+
   const { user, loading, refreshUser } = useAuth();
-
-  useEffect(() => {
-    if (rawRoleParam === "admin" || rawRoleParam === "examiner" || rawRoleParam === "student") {
-      setSelectedRole(rawRoleParam);
-    }
-  }, [rawRoleParam]);
-
   const roleUi = ROLE_CONFIG[selectedRole];
 
   const [email, setEmail] = useState("");
@@ -226,225 +195,127 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      {/* Top-right floating theme switch */}
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 pt-5">
-        <Link href="/" className="inline-flex items-center gap-3">
-          <span className="flex h-12 w-12 items-center justify-center rounded-[2px] border border-border bg-surface p-1.5 surface-card">
-            <BrandMark className="h-9 w-9" />
-          </span>
-          <div className="leading-tight">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-              NASTP INSTITUTE
-            </p>
-            <p className="font-display text-sm sm:text-base font-bold text-foreground">
-              of Information Technology
-            </p>
-          </div>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <Link
-            href="/verify"
-            className="hidden sm:inline-flex h-9 items-center px-3 text-xs font-medium text-ink-muted hover:text-foreground transition-colors"
-          >
-            Public Verify
-          </Link>
-          <ThemeToggleButton showLabel />
-        </div>
+      {/* Minimal Top-Right Theme Switch */}
+      <div className="mx-auto flex w-full max-w-6xl justify-end px-6 pt-5">
+        <ThemeToggleButton showLabel />
       </div>
 
-      {/* NIIT AMS Split Canvas */}
-      <main className="mx-auto flex w-full max-w-6xl flex-1 items-center px-6 py-10">
-        <div className="grid w-full items-center gap-12 lg:grid-cols-12">
-          {/* Left Institutional Showcase (Mirrors NIIT AMS Login Left Column) */}
-          <div className="lg:col-span-7 space-y-7 animate-fade-rise">
-            <h1 className="font-display text-4xl sm:text-5xl font-extrabold uppercase leading-[1.12] tracking-[0.02em] text-foreground">
-              <span className="block">EXAMINATION</span>
-              <span className="block text-accent">MANAGEMENT</span>
-              <span className="block">PORTAL</span>
-            </h1>
+      {/* Centered Single-Role Sign-In Card Only */}
+      <main className="mx-auto flex w-full max-w-md flex-1 items-center justify-center px-4 py-10">
+        <div className="w-full rounded-[2px] border border-border bg-surface p-7 sm:p-9 surface-elevated animate-fade-rise">
+          <h1 className="mb-6 text-center font-display text-2xl font-bold text-foreground">
+            {roleUi.heading}
+          </h1>
 
-            <p className="max-w-lg text-sm sm:text-base text-ink-muted leading-relaxed">
-              The exam system examiners can defend and students can trust — even when the internet fails. Offline-resilient answer sync, fair blueprint randomization, and cryptographically verifiable results.
-            </p>
-
-            <ul className="space-y-3 pt-1">
-              {PORTAL_FEATURES.map((feat) => {
-                const Icon = feat.icon;
-                return (
-                  <li key={feat.label} className="flex items-center gap-3.5 text-sm text-foreground">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[2px] border border-border-strong bg-surface text-accent">
-                      <Icon className="h-4 w-4" strokeWidth={1.7} />
-                    </span>
-                    <span className="text-ink-muted">{feat.label}</span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="flex items-center gap-2 pt-4 text-xs text-ink-subtle">
-              <span className="h-2 w-2 rounded-full bg-portal-live" />
-              <span>System operational · Lahore, Pakistan</span>
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 flex items-start gap-2 rounded-[2px] border border-danger/35 bg-danger-soft p-3 text-xs text-danger"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </div>
-          </div>
+          )}
 
-          {/* Right Elevated Sign-In Card (Mirrors NIIT AMS Auth Card) */}
-          <div className="lg:col-span-5">
-            <div className="rounded-[2px] border border-border bg-surface p-7 sm:p-9 surface-elevated">
-              {/* Role Switcher Pills */}
-              <div className="mb-5 grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-surface-subtle p-1">
-                {(["admin", "examiner", "student"] as const).map((r) => (
-                  <button
-                    key={r}
-                    type="button"
-                    onClick={() => {
-                      setSelectedRole(r);
-                      router.replace(`/login?role=${r}`, { scroll: false });
-                    }}
-                    className={`rounded-md px-2 py-1.5 text-xs font-semibold capitalize transition cursor-pointer ${
-                      selectedRole === r
-                        ? "bg-accent text-accent-ink shadow-2xs"
-                        : "text-ink-muted hover:text-foreground"
-                    }`}
-                  >
-                    {r === "admin" ? "Admin" : r === "examiner" ? "Examiner" : "Student"}
-                  </button>
-                ))}
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="email">EMAIL ADDRESS</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                placeholder={roleUi.placeholder}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-              <div className="text-center space-y-2 mb-6">
-                <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-medium text-foreground">
-                  <span className="h-2 w-2 rounded-full bg-portal-live" />
-                  {roleUi.badge}
-                </div>
-                <h2 className="font-display text-2xl font-bold text-foreground pt-1">
-                  {roleUi.heading}
-                </h2>
-                <p className="text-xs text-ink-subtle">
-                  {roleUi.subtitle}
-                </p>
-              </div>
-
-              {error && (
-                <div
-                  role="alert"
-                  className="mb-4 flex items-start gap-2 rounded-[2px] border border-danger/35 bg-danger-soft p-3 text-xs text-danger"
+            <div>
+              <Label htmlFor="password">PASSWORD</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-ink-subtle hover:text-foreground cursor-pointer"
                 >
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">EMAIL ADDRESS</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    placeholder={roleUi.placeholder}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="password">PASSWORD</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      required
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-ink-subtle hover:text-foreground cursor-pointer"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" strokeWidth={1.7} />
-                      ) : (
-                        <Eye className="h-4 w-4" strokeWidth={1.7} />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs">
-                  {roleUi.allowRegister ? (
-                    <Link href="/register" className="font-medium text-accent hover:underline">
-                      New student? Register
-                    </Link>
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" strokeWidth={1.7} />
                   ) : (
-                    <Link href="/" className="font-medium text-accent hover:underline">
-                      ← Back to Home
-                    </Link>
+                    <Eye className="h-4 w-4" strokeWidth={1.7} />
                   )}
-                  <Link href="/verify" className="text-ink-muted hover:text-foreground hover:underline">
-                    Verify Certificate
-                  </Link>
-                </div>
-
-                <Button type="submit" className="w-full h-11 shadow-md" disabled={submitting || googleLoading}>
-                  {submitting ? (
-                    <>
-                      <Spinner /> Signing In…
-                    </>
-                  ) : (
-                    roleUi.buttonLabel
-                  )}
-                </Button>
-              </form>
-
-              {roleUi.allowGoogle && (
-                <>
-                  <div className="relative my-5">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t border-border" />
-                    </div>
-                    <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-                      <span className="bg-surface px-3 text-ink-subtle">Or continue with Gmail</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleGoogleSignIn}
-                    disabled={submitting || googleLoading}
-                    className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[2px] border border-border-strong bg-surface-subtle px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
-                  >
-                    {googleLoading ? (
-                      <>
-                        <Spinner className="h-4 w-4" />
-                        <span>Redirecting to Google…</span>
-                      </>
-                    ) : (
-                      <>
-                        <GoogleIcon className="h-4 w-4" />
-                        <span>Continue with Google (Gmail)</span>
-                      </>
-                    )}
-                  </button>
-                </>
-              )}
-
-              <div className="mt-7 border-t border-border pt-5 text-center space-y-1.5 text-[11px] text-ink-subtle">
-                <p>https://niit.edu.pk</p>
-                <p>For system issues: admin@niit.edu.pk</p>
-                <p className="inline-flex items-center gap-1.5 pt-1 font-medium text-ink-muted">
-                  <BrandMark variant="square" className="h-4 w-4 border-none" />
-                  <span>NIIT EMS · Verifiable Examination Portal</span>
-                </p>
+                </button>
               </div>
             </div>
-          </div>
+
+            <div className="flex items-center justify-between text-xs">
+              {roleUi.allowRegister ? (
+                <Link href="/register" className="font-medium text-accent hover:underline">
+                  New student? Register
+                </Link>
+              ) : (
+                <Link href="/" className="font-medium text-accent hover:underline">
+                  ← Back to Home
+                </Link>
+              )}
+              <Link href="/verify" className="text-ink-muted hover:text-foreground hover:underline">
+                Verify Certificate
+              </Link>
+            </div>
+
+            <Button type="submit" className="w-full h-11 shadow-md" disabled={submitting || googleLoading}>
+              {submitting ? (
+                <>
+                  <Spinner /> Signing In…
+                </>
+              ) : (
+                roleUi.buttonLabel
+              )}
+            </Button>
+          </form>
+
+          {roleUi.allowGoogle && (
+            <>
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                  <span className="bg-surface px-3 text-ink-subtle">Or continue with Gmail</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={submitting || googleLoading}
+                className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[2px] border border-border-strong bg-surface-subtle px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
+              >
+                {googleLoading ? (
+                  <>
+                    <Spinner className="h-4 w-4" />
+                    <span>Redirecting to Google…</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon className="h-4 w-4" />
+                    <span>Continue with Google (Gmail)</span>
+                  </>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </main>
     </div>
