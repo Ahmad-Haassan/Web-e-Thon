@@ -64,13 +64,12 @@ import {
   type WorkspacePrefs,
 } from "@/lib/client/api-types";
 
-type StudentTab = "dashboard" | "exams" | "results" | "receipts" | "verify" | "settings";
+type StudentTab = "dashboard" | "exams" | "results" | "verify" | "settings";
 
 const STUDENT_NAV: { id: StudentTab; label: string; icon: typeof Home }[] = [
   { id: "dashboard", label: "Dashboard", icon: Home },
   { id: "exams", label: "My Exams", icon: BookOpen },
   { id: "results", label: "Results", icon: BarChart3 },
-  { id: "receipts", label: "Receipts", icon: FileText },
   { id: "verify", label: "Verify Result", icon: ShieldCheck },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -910,56 +909,6 @@ export default function CandidateDashboardPage() {
                       </div>
                     );
                   })}
-                </div>
-              )}
-            </div>
-          ) : activeTab === "receipts" ? (
-            <div className="mx-auto max-w-5xl space-y-5">
-              <div>
-                <h1 className="text-xl font-bold text-foreground">Cryptographic Receipts</h1>
-                <p className="text-sm text-ink-subtle">
-                  Every synced answer generates a server-signed HMAC receipt and links into your SHA-256 hash chain.
-                </p>
-              </div>
-              {rawCompleted.filter((e) => e.attempt).length === 0 ? (
-                <EmptyState
-                  icon={<Receipt className="h-10 w-10" />}
-                  title="No receipts yet"
-                  description="Once you take an exam, every autosaved answer generates a verifiable receipt here."
-                />
-              ) : (
-                <div className="space-y-3">
-                  {rawCompleted
-                    .filter((e) => e.attempt)
-                    .map((exam) => {
-                      const att = exam.attempt!;
-                      const code = attemptVerifyCode(att);
-                      return (
-                        <div
-                          key={exam.id}
-                          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-2xs"
-                        >
-                          <div>
-                            <p className="font-semibold text-foreground">{exam.title}</p>
-                            <p className="font-mono text-xs text-ink-subtle">
-                              Attempt ID: {att.id} {code ? `· Code: ${code}` : ""}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Link href={`/verify?attemptId=${encodeURIComponent(att.id)}`}>
-                              <Button size="sm" variant="verified">
-                                <ShieldCheck className="h-3.5 w-3.5" /> Verify Hash Chain
-                              </Button>
-                            </Link>
-                            {examResultsPublished(exam) && (
-                              <Link href={`/results/${att.id}`}>
-                                <Button size="sm" variant="secondary">Inspect Receipts</Button>
-                              </Link>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
                 </div>
               )}
             </div>
