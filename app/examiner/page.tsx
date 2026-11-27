@@ -4,46 +4,41 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import {
   Activity,
-  AlertTriangle,
-  ArrowRight,
+  Award,
   BarChart3,
-  Bell,
   BookOpen,
   Calendar,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
   ClipboardList,
   Clock,
   FileDown,
-  FileText,
-  Home,
   LogOut,
-  Menu,
   Plus,
-  Scale,
-  Search,
-  Settings,
   Settings2,
-  ShieldCheck,
-  Trophy,
   Users,
-  X,
-  Zap,
+  XCircle,
 } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
+import {
+  Bar,
+  CartesianGrid,
+  ComposedChart,
+  Legend,
+  Line,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { toast } from "sonner";
 import { useAuth, roleHomePath } from "@/hooks/use-auth";
 import {
-  Badge,
   Button,
-  EmptyState,
-  Label,
   Select,
   Spinner,
+  ThemeToggleButton,
 } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
 import {
@@ -51,13 +46,8 @@ import {
   examDurationMin,
   examEndAt,
   examResultsPublished,
-  examStartAt,
   examTotalMarks,
-  type ComputedExamLifecycle,
-  type WorkspacePrefs,
 } from "@/lib/client/api-types";
-
-type ExaminerTab = "dashboard" | "exams" | "settings";
 
 function fmtDate(iso: string) {
   if (!iso) return "—";
@@ -65,47 +55,10 @@ function fmtDate(iso: string) {
   return Number.isNaN(d.getTime()) ? iso : format(d, "MMM d, yyyy · hh:mm a");
 }
 
-function initialsOf(name?: string) {
-  if (!name) return "EX";
-  const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? parts[0]?.[1] ?? "")).toUpperCase() || "EX";
-}
-
-function lifecycleTone(lc: ComputedExamLifecycle) {
-  switch (lc) {
-    case "ONGOING":
-      return "verified" as const;
-    case "PUBLISHED":
-      return "accent" as const;
-    case "COMPLETED":
-      return "neutral" as const;
-    default:
-      return "warning" as const;
-  }
-}
-
 export default function ExaminerDashboardPage() {
   const router = useRouter();
-  const { user, loading, signOut, updatePrefs } = useAuth();
-
-  const [activeTab, setActiveTab] = useState<ExaminerTab>("dashboard");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [showNotif, setShowNotif] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-
-  useEffect(() => {
-    setIsOnline(navigator.onLine);
-    const onOnline = () => setIsOnline(true);
-    const onOffline = () => setIsOnline(false);
-    window.addEventListener("online", onOnline);
-    window.addEventListener("offline", onOffline);
-    return () => {
-      window.removeEventListener("online", onOnline);
-      window.removeEventListener("offline", onOffline);
-    };
-  }, []);
+  const { user, loading, signOut } = useAuth();
+  const [selectedExamId, setSelectedExamId] = useState<string>("");
 
   useEffect(() => {
     if (loading) return;
@@ -113,30 +66,36 @@ export default function ExaminerDashboardPage() {
       router.replace("/login?next=/examiner");
       return;
     }
+    if (!user.active) {
+      router.replace("/pending-approval");
+      return;
+    }
     if (!["ADMIN", "EXAMINER"].includes(user.role)) {
       router.replace(roleHomePath(user.role));
     }
   }, [user, loading, router]);
 
-  const isAllowed = Boolean(user && ["ADMIN", "EXAMINER"].includes(user.role));
+  const isAllowed = Boolean(user && user.active && ["ADMIN", "EXAMINER"].includes(user.role));
 
   const examsQuery = useQuery({
     queryKey: ["examiner-exams"],
     queryFn: () => api.exams.list(),
     enabled: isAllowed,
+    refetchInterval: 30_000,
   });
 
-  const disputesQuery = useQuery({
-    queryKey: ["examiner-disputes-summary"],
-    queryFn: () => api.disputes.list({ status: "OPEN" }),
+  const overviewQuery = useQuery({
+    queryKey: ["examiner-overview"],
+    queryFn: () => api.examiner.overview(),
     enabled: isAllowed,
+    refetchInterval: 30_000,
   });
 
   if (loading || !user || !isAllowed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f6f5]">
-        <div className="flex items-center gap-3 text-sm text-slate-600">
-          <Spinner className="h-5 w-5 text-[#1b4d3e]" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-sm text-ink-muted">
+          <Spinner className="h-5 w-5 text-accent" />
           Loading Examiner Portal…
         </div>
       </div>
@@ -144,871 +103,352 @@ export default function ExaminerDashboardPage() {
   }
 
   const allExams = examsQuery.data?.exams ?? [];
-  const q = search.trim().toLowerCase();
-  const exams = allExams.filter((e) => !q || e.title.toLowerCase().includes(q));
+  const ongoingExams = allExams.filter((e) => computeClientLifecycle(e) === "ONGOING");
+  const activeTargetExam =
+    allExams.find((e) => e.id === selectedExamId) ?? ongoingExams[0] ?? allExams[0] ?? null;
 
-  const ongoingExams = exams.filter((e) => computeClientLifecycle(e) === "ONGOING");
-  const upcomingOrDraft = exams.filter((e) => {
-    const lc = computeClientLifecycle(e);
-    return lc === "PUBLISHED" || lc === "DRAFT";
+  const stats = overviewQuery.data?.stats;
+  const totalStudents = stats?.enrolledCandidates ?? 0;
+  const avgPct = stats?.avgPerformancePct ?? 0;
+  const passRate = stats?.passRatePct ?? 0;
+  const failRate =
+    stats?.passRatePct !== null && stats?.passRatePct !== undefined
+      ? Number(Math.max(0, 100 - stats.passRatePct).toFixed(1))
+      : 0;
+
+  const chartData = (overviewQuery.data?.insightsSeries ?? []).map((pt) => {
+    const hasActivity = pt.submitted > 0 || pt.passRate > 0 || pt.avgScorePct > 0;
+    const ptFailRate = hasActivity ? Number(Math.max(0, 100 - pt.passRate).toFixed(1)) : 0;
+    return {
+      label: pt.label,
+      avgScorePct: pt.avgScorePct,
+      passRate: pt.passRate,
+      failRate: ptFailRate,
+    };
   });
-  const completedExams = exams.filter((e) => computeClientLifecycle(e) === "COMPLETED");
-  const openDisputes = disputesQuery.data?.disputes ?? [];
-
-  const publishedCount = allExams.filter((e) => e.status === "PUBLISHED").length;
-  const resultsPublishedCount = allExams.filter((e) => examResultsPublished(e)).length;
-  const publishedPct = allExams.length
-    ? Math.round((publishedCount / allExams.length) * 100)
-    : 0;
-
-  const firstName = user.name?.split(/\s+/)[0] || "Examiner";
-  const featuredExam = ongoingExams[0] ?? allExams[0];
-  const verifyTargetUrl = featuredExam
-    ? `${typeof window !== "undefined" ? window.location.origin : "https://web-e-thon.vercel.app"}/verify?examId=${featuredExam.id}`
-    : `${typeof window !== "undefined" ? window.location.origin : "https://web-e-thon.vercel.app"}/verify`;
-
-  const ringRadius = 38;
-  const ringCircumference = 2 * Math.PI * ringRadius;
-  const ringOffset = ringCircumference - (publishedPct / 100) * ringCircumference;
-
-  async function handleSignOut() {
-    await signOut();
-    router.replace("/login");
-  }
 
   return (
-    <div className="flex min-h-screen bg-[#f5f6f5] text-slate-900">
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-slate-950/60 lg:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Left Dark Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#113b32] text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
-          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="flex items-center justify-between px-5 py-5">
-          <Link href="/" className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md">
-              <ShieldCheck className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-base font-bold leading-tight text-white">VeriExam</p>
-              <p className="text-xs text-slate-400">Examiner Portal</p>
-            </div>
-          </Link>
-          <button
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 space-y-6">
+        {/* Minimal Top-Right Controls */}
+        <div className="flex items-center justify-end gap-2.5">
+          <ThemeToggleButton showLabel />
+          <Button
             type="button"
-            onClick={() => setMobileMenuOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:bg-white/10 lg:hidden"
-            aria-label="Close sidebar"
+            variant="secondary"
+            size="sm"
+            onClick={() => void signOut()}
           >
-            <X className="h-5 w-5" />
-          </button>
+            <LogOut className="h-4 w-4" /> Sign Out
+          </Button>
         </div>
 
-        <nav className="mt-2 flex-1 space-y-1 px-3">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("dashboard");
-              setMobileMenuOpen(false);
-            }}
-            className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
-              activeTab === "dashboard"
-                ? "bg-gradient-to-r from-[#1b4d3e] to-[#215347] text-white shadow-md shadow-emerald-950/40"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <Home className={`h-4.5 w-4.5 ${activeTab === "dashboard" ? "text-white" : "text-slate-400"}`} />
-            <span>Dashboard</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("exams");
-              setMobileMenuOpen(false);
-            }}
-            className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
-              activeTab === "exams"
-                ? "bg-gradient-to-r from-[#1b4d3e] to-[#215347] text-white shadow-md shadow-emerald-950/40"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <ClipboardList className={`h-4.5 w-4.5 ${activeTab === "exams" ? "text-white" : "text-slate-400"}`} />
-            <span>My Exams</span>
-          </button>
-
-          <Link
-            href="/examiner/questions"
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/5 hover:text-white"
-          >
-            <BookOpen className="h-4.5 w-4.5 text-slate-400" />
-            <span>Question Bank</span>
-          </Link>
-
-          <Link
-            href="/examiner/exams/new"
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/5 hover:text-white"
-          >
-            <Plus className="h-4.5 w-4.5 text-slate-400" />
-            <span>Create Exam</span>
-          </Link>
-
-          <Link
-            href="/disputes"
-            className="flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/5 hover:text-white"
-          >
-            <span className="flex items-center gap-3">
-              <Scale className="h-4.5 w-4.5 text-slate-400" />
-              <span>Disputes</span>
-            </span>
-            {openDisputes.length > 0 && (
-              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-bold text-amber-300">
-                {openDisputes.length}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            href="/verify"
-            className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-300 transition-all hover:bg-white/5 hover:text-white"
-          >
-            <ShieldCheck className="h-4.5 w-4.5 text-slate-400" />
-            <span>Verify Audit</span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab("settings");
-              setMobileMenuOpen(false);
-            }}
-            className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
-              activeTab === "settings"
-                ? "bg-gradient-to-r from-[#1b4d3e] to-[#215347] text-white shadow-md shadow-emerald-950/40"
-                : "text-slate-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <Settings className={`h-4.5 w-4.5 ${activeTab === "settings" ? "text-white" : "text-slate-400"}`} />
-            <span>Settings</span>
-          </button>
-        </nav>
-
-        <div className="space-y-2.5 p-4">
-          <div className="rounded-xl border border-white/10 bg-[#1a4a3f] p-3.5">
-            <div className="flex items-center gap-2 text-xs font-semibold">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${isOnline ? "bg-emerald-400" : "bg-amber-400"}`}
-              />
-              <span className={isOnline ? "text-emerald-400" : "text-amber-300"}>
-                {isOnline ? "Online" : "Reconnecting…"}
-              </span>
-            </div>
-            <p className="mt-1 text-[11px] text-slate-400">
-              {ongoingExams.length} live exam(s) active
+        {/* Hero Welcome Banner */}
+        <section className="rounded-3xl border border-border bg-surface px-6 py-7 sm:px-9 sm:py-8 shadow-2xs">
+          <div className="max-w-2xl">
+            <h1 className="font-display text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Welcome! Examiner
+            </h1>
+            <p className="mt-2 text-sm text-ink-muted">
+              Design fair blueprint exams, monitor live sessions transparently, and publish cryptographically verifiable results.
             </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#1a4a3f] px-3.5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white cursor-pointer"
-          >
-            <LogOut className="h-4 w-4 text-slate-400" />
-            <span>Logout</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Column */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 sm:px-7">
-          <div className="flex flex-1 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(true)}
-              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
-              aria-label="Open menu"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-
-            <div className="relative w-full max-w-md">
-              <Search className="pointer-events-none absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search exams..."
-                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-[#1e8e5a] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#e6f1ec]"
-              />
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <Link
+                href="/examiner/exams/new"
+                className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-xs font-semibold text-accent-ink shadow-sm hover:bg-accent-hover transition-colors"
+              >
+                <Plus className="h-4 w-4" /> Create New Exam
+              </Link>
+              <Link
+                href="/examiner/questions"
+                className="inline-flex items-center gap-2 rounded-xl border border-border-strong bg-surface-subtle px-4 py-2.5 text-xs font-semibold text-foreground hover:bg-surface-muted transition-colors"
+              >
+                <BookOpen className="h-4 w-4" /> Question Bank
+              </Link>
             </div>
           </div>
+        </section>
 
-          <div className="flex items-center gap-3">
-            {/* Notifications */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowNotif((v) => !v);
-                  setShowProfile(false);
-                }}
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
-                aria-label="Notifications"
-              >
-                <Bell className="h-5 w-5" />
-                {(openDisputes.length + ongoingExams.length) > 0 && (
-                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
-                    {openDisputes.length + ongoingExams.length}
+        {/* Middle 2-Column Row: Left = Manage & Enroll / Grading / Summary PDF | Right = Active & Live Exams */}
+        <div className="grid gap-6 lg:grid-cols-12">
+          {/* Left Box (Replaces Examiner Toolkit with Screenshot 2 Controls) */}
+          <section className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-5 flex flex-col justify-between space-y-5">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-2 border-b border-border pb-3">
+                <h2 className="text-base font-bold text-foreground">Exam Actions</h2>
+                {allExams.length > 0 && (
+                  <span className="text-xs text-ink-subtle">
+                    {allExams.length} exam(s)
                   </span>
                 )}
-              </button>
-              {showNotif && (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                  <p className="border-b border-slate-100 pb-2 text-sm font-semibold text-slate-900">
-                    Examiner Alerts
-                  </p>
-                  <div className="mt-3 space-y-2 text-xs">
-                    <p className="text-slate-600">
-                      <strong>{ongoingExams.length}</strong> live exam(s) in progress
-                    </p>
-                    <p className="text-slate-600">
-                      <strong>{openDisputes.length}</strong> open student dispute(s)
-                    </p>
-                    <Link
-                      href="/disputes"
-                      className="inline-flex items-center gap-1 pt-1 font-semibold text-[#1b4d3e] hover:underline"
-                    >
-                      Review disputes <ArrowRight className="h-3 w-3" />
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Profile */}
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowProfile((v) => !v);
-                  setShowNotif(false);
-                }}
-                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-slate-100 cursor-pointer"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1b4d3e] text-xs font-bold text-white">
-                  {initialsOf(user.name)}
-                </span>
-                <span className="hidden text-sm font-medium text-slate-700 sm:inline">
-                  {user.name}
-                </span>
-                <ChevronDown className="h-4 w-4 text-slate-400" />
-              </button>
-
-              {showProfile && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-                  <div className="border-b border-slate-100 px-3 py-2">
-                    <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
-                    <p className="truncate text-xs text-slate-500">{user.email}</p>
-                  </div>
-                  <div className="mt-1 space-y-0.5">
-                    {user.role === "ADMIN" && (
-                      <Link
-                        href="/admin"
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-[#143b30] hover:bg-[#eef5f1]"
-                      >
-                        <ShieldCheck className="h-4 w-4" /> Admin Panel
-                      </Link>
-                    )}
-                    <Link
-                      href="/examiner/questions"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      <BookOpen className="h-4 w-4 text-slate-400" /> Question Bank
-                    </Link>
-                    <Link
-                      href="/disputes"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                    >
-                      <AlertTriangle className="h-4 w-4 text-slate-400" /> Disputes
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 cursor-pointer"
-                    >
-                      <LogOut className="h-4 w-4" /> Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
-
-        {/* Main Body */}
-        <main className="flex-1 p-4 sm:p-7">
-          {examsQuery.isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-20 text-sm text-slate-500">
-              <Spinner className="h-5 w-5 text-[#1b4d3e]" /> Loading your exams…
-            </div>
-          ) : examsQuery.error ? (
-            <div className="mx-auto max-w-4xl rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-              {(examsQuery.error as Error).message}
-            </div>
-          ) : activeTab === "dashboard" ? (
-            <div className="mx-auto max-w-6xl space-y-6">
-              {/* Hero Welcome Banner */}
-              <div className="relative overflow-hidden rounded-3xl border border-[#e6f1ec] bg-gradient-to-r from-[#e6f1ec] via-[#edf5f1] to-[#dcebe4] px-6 py-7 sm:px-9 sm:py-8">
-                <div className="relative z-10 max-w-xl">
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                    Welcome back, {firstName}!
-                  </h1>
-                  <p className="mt-2 text-sm text-slate-600">
-                    Design fair blueprint exams, monitor live sessions transparently, and publish cryptographically verifiable results.
-                  </p>
-                  <div className="mt-4 flex flex-wrap items-center gap-2.5">
-                    <Link
-                      href="/examiner/exams/new"
-                      className="inline-flex items-center gap-2 rounded-xl bg-[#1b4d3e] px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-[#143b30]"
-                    >
-                      <Plus className="h-4 w-4" /> Create New Exam
-                    </Link>
-                    <Link
-                      href="/examiner/questions"
-                      className="inline-flex items-center gap-2 rounded-xl border border-[#c7dfd4] bg-white/90 px-4 py-2 text-xs font-semibold text-[#143b30] hover:bg-white"
-                    >
-                      <BookOpen className="h-4 w-4" /> Question Bank
-                    </Link>
-                  </div>
-                </div>
-
-                {/* Decorative Emblem */}
-                <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 items-center gap-4 md:flex">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-lg shadow-teal-500/20">
-                    <ShieldCheck className="h-9 w-9" />
-                  </div>
-                  <div className="flex h-24 w-32 flex-col items-center justify-center rounded-2xl border border-[#c7dfd4]/70 bg-white/75 backdrop-blur-xs shadow-sm">
-                    <ClipboardList className="h-10 w-10 text-[#143b30]" />
-                    <span className="mt-1 text-[10px] font-semibold text-[#143b30]">
-                      Live Monitor
-                    </span>
-                  </div>
-                </div>
               </div>
 
-              {/* 2-Column Main Grid */}
-              <div className="grid gap-6 lg:grid-cols-3">
-                {/* Left 2 Columns */}
-                <div className="space-y-6 lg:col-span-2">
-                  {/* Live / Ongoing Exams */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                        <Activity className="h-4.5 w-4.5 text-[#1b4d3e]" />
-                        Active &amp; Live Exams
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("exams")}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#1b4d3e] hover:text-[#143b30] cursor-pointer"
-                      >
-                        View All <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    {ongoingExams.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center text-sm text-slate-500">
-                        No exams are currently live. Create or publish an exam to begin live monitoring.
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {ongoingExams.map((exam) => {
-                          const published = examResultsPublished(exam);
-                          return (
-                            <div
-                              key={exam.id}
-                              className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50/60 p-4"
-                            >
-                              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="flex items-start gap-4">
-                                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#e6f1ec] to-[#e6f1ec] text-[#1b4d3e]">
-                                    <ClipboardList className="h-8 w-8" />
-                                  </div>
-                                  <div>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <Link
-                                        href={`/examiner/exams/${exam.id}`}
-                                        className="text-base font-bold text-slate-900 hover:text-[#1b4d3e]"
-                                      >
-                                        {exam.title}
-                                      </Link>
-                                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                        Live Now
-                                      </span>
-                                      {published && (
-                                        <span className="rounded-full bg-[#eef5f1] px-2.5 py-0.5 text-[11px] font-semibold text-[#143b30]">
-                                          Results Published
-                                        </span>
-                                      )}
-                                    </div>
-                                    <p className="mt-1 text-xs text-slate-500">
-                                      {examTotalMarks(exam)} Marks ·{" "}
-                                      {exam.blueprint && exam.blueprint.length > 0
-                                        ? "Fair Blueprint Randomization"
-                                        : "Fixed Paper"}
-                                    </p>
-                                    <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
-                                      <span className="inline-flex items-center gap-1">
-                                        <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                                        Closes {fmtDate(examEndAt(exam))}
-                                      </span>
-                                      <span className="inline-flex items-center gap-1">
-                                        <Clock className="h-3.5 w-3.5 text-slate-400" />
-                                        {examDurationMin(exam)} min
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="flex shrink-0 flex-wrap items-center gap-2">
-                                  <Link
-                                    href={`/examiner/exams/${exam.id}?tab=monitor`}
-                                    className="inline-flex items-center gap-1.5 rounded-xl bg-[#1b4d3e] px-4 py-2.5 text-xs font-semibold text-white shadow-sm shadow-[#c7dfd4] hover:bg-[#143b30]"
-                                  >
-                                    <Activity className="h-4 w-4" /> Live Monitor
-                                  </Link>
-                                </div>
-                              </div>
-
-                              <div className="flex flex-wrap items-center gap-2 border-t border-slate-200/70 pt-3">
-                                <Link href={`/examiner/exams/${exam.id}`}>
-                                  <Button size="sm" variant="secondary">
-                                    <Settings2 className="h-3.5 w-3.5" /> Manage &amp; Enroll
-                                  </Button>
-                                </Link>
-                                <Link href={`/examiner/exams/${exam.id}?tab=grading`}>
-                                  <Button size="sm" variant="secondary">
-                                    <BarChart3 className="h-3.5 w-3.5" /> Grading &amp; Analytics
-                                  </Button>
-                                </Link>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={async () => {
-                                    try {
-                                      await api.reports.downloadExamPdf(exam.id, exam.title);
-                                      toast.success("Exam summary PDF downloaded");
-                                    } catch (e) {
-                                      toast.error((e as Error).message);
-                                    }
-                                  }}
-                                >
-                                  <FileDown className="h-3.5 w-3.5" /> Summary PDF
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upcoming & Draft Exams */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <Clock className="h-4.5 w-4.5 text-[#1b4d3e]" />
-                      Upcoming &amp; Draft Exams
-                    </h2>
-                    {upcomingOrDraft.length === 0 ? (
-                      <p className="text-sm text-slate-500">
-                        No upcoming or draft exams. Click &quot;Create New Exam&quot; above to schedule one.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {upcomingOrDraft.map((exam) => {
-                          const lc = computeClientLifecycle(exam);
-                          return (
-                            <Link
-                              key={exam.id}
-                              href={`/examiner/exams/${exam.id}`}
-                              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3.5 transition hover:border-[#c7dfd4] hover:bg-[#eef5f1]/40"
-                            >
-                              <div className="flex items-center gap-3.5">
-                                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#e6f1ec] text-[#1b4d3e]">
-                                  <FileText className="h-5 w-5" />
-                                </span>
-                                <div>
-                                  <p className="text-sm font-bold text-slate-900">{exam.title}</p>
-                                  <p className="mt-0.5 text-xs text-slate-500">
-                                    Opens {fmtDate(examStartAt(exam))} · {examDurationMin(exam)} min
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge tone={lifecycleTone(lc)}>{lc}</Badge>
-                                <ChevronRight className="h-4 w-4 text-slate-400" />
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Recent Completed / Disputes Activity */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <CheckCircle2 className="h-4.5 w-4.5 text-[#1b4d3e]" />
-                      Recent Activity &amp; Disputes
-                    </h2>
-                    {completedExams.length === 0 && openDisputes.length === 0 ? (
-                      <p className="text-sm text-slate-500">
-                        Completed exams and open student disputes will show up here.
-                      </p>
-                    ) : (
-                      <div className="space-y-3">
-                        {openDisputes.slice(0, 3).map((d) => (
-                          <Link
-                            key={d.id}
-                            href="/disputes"
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-100 bg-amber-50/50 p-3.5 hover:bg-amber-50"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white">
-                                <AlertTriangle className="h-5 w-5" />
-                              </span>
-                              <div>
-                                <p className="text-sm font-bold text-slate-900">
-                                  Open {d.type} Dispute
-                                </p>
-                                <p className="text-xs text-slate-600 line-clamp-1">{d.reason}</p>
-                              </div>
-                            </div>
-                            <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                              Review
-                            </span>
-                          </Link>
-                        ))}
-
-                        {completedExams.slice(0, 3).map((exam) => (
-                          <Link
-                            key={exam.id}
-                            href={`/examiner/exams/${exam.id}?tab=grading`}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3.5 hover:bg-slate-100/70"
-                          >
-                            <div className="flex items-center gap-3">
-                              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-                                <CheckCircle2 className="h-5 w-5" />
-                              </span>
-                              <div>
-                                <p className="text-sm font-bold text-slate-900">{exam.title}</p>
-                                <p className="text-xs text-slate-500">
-                                  Ended{" "}
-                                  {formatDistanceToNow(new Date(examEndAt(exam)), {
-                                    addSuffix: true,
-                                  })}
-                                </p>
-                              </div>
-                            </div>
-                            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                              Completed
-                            </span>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  {/* Quick Examiner Tools */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <Zap className="h-4.5 w-4.5 text-[#1b4d3e]" />
-                      Examiner Toolkit
-                    </h2>
-                    <div className="space-y-3">
-                      <Link
-                        href="/examiner/exams/new"
-                        className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-slate-50"
-                      >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eef5f1] text-[#1b4d3e]">
-                          <Plus className="h-5 w-5" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">Create Fair Exam</p>
-                          <p className="text-xs text-slate-500">Blueprint &amp; seed commitment</p>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/examiner/questions"
-                        className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-slate-50"
-                      >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#eef5f1] text-[#1b4d3e]">
-                          <BookOpen className="h-5 w-5" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">Question Bank &amp; CSV</p>
-                          <p className="text-xs text-slate-500">Single, Multi &amp; Written</p>
-                        </div>
-                      </Link>
-                      <Link
-                        href="/disputes"
-                        className="flex items-center gap-3 rounded-xl p-2 transition hover:bg-slate-50"
-                      >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                          <Scale className="h-5 w-5" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">Evidence &amp; Disputes</p>
-                          <p className="text-xs text-slate-500">
-                            {openDisputes.length} open case(s) to review
-                          </p>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* Exam Overview Ring Card */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <div className="mb-4 flex items-center justify-between">
-                      <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                        <Trophy className="h-4.5 w-4.5 text-amber-500" />
-                        Exam Overview
-                      </h2>
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("exams")}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-[#1b4d3e] hover:text-[#143b30] cursor-pointer"
-                      >
-                        View All <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-5">
-                      <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
-                        <svg className="h-24 w-24 -rotate-90" viewBox="0 0 96 96">
-                          <circle
-                            cx="48"
-                            cy="48"
-                            r={ringRadius}
-                            fill="none"
-                            stroke="#e2e8f0"
-                            strokeWidth="8"
-                          />
-                          <circle
-                            cx="48"
-                            cy="48"
-                            r={ringRadius}
-                            fill="none"
-                            stroke="#10b981"
-                            strokeWidth="8"
-                            strokeLinecap="round"
-                            strokeDasharray={ringCircumference}
-                            strokeDashoffset={ringOffset}
-                          />
-                        </svg>
-                        <div className="absolute text-center">
-                          <p className="text-lg font-bold text-slate-900">{publishedPct}%</p>
-                          <p className="text-[9px] text-slate-500">Published</p>
-                        </div>
-                      </div>
-
-                      <div className="flex-1 space-y-2 text-xs">
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-slate-600">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Live Now
-                          </span>
-                          <span className="font-bold text-slate-900">{ongoingExams.length}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-slate-600">
-                            <span className="h-2 w-2 rounded-full bg-[#1e8e5a]" /> Total Exams
-                          </span>
-                          <span className="font-bold text-slate-900">{allExams.length}</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-slate-600">
-                            <span className="h-2 w-2 rounded-full bg-[#1e8e5a]" /> Results Published
-                          </span>
-                          <span className="font-bold text-slate-900">{resultsPublishedCount}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Public Audit Verification Card with QR */}
-                  <div className="rounded-2xl border border-[#e6f1ec] bg-gradient-to-br from-[#e6f1ec] to-[#dcebe4] p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1b4d3e] text-white">
-                            <ShieldCheck className="h-4 w-4" />
-                          </span>
-                          Verify Exam Audit
-                        </h3>
-                        <p className="mt-2 text-xs text-slate-600">
-                          Inspect cryptographic hash chains, seed commitments, and signed exam checkpoints.
-                        </p>
-                        <Link
-                          href={featuredExam ? `/verify?examId=${encodeURIComponent(featuredExam.id)}` : "/verify"}
-                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl border border-[#c7dfd4] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#143b30] shadow-2xs hover:bg-[#eef5f1]"
-                        >
-                          Verify Now <ArrowRight className="h-3.5 w-3.5" />
-                        </Link>
-                      </div>
-                      <div className="shrink-0 rounded-xl bg-white p-2 shadow-2xs">
-                        <QRCodeSVG value={verifyTargetUrl} size={64} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : activeTab === "exams" ? (
-            <div className="mx-auto max-w-6xl space-y-5">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              {allExams.length > 1 && (
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">All My Examinations ({exams.length})</h1>
-                  <p className="text-sm text-slate-500">
-                    Manage enrollments, monitor live candidates, grade written responses, and export PDFs.
-                  </p>
+                  <label
+                    htmlFor="examiner-action-exam"
+                    className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-ink-subtle"
+                  >
+                    Select Exam
+                  </label>
+                  <Select
+                    id="examiner-action-exam"
+                    value={activeTargetExam?.id ?? ""}
+                    onChange={(e) => setSelectedExamId(e.target.value)}
+                    className="h-10 text-xs"
+                  >
+                    {allExams.map((ex) => (
+                      <option key={ex.id} value={ex.id}>
+                        {ex.title}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
-                <Link href="/examiner/exams/new">
-                  <Button>
-                    <Plus className="h-4 w-4" /> Create Exam
-                  </Button>
-                </Link>
-              </div>
+              )}
 
-              {exams.length === 0 ? (
-                <EmptyState
-                  title="No exams found"
-                  description="Create your first exam or clear your search filter."
-                />
+              {activeTargetExam ? (
+                <div className="space-y-2.5">
+                  <p className="truncate text-xs font-medium text-ink-muted">
+                    Selected: <strong className="text-foreground">{activeTargetExam.title}</strong>
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                    <Link href={`/examiner/exams/${activeTargetExam.id}`}>
+                      <Button size="sm" variant="secondary">
+                        <Settings2 className="h-4 w-4" /> Manage &amp; Enroll
+                      </Button>
+                    </Link>
+                    <Link href={`/examiner/exams/${activeTargetExam.id}?tab=grading`}>
+                      <Button size="sm" variant="secondary">
+                        <BarChart3 className="h-4 w-4" /> Grading &amp; Analytics
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        try {
+                          await api.reports.downloadExamPdf(
+                            activeTargetExam.id,
+                            activeTargetExam.title
+                          );
+                          toast.success("Exam summary PDF downloaded");
+                        } catch (e) {
+                          toast.error((e as Error).message);
+                        }
+                      }}
+                    >
+                      <FileDown className="h-4 w-4" /> Summary PDF
+                    </Button>
+                  </div>
+                </div>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {exams.map((exam) => {
-                    const lc = computeClientLifecycle(exam);
-                    const published = examResultsPublished(exam);
-                    const enrollCount = exam.enrollmentCount ?? exam.enrollment_count;
-                    return (
-                      <div
-                        key={exam.id}
-                        className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-4"
-                      >
-                        <div>
-                          <div className="mb-2 flex flex-wrap items-center gap-1.5">
-                            <Badge tone={lifecycleTone(lc)}>{lc}</Badge>
-                            {published && <Badge tone="verified">Results Published</Badge>}
-                          </div>
-                          <Link
-                            href={`/examiner/exams/${exam.id}`}
-                            className="text-base font-bold text-slate-900 hover:text-[#1b4d3e]"
-                          >
-                            {exam.title}
-                          </Link>
-                          <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
-                            <span className="flex items-center gap-1.5">
-                              <Calendar className="h-3.5 w-3.5 text-slate-400" />
-                              {fmtDate(examStartAt(exam))}
+                <p className="py-6 text-sm text-ink-subtle">
+                  Create your first exam above to manage enrollments, grade responses, and download summary PDFs.
+                </p>
+              )}
+            </div>
+          </section>
+
+          {/* Right Box: Active & Live Exams */}
+          <section className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-7">
+            <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+              <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+                <Activity className="h-4.5 w-4.5 text-accent" />
+                Active &amp; Live Exams
+              </h2>
+              <span className="text-xs font-semibold text-verified">
+                {ongoingExams.length} Live
+              </span>
+            </div>
+
+            {examsQuery.isLoading ? (
+              <div className="flex items-center justify-center gap-2 py-10 text-sm text-ink-subtle">
+                <Spinner /> Loading live exams…
+              </div>
+            ) : ongoingExams.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-surface-subtle p-6 text-center text-sm text-ink-subtle">
+                No exams are currently live. Create or publish an exam to begin live monitoring.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {ongoingExams.map((exam) => {
+                  const published = examResultsPublished(exam);
+                  return (
+                    <div
+                      key={exam.id}
+                      className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-subtle/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    >
+                      <div className="flex items-start gap-3.5 min-w-0">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                          <ClipboardList className="h-6 w-6" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Link
+                              href={`/examiner/exams/${exam.id}`}
+                              className="truncate text-sm font-bold text-foreground hover:text-accent"
+                            >
+                              {exam.title}
+                            </Link>
+                            <span className="inline-flex items-center gap-1 rounded-full bg-verified-soft px-2 py-0.5 text-[11px] font-semibold text-verified">
+                              <span className="h-1.5 w-1.5 rounded-full bg-verified" />
+                              Live Now
                             </span>
-                            <span className="flex items-center gap-1.5">
-                              <Clock className="h-3.5 w-3.5 text-slate-400" />
+                            {published && (
+                              <span className="rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-accent">
+                                Results Published
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 text-xs text-ink-subtle">
+                            {examTotalMarks(exam)} Marks ·{" "}
+                            {exam.blueprint && exam.blueprint.length > 0
+                              ? "Fair Blueprint Randomization"
+                              : "Fixed Paper"}
+                          </p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-xs text-ink-subtle">
+                            <span className="inline-flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              Closes {fmtDate(examEndAt(exam))}
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
                               {examDurationMin(exam)} min
                             </span>
-                            <span className="flex items-center gap-1.5">
-                              <Users className="h-3.5 w-3.5 text-slate-400" />
-                              {enrollCount !== undefined ? `${enrollCount} enrolled` : `${examTotalMarks(exam)} pts`}
-                            </span>
                           </div>
                         </div>
-
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                          <Link href={`/examiner/exams/${exam.id}`}>
-                            <Button size="sm">
-                              <Settings2 className="h-3.5 w-3.5" /> Manage
-                            </Button>
-                          </Link>
-                          <Link href={`/examiner/exams/${exam.id}?tab=monitor`}>
-                            <Button size="sm" variant="secondary">
-                              <Activity className="h-3.5 w-3.5" /> Monitor
-                            </Button>
-                          </Link>
-                          <Link href={`/examiner/exams/${exam.id}?tab=grading`}>
-                            <Button size="sm" variant="secondary">
-                              <BarChart3 className="h-3.5 w-3.5" /> Analytics
-                            </Button>
-                          </Link>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => api.reports.downloadExamPdf(exam.id, exam.title)}
-                          >
-                            <FileDown className="h-3.5 w-3.5" /> PDF
-                          </Button>
-                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-5">
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">Examiner Workspace Preferences</h1>
-                <p className="text-sm text-slate-500">
-                  Saved directly to your account via <code className="font-mono">/api/me/prefs</code>.
-                </p>
+
+                      <Link
+                        href={`/examiner/exams/${exam.id}?tab=monitor`}
+                        className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-accent-ink shadow-sm hover:bg-accent-hover transition-colors"
+                      >
+                        <Activity className="h-4 w-4" /> Live Monitor
+                      </Link>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+            )}
+          </section>
+        </div>
+
+        {/* Bottom Box: Total Student Average & Pass/Fail Ratio Graph */}
+        <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6 shadow-2xs">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-foreground">
+                Student Average &amp; Pass / Fail Ratio
+              </h2>
+              <p className="mt-0.5 text-xs text-ink-subtle">
+                Overall student average score (%) alongside pass and fail rate trends
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-subtle px-3.5 py-2">
+                <Users className="h-4 w-4 text-accent" />
                 <div>
-                  <Label htmlFor="ex-font">Font Size</Label>
-                  <Select
-                    id="ex-font"
-                    value={user.prefs?.fontSize ?? "md"}
-                    onChange={(e) => {
-                      updatePrefs({ fontSize: e.target.value as WorkspacePrefs["fontSize"] });
-                      toast.success("Font size saved");
-                    }}
-                  >
-                    <option value="sm">Small</option>
-                    <option value="md">Medium</option>
-                    <option value="lg">Large</option>
-                    <option value="xl">Extra Large</option>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="ex-theme">Theme</Label>
-                  <Select
-                    id="ex-theme"
-                    value={user.prefs?.theme ?? "light"}
-                    onChange={(e) => {
-                      updatePrefs({ theme: e.target.value as WorkspacePrefs["theme"] });
-                      toast.success("Theme saved");
-                    }}
-                  >
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="system">System</option>
-                  </Select>
+                  <p className="text-[10px] uppercase tracking-wider text-ink-subtle">
+                    Total Students
+                  </p>
+                  <p className="text-sm font-bold text-foreground">
+                    {overviewQuery.isLoading ? "…" : totalStudents}
+                  </p>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-subtle px-3.5 py-2">
+                <Award className="h-4 w-4 text-accent" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-ink-subtle">
+                    Student Average
+                  </p>
+                  <p className="text-sm font-bold text-foreground">
+                    {overviewQuery.isLoading ? "…" : `${avgPct}%`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-subtle px-3.5 py-2">
+                <CheckCircle2 className="h-4 w-4 text-verified" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-ink-subtle">
+                    Pass Rate
+                  </p>
+                  <p className="text-sm font-bold text-verified">
+                    {overviewQuery.isLoading ? "…" : `${passRate}%`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-subtle px-3.5 py-2">
+                <XCircle className="h-4 w-4 text-danger" />
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-ink-subtle">
+                    Fail Rate
+                  </p>
+                  <p className="text-sm font-bold text-danger">
+                    {overviewQuery.isLoading ? "…" : `${failRate}%`}
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
-        </main>
+          </div>
+
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={chartData} margin={{ top: 10, right: 16, left: -12, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: "var(--ink-subtle)" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  unit="%"
+                  tick={{ fontSize: 11, fill: "var(--ink-subtle)" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: "8px",
+                    borderColor: "var(--border)",
+                    backgroundColor: "var(--surface)",
+                    color: "var(--foreground)",
+                    fontSize: "12px",
+                  }}
+                />
+                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
+                <Bar
+                  dataKey="passRate"
+                  name="Pass Rate (%)"
+                  fill="#10b981"
+                  radius={[4, 4, 0, 0]}
+                  barSize={18}
+                />
+                <Bar
+                  dataKey="failRate"
+                  name="Fail Rate (%)"
+                  fill="#dc2626"
+                  radius={[4, 4, 0, 0]}
+                  barSize={18}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="avgScorePct"
+                  name="Student Average (%)"
+                  stroke="#113b32"
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </section>
       </div>
     </div>
   );
