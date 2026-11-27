@@ -65,7 +65,36 @@ export async function DELETE(
     if (!uuidSchema.safeParse(id).success) throw new HttpError(400, "Invalid user ID");
     if (id === admin.id) throw new HttpError(400, "Cannot deactivate your own admin account");
 
+    const permanent = req.nextUrl.searchParams.get("permanent") === "true";
     const supabase = getServiceSupabase();
+
+    if (permanent) {
+      const { data: target } = await supabase
+        .from("users")
+        .select("id, supabase_user_id, email")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (!target) throw new HttpError(404, "User not found");
+
+      const { error: delErr } = await supabase.from("users").delete().eq("id", id);
+      if (delErr) throw new HttpError(500, delErr.message);
+
+      if (target.supabase_user_id) {
+        await supabase.auth.admin.deleteUser(target.supabase_user_id).catch(() => {});
+      }
+
+      await logAudit({
+        actorId: admin.id,
+        action: "USER_APPROVAL_REJECTED",
+        entity: "users",
+        entityId: id,
+        before: { email: target.email },
+      });
+
+      return jsonOk({ ok: true, deleted: true });
+    }
+
     const { data: updated, error } = await supabase
       .from("users")
       .update({ active: false, updated_at: new Date().toISOString() })

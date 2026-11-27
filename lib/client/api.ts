@@ -169,8 +169,17 @@ export const api = {
           inProgressAttempts: number;
           totalQuestions: number;
           openDisputes: number;
+          pendingApprovals?: number;
           platformHealthPct: number;
         };
+        pendingUsers?: Array<{
+          id: string;
+          name: string;
+          email: string;
+          role: UserRole;
+          active: boolean;
+          created_at: string;
+        }>;
         recentActivities: Array<{
           id: string;
           kind: "exam" | "submit" | "user" | "publish" | "dispute" | "security";
@@ -278,8 +287,10 @@ export const api = {
     }) => apiFetch<{ user: AppUser }>("/api/admin/users", { method: "POST", body }),
     updateUser: (id: string, body: { name?: string; role?: UserRole; active?: boolean }) =>
       apiFetch<{ user: AppUser }>(`/api/admin/users/${id}`, { method: "PATCH", body }),
-    deleteUser: (id: string) =>
-      apiFetch<{ ok: true }>(`/api/admin/users/${id}`, { method: "DELETE" }),
+    deleteUser: (id: string, permanent = false) =>
+      apiFetch<{ ok: true }>(`/api/admin/users/${id}${permanent ? "?permanent=true" : ""}`, {
+        method: "DELETE",
+      }),
   },
 
   categories: {

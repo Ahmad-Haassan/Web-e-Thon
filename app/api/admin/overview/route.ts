@@ -49,6 +49,8 @@ export async function GET(req: NextRequest) {
     const allStudents = allUsers.filter((u) => u.role === "CANDIDATE");
     const totalStudents = allStudents.length;
     const activeStudents = allStudents.filter((u) => u.active).length;
+    const pendingUsers = allUsers.filter((u) => !u.active);
+    const pendingApprovals = pendingUsers.length;
     const totalExaminers = allUsers.filter((u) => u.role === "EXAMINER").length;
 
     const thirtyDaysAgoMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
@@ -293,14 +295,17 @@ export async function GET(req: NextRequest) {
         inProgressAttempts,
         totalQuestions: questionsCount ?? 0,
         openDisputes,
+        pendingApprovals,
         platformHealthPct: 99.9,
       },
+      pendingUsers,
       recentActivities: activities.slice(0, 10),
       analyticsSeries: series,
       examBreakdown,
       notifications: {
-        unreadCount: openDisputes + inProgressAttempts,
+        unreadCount: openDisputes + inProgressAttempts + pendingApprovals,
         openDisputes,
+        pendingApprovals,
         inProgressAttempts,
         recentDisputes: allDisputes.filter((d) => d.status === "OPEN").slice(0, 5),
       },

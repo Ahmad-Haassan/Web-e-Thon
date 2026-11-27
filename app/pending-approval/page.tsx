@@ -28,6 +28,19 @@ export default function PendingApprovalPage() {
     }
   }, [user, loading, router]);
 
+  // Auto-check every 10 seconds so the user enters automatically once Admin approves
+  useEffect(() => {
+    if (!user || user.active) return;
+    const interval = setInterval(async () => {
+      const refreshed = await refreshUser();
+      if (refreshed?.active) {
+        toast.success(`Approved as ${refreshed.role}! Redirecting…`);
+        router.replace(roleHomePath(refreshed.role));
+      }
+    }, 10_000);
+    return () => clearInterval(interval);
+  }, [user, refreshUser, router]);
+
   async function handleCheckStatus() {
     setChecking(true);
     try {

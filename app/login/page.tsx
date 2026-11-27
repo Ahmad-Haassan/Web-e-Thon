@@ -55,7 +55,7 @@ const ROLE_CONFIG: Record<
     placeholder: "admin@exam.edu.pk",
     buttonLabel: "Sign In as Administrator",
     allowRegister: false,
-    allowGoogle: false,
+    allowGoogle: true,
   },
   examiner: {
     heading: "Examiner Sign In",
@@ -92,6 +92,11 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showGmailModal, setShowGmailModal] = useState(false);
+  const [gmailName, setGmailName] = useState("");
+  const [gmailEmail, setGmailEmail] = useState("");
+  const [gmailPassword, setGmailPassword] = useState("");
+  const [gmailSubmitting, setGmailSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(oauthErrorParam);
 
   useEffect(() => {
@@ -121,6 +126,21 @@ function LoginForm() {
 
     setGoogleLoading(true);
     try {
+      // Check if Google OAuth provider is enabled on Supabase first
+      const settingsRes = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`,
+        { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "" } }
+      ).catch(() => null);
+      const settingsJson = settingsRes?.ok ? await settingsRes.json().catch(() => null) : null;
+      const isGoogleProviderEnabled = Boolean(settingsJson?.external?.google);
+
+      if (!isGoogleProviderEnabled) {
+        // Fallback: open instant Gmail Sign-In / Approval Request dialog so ANY Gmail works right away!
+        setGoogleLoading(false);
+        setShowGmailModal(true);
+        return;
+      }
+
       const supabase = getBrowserSupabase();
       const callbackUrl = new URL("/auth/callback", window.location.origin);
       if (nextPath && nextPath.startsWith("/")) {
@@ -138,12 +158,78 @@ function LoginForm() {
       });
 
       if (oauthError) {
-        setError(oauthError.message);
         setGoogleLoading(false);
+        setShowGmailModal(true);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to start Google sign-in");
+    } catch {
       setGoogleLoading(false);
+      setShowGmailModal(true);
+    }
+  }
+
+  async function handleGmailRequestSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const trimmedEmail = gmailEmail.trim().toLowerCase();
+    if (!trimmedEmail.endsWith("@gmail.com") && !trimmedEmail.includes("@")) {
+      setError("Please enter a valid Gmail address.");
+      return;
+    }
+
+    setGmailSubmitting(true);
+    try {
+      const requestedRole =
+        selectedRole === "admin"
+          ? "ADMIN"
+          : selectedRole === "examiner"
+            ? "EXAMINER"
+            : "CANDIDATE";
+
+      const res = await fetch("/api/auth/gmail-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: trimmedEmail,
+          name: gmailName.trim() || undefined,
+          password: gmailPassword,
+          requestedRole,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Unable to continue with Gmail");
+      }
+
+      // Sign in with Supabase Auth
+      const supabase = getBrowserSupabase();
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: trimmedEmail,
+        password: gmailPassword,
+      });
+
+      if (signInErr) {
+        throw new Error(
+          data.exists
+            ? "This Gmail is already registered — please enter your existing password."
+            : signInErr.message
+        );
+      }
+
+      const appUser = await refreshUser();
+      setShowGmailModal(false);
+
+      if (!appUser || !appUser.active || data.pendingApproval) {
+        toast.info("Request sent! Please wait until an Administrator approves your account.");
+        router.replace("/pending-approval");
+        return;
+      }
+
+      toast.success(`Welcome back, ${appUser.name}`);
+      router.replace(nextPath && nextPath.startsWith("/") ? nextPath : roleHomePath(appUser.role));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Gmail sign-in failed");
+    } finally {
+      setGmailSubmitting(false);
     }
   }
 
@@ -305,7 +391,7 @@ function LoginForm() {
                 {googleLoading ? (
                   <>
                     <Spinner className="h-4 w-4" />
-                    <span>Redirecting to Google…</span>
+                    <span>Connecting to Gmail…</span>
                   </>
                 ) : (
                   <>
@@ -318,6 +404,106 @@ function LoginForm() {
           )}
         </div>
       </main>
+
+      {/* Instant Gmail Sign-In / Admin Approval Request Modal */}
+      {showGmailModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-4 backdrop-blur-xs"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Continue with Gmail"
+          onClick={() => setShowGmailModal(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-2xl animate-fade-rise"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2.5">
+                <GoogleIcon className="h-5 w-5" />
+                <h2 className="text-base font-bold text-foreground">Continue with Gmail</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGmailModal(false)}
+                className="rounded-lg px-2 py-1 text-xs font-medium text-ink-muted hover:bg-surface-muted cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="mb-4 text-xs text-ink-muted leading-relaxed">
+              Enter your Gmail address. If you are already approved, you&apos;ll sign in immediately.
+              If you&apos;re new, your request will be sent to the <strong>Admin Approval</strong> queue.
+            </p>
+
+            {error && (
+              <div
+                role="alert"
+                className="mb-4 flex items-start gap-2 rounded-lg border border-danger/35 bg-danger-soft p-3 text-xs text-danger"
+              >
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleGmailRequestSubmit} className="space-y-3.5">
+              <div>
+                <Label htmlFor="gmail-name">Full Name</Label>
+                <Input
+                  id="gmail-name"
+                  type="text"
+                  required
+                  placeholder="Your full name"
+                  value={gmailName}
+                  onChange={(e) => setGmailName(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="gmail-email">Gmail Address</Label>
+                <Input
+                  id="gmail-email"
+                  type="email"
+                  required
+                  placeholder="yourname@gmail.com"
+                  value={gmailEmail}
+                  onChange={(e) => setGmailEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="gmail-password">Password (min 6 characters)</Label>
+                <Input
+                  id="gmail-password"
+                  type="password"
+                  required
+                  minLength={6}
+                  placeholder="Enter or create password"
+                  value={gmailPassword}
+                  onChange={(e) => setGmailPassword(e.target.value)}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setShowGmailModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={gmailSubmitting}>
+                  {gmailSubmitting ? (
+                    <>
+                      <Spinner /> Continuing…
+                    </>
+                  ) : (
+                    "Continue with Gmail"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

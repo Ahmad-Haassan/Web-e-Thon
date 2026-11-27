@@ -120,40 +120,43 @@ export default function RegisterPage() {
 
     setSubmitting(true);
     try {
-      const supabase = getBrowserSupabase();
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: {
-          data: {
-            name: name.trim(),
-            phone: phone.trim() || undefined,
-            className: className.trim() || undefined,
-            section: section.trim() || undefined,
-          },
-        },
+      const reqRes = await fetch("/api/auth/gmail-request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          name: name.trim(),
+          password,
+          requestedRole: "CANDIDATE",
+        }),
       });
-
-      if (signUpError) {
-        setError(signUpError.message);
+      const reqData = await reqRes.json();
+      if (!reqRes.ok) {
+        setError(reqData.error ?? "Registration failed");
         setSubmitting(false);
         return;
       }
 
-      if (!data.session) {
-        setNeedsEmailConfirm(true);
+      const supabase = getBrowserSupabase();
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+
+      if (signInError) {
+        setError(signInError.message);
         setSubmitting(false);
         return;
       }
 
       const appUser = await refreshUser();
-      if (appUser && !appUser.active) {
-        toast.info("Account created! Waiting for Administrator approval.");
+      if (!appUser || !appUser.active || reqData.pendingApproval) {
+        toast.info("Account created! Please wait until an Administrator approves your account.");
         router.replace("/pending-approval");
         return;
       }
       toast.success("Candidate account created");
-      router.replace(appUser ? roleHomePath(appUser.role) : "/candidate");
+      router.replace(roleHomePath(appUser.role));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
       setSubmitting(false);
