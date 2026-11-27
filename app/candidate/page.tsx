@@ -1,21 +1,43 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import {
+  Activity,
+  ArrowRight,
+  Award,
+  BarChart3,
+  Bell,
+  BookOpen,
   Calendar,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Clock,
+  FileCheck2,
   FileDown,
+  FileText,
+  Home,
+  Laptop,
+  Lock,
+  LogOut,
+  Menu,
   Play,
+  Receipt,
+  Search,
+  Settings,
   ShieldCheck,
+  Trophy,
   WifiOff,
+  X,
+  Zap,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
-import { AppShell } from "@/components/app-shell";
+import { useAuth, roleHomePath } from "@/hooks/use-auth";
 import {
   Badge,
   Button,
@@ -23,10 +45,13 @@ import {
   CardContent,
   CardHeader,
   EmptyState,
+  Label,
+  Select,
   Spinner,
 } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
 import {
+  attemptMaxScore,
   attemptVerifyCode,
   computeClientLifecycle,
   examDurationMin,
@@ -35,22 +60,74 @@ import {
   examStartAt,
   examTotalMarks,
   type ExamRecord,
+  type WorkspacePrefs,
 } from "@/lib/client/api-types";
 
-function fmt(iso: string) {
+type StudentTab = "dashboard" | "exams" | "results" | "receipts" | "verify" | "settings";
+
+const STUDENT_NAV: { id: StudentTab; label: string; icon: typeof Home }[] = [
+  { id: "dashboard", label: "Dashboard", icon: Home },
+  { id: "exams", label: "My Exams", icon: BookOpen },
+  { id: "results", label: "Results", icon: BarChart3 },
+  { id: "receipts", label: "Receipts", icon: FileText },
+  { id: "verify", label: "Verify Result", icon: ShieldCheck },
+  { id: "settings", label: "Settings", icon: Settings },
+];
+
+function fmtDate(iso: string) {
   if (!iso) return "—";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : format(d, "MMM d, yyyy · HH:mm");
+  return Number.isNaN(d.getTime()) ? iso : format(d, "MMM d, yyyy · hh:mm a");
+}
+
+function initialsOf(name?: string) {
+  if (!name) return "ST";
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? parts[0]?.[1] ?? "")).toUpperCase() || "ST";
 }
 
 export default function CandidateDashboardPage() {
   const router = useRouter();
+  const { user, loading, signOut, updatePrefs } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<StudentTab>("dashboard");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showNotif, setShowNotif] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
   const [ackExam, setAckExam] = useState<ExamRecord | null>(null);
   const [ackChecked, setAckChecked] = useState(false);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const onOnline = () => setIsOnline(true);
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loading) return;
+    if (!user) {
+      router.replace("/login?next=/candidate");
+      return;
+    }
+    if (!["CANDIDATE", "ADMIN", "EXAMINER"].includes(user.role)) {
+      router.replace(roleHomePath(user.role));
+    }
+  }, [user, loading, router]);
 
   const examsQuery = useQuery({
     queryKey: ["candidate-exams"],
     queryFn: () => api.exams.list(),
+    enabled: Boolean(user),
+    refetchOnWindowFocus: true,
   });
 
   const startMut = useMutation({
@@ -64,229 +141,939 @@ export default function CandidateDashboardPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  // Support both categorized response { available, upcoming, completed } and flat { exams }
-  const available = [...(examsQuery.data?.available ?? [])];
-  const upcoming = [...(examsQuery.data?.upcoming ?? [])];
-  const completed = [...(examsQuery.data?.completed ?? [])];
+  if (loading || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f4f6fb]">
+        <div className="flex items-center gap-3 text-sm text-slate-600">
+          <Spinner className="h-5 w-5 text-blue-600" />
+          Loading Student Portal…
+        </div>
+      </div>
+    );
+  }
+
+  // Normalize available / upcoming / completed lists
+  const rawAvailable = [...(examsQuery.data?.available ?? [])];
+  const rawUpcoming = [...(examsQuery.data?.upcoming ?? [])];
+  const rawCompleted = [...(examsQuery.data?.completed ?? [])];
 
   if (
-    available.length === 0 &&
-    upcoming.length === 0 &&
-    completed.length === 0 &&
+    rawAvailable.length === 0 &&
+    rawUpcoming.length === 0 &&
+    rawCompleted.length === 0 &&
     examsQuery.data?.exams?.length
   ) {
     for (const ex of examsQuery.data.exams) {
       const lc = computeClientLifecycle(ex);
       const st = ex.attempt?.status;
       if (st === "SUBMITTED" || st === "EXPIRED" || st === "GRADED" || lc === "COMPLETED") {
-        completed.push(ex);
+        rawCompleted.push(ex);
       } else if (lc === "ONGOING") {
-        available.push(ex);
+        rawAvailable.push(ex);
       } else {
-        upcoming.push(ex);
+        rawUpcoming.push(ex);
       }
     }
   }
 
+  const q = search.trim().toLowerCase();
+  const match = (e: ExamRecord) => !q || e.title.toLowerCase().includes(q);
+  const available = rawAvailable.filter(match);
+  const upcoming = rawUpcoming.filter(match);
+  const completed = rawCompleted.filter(match);
+
+  // Result stats for circular progress ring
+  const gradedWithScore = rawCompleted.filter(
+    (e) =>
+      examResultsPublished(e) &&
+      e.attempt &&
+      e.attempt.score !== null &&
+      e.attempt.score !== undefined &&
+      attemptMaxScore(e.attempt) > 0
+  );
+  const pctList = gradedWithScore.map((e) =>
+    Math.round((Number(e.attempt!.score) / attemptMaxScore(e.attempt!)) * 100)
+  );
+  const avgPct = pctList.length
+    ? Math.round(pctList.reduce((a, b) => a + b, 0) / pctList.length)
+    : 0;
+  const passedCount = pctList.filter((p) => p >= 50).length;
+  const totalAttempts =
+    rawCompleted.filter((e) => Boolean(e.attempt)).length +
+    rawAvailable.filter((e) => Boolean(e.attempt)).length;
+
+  const firstName = user.name?.split(/\s+/)[0] || "Student";
+  const firstVerifyCode =
+    rawCompleted.map((e) => (e.attempt ? attemptVerifyCode(e.attempt) : "")).find(Boolean) || "";
+  const verifyTargetUrl = firstVerifyCode
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://web-e-thon.vercel.app"}/verify/${firstVerifyCode}`
+    : `${typeof window !== "undefined" ? window.location.origin : "https://web-e-thon.vercel.app"}/verify`;
+
+  const ringRadius = 38;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringOffset = ringCircumference - (avgPct / 100) * ringCircumference;
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace("/login");
+  }
+
   return (
-    <AppShell
-      allowedRoles={["CANDIDATE", "ADMIN", "EXAMINER"]}
-      title="Candidate Exam Portal"
-      subtitle="View your enrolled examinations, resume active sessions without losing answers, and verify published results."
-    >
-      {examsQuery.isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-muted">
-          <Spinner /> Loading your enrolled examinations…
-        </div>
-      ) : examsQuery.error ? (
-        <Card>
-          <CardContent className="text-sm text-danger">
-            {(examsQuery.error as Error).message}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-8">
-          {/* AVAILABLE NOW */}
-          <section aria-labelledby="heading-available">
-            <div className="mb-3 flex items-center justify-between">
-              <h2 id="heading-available" className="text-lg font-semibold">
-                Available Now ({available.length})
-              </h2>
-              <Badge tone="verified">Window Open</Badge>
-            </div>
-
-            {available.length === 0 ? (
-              <EmptyState
-                title="No exams open right now"
-                description="When an examiner publishes an exam and its scheduled window begins, it will appear here."
-              />
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {available.map((exam) => {
-                  const inProgress = exam.attempt?.status === "IN_PROGRESS";
-                  return (
-                    <Card key={exam.id} className="border-accent/30">
-                      <CardContent className="space-y-4">
-                        <div>
-                          <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-                            <Badge tone="verified">ONGOING</Badge>
-                            {inProgress && <Badge tone="warning">In Progress — Resume</Badge>}
-                          </div>
-                          <h3 className="text-lg font-semibold">{exam.title}</h3>
-                          {exam.instructions && (
-                            <p className="mt-1 text-xs text-ink-muted line-clamp-2">
-                              {exam.instructions}
-                            </p>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface-subtle p-3 text-xs text-ink-muted">
-                          <span className="flex items-center gap-1.5">
-                            <Clock className="h-3.5 w-3.5" /> {examDurationMin(exam)} min
-                          </span>
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="h-3.5 w-3.5" /> Closes {fmt(examEndAt(exam))}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-xs text-ink-subtle">
-                            {examTotalMarks(exam)} total marks
-                          </span>
-                          {inProgress && exam.attempt ? (
-                            <Link href={`/exam/${exam.attempt.id}`}>
-                              <Button variant="verified">
-                                <Play className="h-4 w-4" /> Resume Attempt
-                              </Button>
-                            </Link>
-                          ) : (
-                            <Button
-                              onClick={() => {
-                                setAckExam(exam);
-                                setAckChecked(false);
-                              }}
-                            >
-                              <Play className="h-4 w-4" /> Start Exam
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-
-          {/* UPCOMING */}
-          <section aria-labelledby="heading-upcoming">
-            <h2 id="heading-upcoming" className="mb-3 text-lg font-semibold">
-              Upcoming ({upcoming.length})
-            </h2>
-            {upcoming.length === 0 ? (
-              <p className="text-sm text-ink-muted">No upcoming scheduled exams.</p>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {upcoming.map((exam) => (
-                  <Card key={exam.id}>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">{exam.title}</h3>
-                        <Badge tone="accent">UPCOMING</Badge>
-                      </div>
-                      <p className="text-xs text-ink-muted">
-                        Opens: <strong>{fmt(examStartAt(exam))}</strong> · Duration:{" "}
-                        {examDurationMin(exam)} min
-                      </p>
-                      <p className="text-xs text-ink-subtle">
-                        Entry is locked by the server until the scheduled start time.
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* COMPLETED */}
-          <section aria-labelledby="heading-completed">
-            <h2 id="heading-completed" className="mb-3 text-lg font-semibold">
-              Completed ({completed.length})
-            </h2>
-            {completed.length === 0 ? (
-              <p className="text-sm text-ink-muted">No completed exams yet.</p>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {completed.map((exam) => {
-                  const att = exam.attempt;
-                  const published = examResultsPublished(exam);
-                  const code = att ? attemptVerifyCode(att) : "";
-                  return (
-                    <Card key={exam.id}>
-                      <CardContent className="space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h3 className="font-semibold">{exam.title}</h3>
-                            <p className="text-xs text-ink-subtle">
-                              Window closed {fmt(examEndAt(exam))}
-                            </p>
-                          </div>
-                          <Badge tone={published ? "verified" : "neutral"}>
-                            {att?.status ?? "COMPLETED"}
-                          </Badge>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2 pt-1">
-                          {att && published ? (
-                            <>
-                              <Link href={`/results/${att.id}`}>
-                                <Button size="sm">
-                                  <CheckCircle2 className="h-3.5 w-3.5" /> View Result &amp; Receipts
-                                </Button>
-                              </Link>
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={async () => {
-                                  try {
-                                    await api.reports.downloadAttemptPdf(att.id, code);
-                                    toast.success("Result PDF downloaded");
-                                  } catch (e) {
-                                    toast.error((e as Error).message);
-                                  }
-                                }}
-                              >
-                                <FileDown className="h-3.5 w-3.5" /> PDF
-                              </Button>
-                            </>
-                          ) : att ? (
-                            <Badge tone="warning">Awaiting Examiner Result Publication</Badge>
-                          ) : (
-                            <Badge tone="neutral">Not Attempted</Badge>
-                          )}
-
-                          {code && (
-                            <Link href={`/verify/${encodeURIComponent(code)}`}>
-                              <Button size="sm" variant="ghost">
-                                <ShieldCheck className="h-3.5 w-3.5 text-verified" /> Verify
-                              </Button>
-                            </Link>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        </div>
+    <div className="flex min-h-screen bg-[#f4f6fb] text-slate-900">
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-slate-950/60 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
       )}
 
-      {/* Privacy-First Integrity Policy Acknowledgment Modal */}
+      {/* Left Dark Sidebar */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#141824] text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
+          mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-between px-5 py-5">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 text-white shadow-md">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="text-base font-bold leading-tight text-white">VeriExam</p>
+              <p className="text-xs text-slate-400">Student Portal</p>
+            </div>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="rounded-lg p-1 text-slate-400 hover:bg-white/10 lg:hidden"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="mt-2 flex-1 space-y-1 px-3">
+          {STUDENT_NAV.map(({ id, label, icon: Icon }) => {
+            const active = activeTab === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => {
+                  setActiveTab(id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
+                  active
+                    ? "bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white shadow-md shadow-blue-950/40"
+                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                }`}
+              >
+                <Icon className={`h-4.5 w-4.5 ${active ? "text-white" : "text-slate-400"}`} />
+                <span>{label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="space-y-2.5 p-4">
+          <div className="rounded-xl border border-white/10 bg-[#1d2233] p-3.5">
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${isOnline ? "bg-emerald-400" : "bg-amber-400"}`}
+              />
+              <span className={isOnline ? "text-emerald-400" : "text-amber-300"}>
+                {isOnline ? "Online" : "Offline Mode"}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] text-slate-400">
+              {isOnline ? "Last seen: just now" : "Local IndexedDB queue active"}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleSignOut}
+            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#1d2233] px-3.5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white cursor-pointer"
+          >
+            <LogOut className="h-4 w-4 text-slate-400" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Column */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 sm:px-7">
+          <div className="flex flex-1 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(true)}
+              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <div className="relative w-full max-w-md">
+              <Search className="pointer-events-none absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search exams..."
+                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {/* Notifications */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNotif((v) => !v);
+                  setShowProfile(false);
+                }}
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
+                aria-label="Notifications"
+              >
+                <Bell className="h-5 w-5" />
+                {available.length > 0 && (
+                  <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white">
+                    {available.length}
+                  </span>
+                )}
+              </button>
+              {showNotif && (
+                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
+                  <p className="border-b border-slate-100 pb-2 text-sm font-semibold text-slate-900">
+                    Exam Alerts
+                  </p>
+                  <div className="mt-3 space-y-2 text-xs">
+                    <p className="text-slate-600">
+                      <strong>{available.length}</strong> exam(s) open right now
+                    </p>
+                    <p className="text-slate-600">
+                      <strong>{upcoming.length}</strong> upcoming scheduled exam(s)
+                    </p>
+                    <Link
+                      href="/disputes"
+                      className="inline-flex items-center gap-1 pt-1 font-semibold text-blue-600 hover:underline"
+                    >
+                      View my disputes <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Profile */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowProfile((v) => !v);
+                  setShowNotif(false);
+                }}
+                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-slate-100 cursor-pointer"
+              >
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#312e81] text-xs font-bold text-white">
+                  {initialsOf(user.name)}
+                </span>
+                <span className="hidden text-sm font-medium text-slate-700 sm:inline">
+                  {user.name}
+                </span>
+                <ChevronDown className="h-4 w-4 text-slate-400" />
+              </button>
+
+              {showProfile && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
+                  <div className="border-b border-slate-100 px-3 py-2">
+                    <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
+                    <p className="truncate text-xs text-slate-500">{user.email}</p>
+                  </div>
+                  <div className="mt-1 space-y-0.5">
+                    <Link
+                      href="/disputes"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      <FileCheck2 className="h-4 w-4 text-slate-400" /> Disputes &amp; Appeals
+                    </Link>
+                    <Link
+                      href="/verify"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      <ShieldCheck className="h-4 w-4 text-emerald-500" /> Public Verifier
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 cursor-pointer"
+                    >
+                      <LogOut className="h-4 w-4" /> Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content */}
+        <main className="flex-1 p-4 sm:p-7">
+          {examsQuery.isLoading ? (
+            <div className="flex items-center justify-center gap-2 py-20 text-sm text-slate-500">
+              <Spinner className="h-5 w-5 text-blue-600" /> Loading your exams…
+            </div>
+          ) : examsQuery.error ? (
+            <div className="mx-auto max-w-4xl rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
+              {(examsQuery.error as Error).message}
+            </div>
+          ) : activeTab === "dashboard" ? (
+            <div className="mx-auto max-w-6xl space-y-6">
+              {/* Hero Welcome Banner */}
+              <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-r from-[#e8f0ff] via-[#dfe9ff] to-[#d6e4ff] px-6 py-7 sm:px-9 sm:py-8">
+                <div className="relative z-10 max-w-xl">
+                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                    Welcome back, {firstName}!
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-600">
+                    Give your best. We&apos;re here to ensure a fair and secure exam experience.
+                  </p>
+                  <div className="mt-4 h-1 w-14 rounded-full bg-blue-600" />
+                </div>
+
+                {/* Decorative Shield + Laptop Emblem */}
+                <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 items-center gap-4 md:flex">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-lg shadow-teal-500/20">
+                    <ShieldCheck className="h-9 w-9" />
+                  </div>
+                  <div className="flex h-24 w-32 flex-col items-center justify-center rounded-2xl border border-blue-200/70 bg-white/75 backdrop-blur-xs shadow-sm">
+                    <Laptop className="h-10 w-10 text-blue-700" />
+                    <span className="mt-1 text-[10px] font-semibold text-blue-700">
+                      Offline-Safe Sync
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2-Column Main Grid */}
+              <div className="grid gap-6 lg:grid-cols-3">
+                {/* Left 2 columns */}
+                <div className="space-y-6 lg:col-span-2">
+                  {/* Available Exams */}
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                        <Calendar className="h-4.5 w-4.5 text-blue-600" />
+                        Available Exams
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("exams")}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                      >
+                        View All <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    {available.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center text-sm text-slate-500">
+                        No exams open right now. Check Upcoming Exams below or your Results tab.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {available.map((exam) => {
+                          const inProgress = exam.attempt?.status === "IN_PROGRESS";
+                          return (
+                            <div
+                              key={exam.id}
+                              className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                              <div className="flex items-start gap-4">
+                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600">
+                                  <Laptop className="h-8 w-8" />
+                                </div>
+                                <div>
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <h3 className="text-base font-bold text-slate-900">
+                                      {exam.title}
+                                    </h3>
+                                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                      {inProgress ? "In Progress" : "Available Now"}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-xs text-slate-500">
+                                    {examTotalMarks(exam)} Marks · Server-Authoritative Timer
+                                  </p>
+                                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                                    <span className="inline-flex items-center gap-1">
+                                      <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                                      Closes {fmtDate(examEndAt(exam))}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1">
+                                      <Clock className="h-3.5 w-3.5 text-slate-400" />
+                                      {examDurationMin(exam)} min
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="shrink-0">
+                                {inProgress && exam.attempt ? (
+                                  <Link
+                                    href={`/exam/${exam.attempt.id}`}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+                                  >
+                                    <Play className="h-4 w-4 fill-current" /> Resume Exam
+                                  </Link>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setAckExam(exam);
+                                      setAckChecked(false);
+                                    }}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-700 cursor-pointer"
+                                  >
+                                    <Play className="h-4 w-4 fill-current" /> Start Exam
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upcoming Exams */}
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
+                      <Clock className="h-4.5 w-4.5 text-blue-600" />
+                      Upcoming Exams
+                    </h2>
+                    {upcoming.length === 0 ? (
+                      <p className="text-sm text-slate-500">No upcoming scheduled exams right now.</p>
+                    ) : (
+                      <div className="space-y-3">
+                        {upcoming.map((exam) => (
+                          <div
+                            key={exam.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3.5"
+                          >
+                            <div className="flex items-center gap-3.5">
+                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                                <FileText className="h-5 w-5" />
+                              </span>
+                              <div>
+                                <p className="text-sm font-bold text-slate-900">{exam.title}</p>
+                                <p className="mt-0.5 text-xs text-slate-500">
+                                  {fmtDate(examStartAt(exam))} · {examDurationMin(exam)} min
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-50 px-3 py-1 text-xs font-semibold text-violet-700">
+                                <Calendar className="h-3.5 w-3.5" />
+                                Starts {formatDistanceToNow(new Date(examStartAt(exam)), { addSuffix: true })}
+                              </span>
+                              <ChevronRight className="h-4 w-4 text-slate-400" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recent Activity */}
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
+                      <Activity className="h-4.5 w-4.5 text-blue-600" />
+                      Recent Activity
+                    </h2>
+                    {completed.length === 0 ? (
+                      <p className="text-sm text-slate-500">
+                        Your completed exams and cryptographic receipts will appear here.
+                      </p>
+                    ) : (
+                      <div className="space-y-3">
+                        {completed.slice(0, 4).map((exam) => {
+                          const att = exam.attempt;
+                          const published = examResultsPublished(exam);
+                          return (
+                            <div
+                              key={exam.id}
+                              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5"
+                            >
+                              <div className="flex items-center gap-3.5">
+                                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                                  <CheckCircle2 className="h-5 w-5" />
+                                </span>
+                                <div>
+                                  <p className="text-sm font-bold text-slate-900">
+                                    Exam submitted successfully
+                                  </p>
+                                  <p className="text-xs text-slate-500">
+                                    {exam.title} · {fmtDate(att?.submittedAt ?? examEndAt(exam))}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {att && published ? (
+                                  <Link
+                                    href={`/results/${att.id}`}
+                                    className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                                  >
+                                    View Result
+                                  </Link>
+                                ) : (
+                                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                    Completed
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="space-y-6">
+                  {/* Quick Info */}
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
+                      <Zap className="h-4.5 w-4.5 text-blue-600" />
+                      Quick Info
+                    </h2>
+                    <div className="space-y-3.5">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                          <ShieldCheck className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">Secure &amp; Fair Exam</p>
+                          <p className="text-xs text-slate-500">Your answers are protected</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                          <Lock className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">Auto-Save Enabled</p>
+                          <p className="text-xs text-slate-500">No data will be lost offline</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                          <Award className="h-5 w-5" />
+                        </span>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">Verified Results</p>
+                          <p className="text-xs text-slate-500">With signed digital receipt</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* My Results Ring Card */}
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                    <div className="mb-4 flex items-center justify-between">
+                      <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                        <Trophy className="h-4.5 w-4.5 text-amber-500" />
+                        My Results
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("results")}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                      >
+                        View All <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-5">
+                      <div className="relative flex h-24 w-24 shrink-0 items-center justify-center">
+                        <svg className="h-24 w-24 -rotate-90" viewBox="0 0 96 96">
+                          <circle
+                            cx="48"
+                            cy="48"
+                            r={ringRadius}
+                            fill="none"
+                            stroke="#e2e8f0"
+                            strokeWidth="8"
+                          />
+                          <circle
+                            cx="48"
+                            cy="48"
+                            r={ringRadius}
+                            fill="none"
+                            stroke="#10b981"
+                            strokeWidth="8"
+                            strokeLinecap="round"
+                            strokeDasharray={ringCircumference}
+                            strokeDashoffset={ringOffset}
+                          />
+                        </svg>
+                        <div className="absolute text-center">
+                          <p className="text-lg font-bold text-slate-900">
+                            {pctList.length > 0 ? `${avgPct}%` : "—"}
+                          </p>
+                          <p className="text-[9px] text-slate-500">Overall Score</p>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 space-y-2 text-xs">
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-slate-600">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500" /> Passed Exams
+                          </span>
+                          <span className="font-bold text-slate-900">{passedCount}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-slate-600">
+                            <span className="h-2 w-2 rounded-full bg-blue-500" /> Total Attempts
+                          </span>
+                          <span className="font-bold text-slate-900">{totalAttempts}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-1.5 text-slate-600">
+                            <span className="h-2 w-2 rounded-full bg-violet-500" /> Average Score
+                          </span>
+                          <span className="font-bold text-slate-900">
+                            {pctList.length > 0 ? `${avgPct}%` : "Pending"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Verify Your Result Card with Real QR */}
+                  <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-[#f3f0ff] to-[#ebe8ff] p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                            <ShieldCheck className="h-4 w-4" />
+                          </span>
+                          Verify Your Result
+                        </h3>
+                        <p className="mt-2 text-xs text-slate-600">
+                          Check the authenticity of any result or hash chain using our public verifier.
+                        </p>
+                        <Link
+                          href={firstVerifyCode ? `/verify/${encodeURIComponent(firstVerifyCode)}` : "/verify"}
+                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-indigo-700 shadow-2xs hover:bg-indigo-50"
+                        >
+                          Verify Now <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </div>
+                      <div className="shrink-0 rounded-xl bg-white p-2 shadow-2xs">
+                        <QRCodeSVG value={verifyTargetUrl} size={64} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === "exams" ? (
+            <div className="mx-auto max-w-5xl space-y-6">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">My Enrolled Examinations</h1>
+                <p className="text-sm text-slate-500">
+                  All available, upcoming, and completed examinations assigned to your account.
+                </p>
+              </div>
+              {[
+                { title: `Available Now (${available.length})`, items: available, type: "available" as const },
+                { title: `Upcoming (${upcoming.length})`, items: upcoming, type: "upcoming" as const },
+                { title: `Completed (${completed.length})`, items: completed, type: "completed" as const },
+              ].map((sec) => (
+                <div key={sec.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
+                  <h2 className="mb-3 text-base font-bold text-slate-900">{sec.title}</h2>
+                  {sec.items.length === 0 ? (
+                    <p className="text-sm text-slate-500">None in this category.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {sec.items.map((exam) => {
+                        const att = exam.attempt;
+                        const published = examResultsPublished(exam);
+                        const code = att ? attemptVerifyCode(att) : "";
+                        return (
+                          <div
+                            key={exam.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4"
+                          >
+                            <div>
+                              <p className="font-semibold text-slate-900">{exam.title}</p>
+                              <p className="text-xs text-slate-500">
+                                {fmtDate(examStartAt(exam))} – {fmtDate(examEndAt(exam))} ·{" "}
+                                {examDurationMin(exam)} min · {examTotalMarks(exam)} marks
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {sec.type === "available" && (
+                                att?.status === "IN_PROGRESS" ? (
+                                  <Link href={`/exam/${att.id}`}>
+                                    <Button variant="verified" size="sm">
+                                      <Play className="h-3.5 w-3.5" /> Resume
+                                    </Button>
+                                  </Link>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => {
+                                      setAckExam(exam);
+                                      setAckChecked(false);
+                                    }}
+                                  >
+                                    <Play className="h-3.5 w-3.5" /> Start Exam
+                                  </Button>
+                                )
+                              )}
+                              {sec.type === "upcoming" && <Badge tone="accent">Locked until start</Badge>}
+                              {sec.type === "completed" && att && published && (
+                                <Link href={`/results/${att.id}`}>
+                                  <Button size="sm">View Result</Button>
+                                </Link>
+                              )}
+                              {sec.type === "completed" && att && !published && (
+                                <Badge tone="warning">Awaiting Publication</Badge>
+                              )}
+                              {code && (
+                                <Link href={`/verify/${encodeURIComponent(code)}`}>
+                                  <Button size="sm" variant="ghost">Verify</Button>
+                                </Link>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : activeTab === "results" ? (
+            <div className="mx-auto max-w-5xl space-y-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h1 className="text-xl font-bold text-slate-900">My Results &amp; Certificates</h1>
+                  <p className="text-sm text-slate-500">
+                    Download official QR-verifiable PDF reports or raise a dispute with full evidence timeline.
+                  </p>
+                </div>
+                <Link href="/disputes">
+                  <Button variant="secondary">Disputes &amp; Appeals</Button>
+                </Link>
+              </div>
+              {completed.length === 0 ? (
+                <EmptyState
+                  title="No results yet"
+                  description="Completed examinations will appear here once submitted."
+                />
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {completed.map((exam) => {
+                    const att = exam.attempt;
+                    const published = examResultsPublished(exam);
+                    const code = att ? attemptVerifyCode(att) : "";
+                    return (
+                      <div key={exam.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="font-bold text-slate-900">{exam.title}</h3>
+                            <p className="text-xs text-slate-500">
+                              Submitted {fmtDate(att?.submittedAt ?? examEndAt(exam))}
+                            </p>
+                          </div>
+                          <Badge tone={published ? "verified" : "warning"}>
+                            {published ? "Published" : "Pending"}
+                          </Badge>
+                        </div>
+                        {att && published ? (
+                          <div className="flex flex-wrap items-center gap-2 pt-1">
+                            <Link href={`/results/${att.id}`}>
+                              <Button size="sm">
+                                <CheckCircle2 className="h-3.5 w-3.5" /> Open Result
+                              </Button>
+                            </Link>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={() => api.reports.downloadAttemptPdf(att.id, code)}
+                            >
+                              <FileDown className="h-3.5 w-3.5" /> Download PDF
+                            </Button>
+                            {code && (
+                              <Link href={`/verify/${encodeURIComponent(code)}`}>
+                                <Button size="sm" variant="ghost">
+                                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> {code}
+                                </Button>
+                              </Link>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-slate-500">
+                            Waiting for examiner to publish grades.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ) : activeTab === "receipts" ? (
+            <div className="mx-auto max-w-5xl space-y-5">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Cryptographic Receipts</h1>
+                <p className="text-sm text-slate-500">
+                  Every synced answer generates a server-signed HMAC receipt and links into your SHA-256 hash chain.
+                </p>
+              </div>
+              {rawCompleted.filter((e) => e.attempt).length === 0 ? (
+                <EmptyState
+                  icon={<Receipt className="h-10 w-10" />}
+                  title="No receipts yet"
+                  description="Once you take an exam, every autosaved answer generates a verifiable receipt here."
+                />
+              ) : (
+                <div className="space-y-3">
+                  {rawCompleted
+                    .filter((e) => e.attempt)
+                    .map((exam) => {
+                      const att = exam.attempt!;
+                      const code = attemptVerifyCode(att);
+                      return (
+                        <div
+                          key={exam.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs"
+                        >
+                          <div>
+                            <p className="font-semibold text-slate-900">{exam.title}</p>
+                            <p className="font-mono text-xs text-slate-500">
+                              Attempt ID: {att.id} {code ? `· Code: ${code}` : ""}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Link href={`/verify?attemptId=${encodeURIComponent(att.id)}`}>
+                              <Button size="sm" variant="verified">
+                                <ShieldCheck className="h-3.5 w-3.5" /> Verify Hash Chain
+                              </Button>
+                            </Link>
+                            {examResultsPublished(exam) && (
+                              <Link href={`/results/${att.id}`}>
+                                <Button size="sm" variant="secondary">Inspect Receipts</Button>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          ) : activeTab === "verify" ? (
+            <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-2xs space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
+                <ShieldCheck className="h-7 w-7" />
+              </div>
+              <h1 className="text-xl font-bold text-slate-900">Public Cryptographic Verifier</h1>
+              <p className="text-sm text-slate-600">
+                Independently audit your certificate verification code, SHA-256 answer hash chain, or exam seed commitment.
+              </p>
+              <div className="pt-2">
+                <Link href="/verify">
+                  <Button size="lg">
+                    Open Public Verification Portal <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-5">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Exam Workspace Preferences</h1>
+                <p className="text-sm text-slate-500">
+                  Saved to your account and applied automatically inside the exam workspace.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="st-font">Font Size</Label>
+                  <Select
+                    id="st-font"
+                    value={user.prefs?.fontSize ?? "md"}
+                    onChange={(e) => {
+                      updatePrefs({ fontSize: e.target.value as WorkspacePrefs["fontSize"] });
+                      toast.success("Font size saved");
+                    }}
+                  >
+                    <option value="sm">Small</option>
+                    <option value="md">Medium</option>
+                    <option value="lg">Large</option>
+                    <option value="xl">Extra Large</option>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="st-palette">Question Palette Position</Label>
+                  <Select
+                    id="st-palette"
+                    value={user.prefs?.palettePosition ?? "right"}
+                    onChange={(e) => {
+                      updatePrefs({ palettePosition: e.target.value as WorkspacePrefs["palettePosition"] });
+                      toast.success("Palette layout saved");
+                    }}
+                  >
+                    <option value="right">Right Sidebar</option>
+                    <option value="left">Left Sidebar</option>
+                    <option value="bottom">Bottom Bar</option>
+                  </Select>
+                </div>
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(user.prefs?.highContrast)}
+                    onChange={(e) => {
+                      updatePrefs({ highContrast: e.target.checked });
+                      toast.success("Contrast preference saved");
+                    }}
+                    className="h-4 w-4 accent-blue-600"
+                  />
+                  High Contrast Mode
+                </label>
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(user.prefs?.splitLayout)}
+                    onChange={(e) => {
+                      updatePrefs({ splitLayout: e.target.checked });
+                      toast.success("Split layout saved");
+                    }}
+                    className="h-4 w-4 accent-blue-600"
+                  />
+                  Enable Split Scratchpad Layout
+                </label>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Privacy-First Integrity Policy Modal */}
       {ackExam && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Exam Integrity Policy Acknowledgment"
@@ -301,13 +1088,13 @@ export default function CandidateDashboardPage() {
             <CardContent className="space-y-4 text-sm">
               <div className="space-y-2 rounded-lg border border-border bg-surface-subtle p-3.5 text-xs text-ink-muted">
                 <p className="flex items-start gap-2">
-                  <WifiOff className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                  <WifiOff className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                   <span>
                     <strong>Offline Resilience:</strong> If your internet drops, keep answering. Your responses are stored locally in IndexedDB and synced with cryptographic receipts on reconnect.
                   </span>
                 </p>
                 <p className="flex items-start gap-2">
-                  <ShieldCheck className="h-4 w-4 text-verified shrink-0 mt-0.5" />
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-verified" />
                   <span>
                     <strong>Privacy-First Indicators (Not Proof):</strong> We never use your webcam or screen recording. Fullscreen exits, tab switches, and paste attempts are logged solely as review indicators — never automated failure.
                   </span>
@@ -316,17 +1103,17 @@ export default function CandidateDashboardPage() {
 
               {ackExam.instructions && (
                 <div className="text-xs text-ink-muted">
-                  <p className="font-semibold text-foreground mb-1">Examiner Instructions:</p>
+                  <p className="mb-1 font-semibold text-foreground">Examiner Instructions:</p>
                   <p>{ackExam.instructions}</p>
                 </div>
               )}
 
-              <label className="flex items-start gap-2.5 text-xs font-medium cursor-pointer">
+              <label className="flex cursor-pointer items-start gap-2.5 text-xs font-medium">
                 <input
                   type="checkbox"
                   checked={ackChecked}
                   onChange={(e) => setAckChecked(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 accent-accent"
+                  className="mt-0.5 h-4 w-4 accent-blue-600"
                 />
                 <span>
                   I understand the server deadline policy and acknowledge the privacy-first integrity indicators.
@@ -356,6 +1143,6 @@ export default function CandidateDashboardPage() {
           </Card>
         </div>
       )}
-    </AppShell>
+    </div>
   );
 }
