@@ -9,7 +9,6 @@ const PROTECTED_PREFIXES = [
   "/results",
   "/disputes",
   "/dashboard",
-  "/security",
 ];
 
 export async function proxy(request: NextRequest) {
@@ -59,18 +58,6 @@ export async function proxy(request: NextRequest) {
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  // Enforce Google Authenticator (AAL2) server-side if enrolled on this account
-  if (isProtected && user) {
-    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2") {
-      const loginUrl = request.nextUrl.clone();
-      loginUrl.pathname = "/login";
-      loginUrl.searchParams.set("mfa", "1");
-      loginUrl.searchParams.set("next", pathname);
-      return NextResponse.redirect(loginUrl);
-    }
   }
 
   return response;

@@ -7,7 +7,6 @@ import {
   BookOpen,
   ClipboardCheck,
   FileWarning,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Moon,
@@ -35,7 +34,6 @@ function getNavForRole(role: UserRole): NavItem[] {
       { href: "/examiner/questions", label: "Question Bank", icon: <BookOpen className="h-4 w-4" /> },
       { href: "/disputes", label: "Disputes", icon: <FileWarning className="h-4 w-4" /> },
       { href: "/verify", label: "Verify", icon: <ShieldCheck className="h-4 w-4" /> },
-      { href: "/security", label: "2FA", icon: <KeyRound className="h-4 w-4" /> },
     ];
   }
   if (role === "EXAMINER") {
@@ -44,14 +42,12 @@ function getNavForRole(role: UserRole): NavItem[] {
       { href: "/examiner/questions", label: "Question Bank", icon: <BookOpen className="h-4 w-4" /> },
       { href: "/disputes", label: "Disputes", icon: <FileWarning className="h-4 w-4" /> },
       { href: "/verify", label: "Verify", icon: <ShieldCheck className="h-4 w-4" /> },
-      { href: "/security", label: "2FA", icon: <KeyRound className="h-4 w-4" /> },
     ];
   }
   return [
     { href: "/candidate", label: "My Exams", icon: <ClipboardCheck className="h-4 w-4" /> },
     { href: "/disputes", label: "Disputes", icon: <FileWarning className="h-4 w-4" /> },
     { href: "/verify", label: "Verify", icon: <ShieldCheck className="h-4 w-4" /> },
-    { href: "/security", label: "2FA", icon: <KeyRound className="h-4 w-4" /> },
   ];
 }
 
