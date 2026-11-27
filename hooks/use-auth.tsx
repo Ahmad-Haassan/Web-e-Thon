@@ -111,6 +111,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
+      // If user has Google Authenticator (AAL2) enrolled, hold profile until 2FA code is verified
+      const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.nextLevel === "aal2" && aal?.currentLevel !== "aal2") {
+        setUser(null);
+        setError(null);
+        setLoading(false);
+        return null;
+      }
+
       const res = await api.me.get();
       setUser(res.user);
       setError(null);
