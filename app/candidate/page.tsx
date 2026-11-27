@@ -206,7 +206,12 @@ export default function CandidateDashboardPage() {
     rawCompleted.filter((e) => Boolean(e.attempt)).length +
     rawAvailable.filter((e) => Boolean(e.attempt)).length;
 
-  const firstName = user.name?.split(/\s+/)[0] || "Student";
+  const roleLabel =
+    user.role === "ADMIN"
+      ? "Admin"
+      : user.role === "EXAMINER"
+        ? "Examiner"
+        : "Candidate";
   const firstVerifyCode =
     rawCompleted.map((e) => (e.attempt ? attemptVerifyCode(e.attempt) : "")).find(Boolean) || "";
   const verifyTargetUrl = firstVerifyCode
@@ -468,7 +473,7 @@ export default function CandidateDashboardPage() {
               <div className="relative overflow-hidden rounded-3xl border border-[#e6f1ec] bg-gradient-to-r from-[#e6f1ec] via-[#edf5f1] to-[#dcebe4] px-6 py-7 sm:px-9 sm:py-8">
                 <div className="relative z-10 max-w-xl">
                   <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
-                    Welcome back, {firstName}!
+                    Welcome back, {roleLabel}!
                   </h1>
                   <p className="mt-2 text-sm text-ink-muted">
                     Give your best. We&apos;re here to ensure a fair and secure exam experience.

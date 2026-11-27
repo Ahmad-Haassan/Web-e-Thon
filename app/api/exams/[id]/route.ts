@@ -288,7 +288,18 @@ export async function PATCH(
       .select("*")
       .single();
 
-    if (error && (error.code === "42703" || error.message?.includes("does not exist"))) {
+    const isMissingColumnError = (err: { code?: string; message?: string } | null | undefined) => {
+      if (!err) return false;
+      if (err.code === "42703" || err.code === "PGRST204") return true;
+      const msg = (err.message ?? "").toLowerCase();
+      return (
+        msg.includes("does not exist") ||
+        msg.includes("schema cache") ||
+        msg.includes("could not find the")
+      );
+    };
+
+    if (isMissingColumnError(error)) {
       const { category: _c, class_name: _cn, section: _s, rules: _r, ...fallbackPatch } = patch;
       void _c;
       void _cn;

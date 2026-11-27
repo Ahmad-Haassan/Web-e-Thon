@@ -257,8 +257,9 @@ function CreateExamFormInner({
       orderIndex: idx,
     }));
 
-    if (publishNow && attached.length === 0) {
-      toast.error("Attach at least one question before publishing");
+    const hasBlueprintRules = useBlueprint && blueprint.some((r) => r.count > 0);
+    if (publishNow && attached.length === 0 && !hasBlueprintRules) {
+      toast.error("Attach at least one question or enable a Blueprint rule before publishing");
       return;
     }
 
@@ -303,6 +304,8 @@ function CreateExamFormInner({
 
   const attachedCount = Object.keys(selectedQuestions).length;
   const totalSelectedMarks = Object.values(selectedQuestions).reduce((s, m) => s + m, 0);
+  const hasBlueprintRules = useBlueprint && blueprint.some((r) => r.count > 0);
+  const canPublish = attachedCount > 0 || hasBlueprintRules;
 
   return (
     <div className="mx-auto max-w-5xl space-y-5">
@@ -822,7 +825,7 @@ function CreateExamFormInner({
             <div className="flex items-start gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-800">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
               <span>
-                {attachedCount > 0
+                {canPublish
                   ? "You can save as Draft to enroll candidates first, or Publish immediately so enrolled students can enter inside the scheduled window."
                   : "No questions attached yet — save as Draft and attach questions before publishing."}
               </span>
@@ -848,7 +851,7 @@ function CreateExamFormInner({
                 </Button>
                 <Button
                   variant="verified"
-                  disabled={saveMut.isPending || attachedCount === 0}
+                  disabled={saveMut.isPending || !canPublish}
                   onClick={() => handleSave(true)}
                 >
                   <Send className="h-4 w-4" />
