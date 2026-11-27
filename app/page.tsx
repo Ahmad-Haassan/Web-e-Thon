@@ -1,27 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
   Clock,
   FileCheck2,
-  Menu,
   Scale,
   ShieldCheck,
   WifiOff,
-  X,
 } from "lucide-react";
-import { BrandMark, Button, ThemeToggleButton } from "@/components/ui/primitives";
+import { Button, ThemeToggleButton } from "@/components/ui/primitives";
 import { HeroProductPreview } from "@/components/landing/hero-preview";
 import { TaglineReveal } from "@/components/landing/tagline-reveal";
 import { SiteFooter } from "@/components/site-footer";
-
-const NAV_LINKS = [
-  { href: "#how-it-works", label: "How It Works" },
-  { href: "#architecture", label: "Architecture" },
-  { href: "/verify", label: "Public Verify" },
-];
 
 const STEPS = [
   {
@@ -65,100 +56,16 @@ const GUARANTEES = [
 ];
 
 export default function HomePage() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
 
-      {/* Institutional Sticky Header */}
-      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="inline-flex items-center gap-2.5 text-foreground">
-              <BrandMark />
-              <div className="leading-tight">
-                <span className="block font-display text-sm font-bold uppercase tracking-[0.06em]">
-                  NIIT EMS
-                </span>
-                <span className="block text-[10px] font-medium uppercase tracking-[0.12em] text-ink-subtle">
-                  Examination Portal
-                </span>
-              </div>
-            </Link>
-
-            <nav aria-label="Primary" className="hidden md:flex items-center gap-1">
-              {NAV_LINKS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-[2px] px-3 py-2 text-xs font-semibold uppercase tracking-[0.05em] text-ink-muted hover:bg-surface-muted hover:text-foreground transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
-
-          <div className="hidden md:flex items-center gap-3">
-            <ThemeToggleButton showLabel />
-            <Link
-              href="/login"
-              className="px-2 text-xs font-semibold uppercase tracking-[0.05em] text-ink-muted hover:text-foreground transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link href="/register">
-              <Button size="sm">Open Portal</Button>
-            </Link>
-          </div>
-
-          <div className="flex items-center gap-2 md:hidden">
-            <ThemeToggleButton />
-            <button
-              type="button"
-              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={mobileMenuOpen}
-              onClick={() => setMobileMenuOpen((v) => !v)}
-              className="flex h-9 w-9 items-center justify-center rounded-[2px] border border-border bg-surface text-foreground cursor-pointer"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Drawer */}
-        {mobileMenuOpen && (
-          <div className="fixed inset-x-0 top-16 bottom-0 z-40 bg-background/95 backdrop-blur-md p-6 md:hidden animate-fade-rise">
-            <nav aria-label="Mobile" className="flex flex-col gap-2">
-              {NAV_LINKS.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="rounded-[2px] border border-border bg-surface px-4 py-3 text-sm font-semibold uppercase tracking-[0.04em] text-foreground"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <div className="mt-4 flex flex-col gap-2.5 border-t border-border pt-4">
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                  <Button variant="secondary" size="lg" className="w-full">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-                  <Button size="lg" className="w-full">
-                    Open Portal
-                  </Button>
-                </Link>
-              </div>
-            </nav>
-          </div>
-        )}
-      </header>
+      {/* Minimal Top-Right Theme Switch Only */}
+      <div className="mx-auto flex w-full max-w-6xl justify-end px-4 pt-5 sm:px-6">
+        <ThemeToggleButton showLabel />
+      </div>
 
       <main id="main-content" className="flex-1">
         {/* NIIT-Inspired Asymmetric Split Hero on #f5f8f6 (Light) / #113b32 (Dark) */}
