@@ -54,12 +54,69 @@ function GoogleIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+type LoginRoleTab = "admin" | "examiner" | "student";
+
+const ROLE_CONFIG: Record<
+  LoginRoleTab,
+  {
+    badge: string;
+    heading: string;
+    subtitle: string;
+    placeholder: string;
+    buttonLabel: string;
+    allowRegister: boolean;
+    allowGoogle: boolean;
+  }
+> = {
+  admin: {
+    badge: "Administrator Portal",
+    heading: "Administrator Sign In",
+    subtitle: "Sign in with your institutional administrator credentials",
+    placeholder: "admin@exam.edu.pk",
+    buttonLabel: "Sign In as Administrator",
+    allowRegister: false,
+    allowGoogle: false,
+  },
+  examiner: {
+    badge: "Examiner Portal",
+    heading: "Examiner Sign In",
+    subtitle: "Sign in to create exams, manage question banks & monitor sessions",
+    placeholder: "examiner@exam.edu.pk",
+    buttonLabel: "Sign In as Examiner",
+    allowRegister: false,
+    allowGoogle: true,
+  },
+  student: {
+    badge: "Student Portal",
+    heading: "Student Sign In",
+    subtitle: "Sign in to take exams, view signed receipts & check published results",
+    placeholder: "student1@exam.edu.pk",
+    buttonLabel: "Sign In as Student",
+    allowRegister: true,
+    allowGoogle: true,
+  },
+};
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next");
   const oauthErrorParam = searchParams.get("error");
+  const rawRoleParam = (searchParams.get("role") ?? "").toLowerCase();
+  const initialRole: LoginRoleTab =
+    rawRoleParam === "admin" || rawRoleParam === "examiner" || rawRoleParam === "student"
+      ? rawRoleParam
+      : "student";
+  const [selectedRole, setSelectedRole] = useState<LoginRoleTab>(initialRole);
   const { user, loading, refreshUser } = useAuth();
+
+  useEffect(() => {
+    if (rawRoleParam === "admin" || rawRoleParam === "examiner" || rawRoleParam === "student") {
+      setSelectedRole(rawRoleParam);
+    }
+  }, [rawRoleParam]);
+
+  const roleUi = ROLE_CONFIG[selectedRole];
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -234,16 +291,37 @@ function LoginForm() {
           {/* Right Elevated Sign-In Card (Mirrors NIIT AMS Auth Card) */}
           <div className="lg:col-span-5">
             <div className="rounded-[2px] border border-border bg-surface p-7 sm:p-9 surface-elevated">
+              {/* Role Switcher Pills */}
+              <div className="mb-5 grid grid-cols-3 gap-1.5 rounded-lg border border-border bg-surface-subtle p-1">
+                {(["admin", "examiner", "student"] as const).map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRole(r);
+                      router.replace(`/login?role=${r}`, { scroll: false });
+                    }}
+                    className={`rounded-md px-2 py-1.5 text-xs font-semibold capitalize transition cursor-pointer ${
+                      selectedRole === r
+                        ? "bg-accent text-accent-ink shadow-2xs"
+                        : "text-ink-muted hover:text-foreground"
+                    }`}
+                  >
+                    {r === "admin" ? "Admin" : r === "examiner" ? "Examiner" : "Student"}
+                  </button>
+                ))}
+              </div>
+
               <div className="text-center space-y-2 mb-6">
                 <div className="inline-flex items-center gap-2 rounded-full border border-border bg-surface-muted px-3 py-1 text-xs font-medium text-foreground">
                   <span className="h-2 w-2 rounded-full bg-portal-live" />
-                  Examination Management System
+                  {roleUi.badge}
                 </div>
                 <h2 className="font-display text-2xl font-bold text-foreground pt-1">
-                  Welcome Back
+                  {roleUi.heading}
                 </h2>
                 <p className="text-xs text-ink-subtle">
-                  Sign in to NIIT Examination Management Portal
+                  {roleUi.subtitle}
                 </p>
               </div>
 
@@ -265,7 +343,7 @@ function LoginForm() {
                     type="email"
                     autoComplete="email"
                     required
-                    placeholder="f2025cs006@niit.edu.pk"
+                    placeholder={roleUi.placeholder}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                   />
@@ -300,9 +378,15 @@ function LoginForm() {
                 </div>
 
                 <div className="flex items-center justify-between text-xs">
-                  <Link href="/register" className="font-medium text-accent hover:underline">
-                    New student? Register
-                  </Link>
+                  {roleUi.allowRegister ? (
+                    <Link href="/register" className="font-medium text-accent hover:underline">
+                      New student? Register
+                    </Link>
+                  ) : (
+                    <Link href="/" className="font-medium text-accent hover:underline">
+                      ← Back to Home
+                    </Link>
+                  )}
                   <Link href="/verify" className="text-ink-muted hover:text-foreground hover:underline">
                     Verify Certificate
                   </Link>
@@ -314,38 +398,42 @@ function LoginForm() {
                       <Spinner /> Signing In…
                     </>
                   ) : (
-                    "Sign In"
+                    roleUi.buttonLabel
                   )}
                 </Button>
               </form>
 
-              <div className="relative my-5">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
-                  <span className="bg-surface px-3 text-ink-subtle">Or continue with Gmail</span>
-                </div>
-              </div>
+              {roleUi.allowGoogle && (
+                <>
+                  <div className="relative my-5">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-[11px] uppercase tracking-wider">
+                      <span className="bg-surface px-3 text-ink-subtle">Or continue with Gmail</span>
+                    </div>
+                  </div>
 
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={submitting || googleLoading}
-                className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[2px] border border-border-strong bg-surface-subtle px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
-              >
-                {googleLoading ? (
-                  <>
-                    <Spinner className="h-4 w-4" />
-                    <span>Redirecting to Google…</span>
-                  </>
-                ) : (
-                  <>
-                    <GoogleIcon className="h-4 w-4" />
-                    <span>Continue with Google (Gmail)</span>
-                  </>
-                )}
-              </button>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={submitting || googleLoading}
+                    className="flex h-11 w-full items-center justify-center gap-2.5 rounded-[2px] border border-border-strong bg-surface-subtle px-4 text-sm font-medium text-foreground transition-colors hover:bg-surface-muted disabled:opacity-60 cursor-pointer"
+                  >
+                    {googleLoading ? (
+                      <>
+                        <Spinner className="h-4 w-4" />
+                        <span>Redirecting to Google…</span>
+                      </>
+                    ) : (
+                      <>
+                        <GoogleIcon className="h-4 w-4" />
+                        <span>Continue with Google (Gmail)</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              )}
 
               <div className="mt-7 border-t border-border pt-5 text-center space-y-1.5 text-[11px] text-ink-subtle">
                 <p>https://niit.edu.pk</p>
