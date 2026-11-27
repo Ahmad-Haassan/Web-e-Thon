@@ -64,7 +64,7 @@ export default function CandidateAdmitCardPage() {
               <BrandMark />
               <div>
                 <h2 className="font-display text-base font-bold uppercase tracking-[0.03em] text-foreground">
-                  NIIT EMS · Examination Admit Card
+                  Examination Admit Card
                 </h2>
                 <p className="text-xs text-ink-subtle tabular-nums">
                   {enrolledExams.length} enrolled paper(s)
@@ -75,7 +75,7 @@ export default function CandidateAdmitCardPage() {
           </CardHeader>
 
           <CardContent className="space-y-5">
-            {/* Green Clearance Banner (Exact NIIT AMS Admit Card Pattern) */}
+            {/* Green Clearance Banner (Admit Card Pattern) */}
             <div className="flex items-start gap-3 rounded-[2px] border border-verified/30 bg-verified-soft px-4 py-3 text-xs sm:text-sm text-verified">
               <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
               <div>

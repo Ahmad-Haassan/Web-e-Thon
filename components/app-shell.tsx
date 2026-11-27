@@ -328,7 +328,7 @@ export function AppShell({
         Skip to main content
       </a>
 
-      {/* Desktop Collapsible Heritage Espresso Sidebar (NIIT AMS Layout) */}
+      {/* Desktop Collapsible Heritage Espresso Sidebar */}
       <aside
         className={cn(
           "hidden lg:flex shrink-0 flex-col portal-chrome border-r border-[var(--portal-chrome-border)] sticky top-0 h-screen transition-[width] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] no-print",
@@ -342,10 +342,7 @@ export function AppShell({
           >
             <BrandMark className="h-8 w-8" />
             {!collapsed && (
-              <div className="leading-tight min-w-0">
-                <p className="font-display text-sm font-bold tracking-wide text-[#f5f8f6] truncate">
-                  NIIT EMS
-                </p>
+              <div className="leading-tight">
                 <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[#f5f8f6]/60">
                   {roleSubLabel}
                 </p>
@@ -367,7 +364,7 @@ export function AppShell({
           {renderSidebarNav(collapsed)}
         </nav>
 
-        {/* Bottom Profile Box (Matches NIIT AMS) */}
+        {/* Bottom Profile Box */}
         <div className="border-t border-[var(--portal-chrome-border)] p-3">
           <Link
             href="/profile"
@@ -478,7 +475,6 @@ export function AppShell({
                 >
                   <BrandMark className="h-8 w-8" />
                   <div className="leading-tight">
-                    <p className="font-display text-sm font-bold text-[#f5f8f6]">NIIT EMS</p>
                     <p className="text-[10px] uppercase tracking-[0.14em] text-[#f5f8f6]/60">
                       {roleSubLabel}
                     </p>

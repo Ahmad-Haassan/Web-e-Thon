@@ -83,7 +83,7 @@ export default function ProfilePage() {
       subtitle="Review your institutional record and manage your academic class, section, and contact number."
     >
       <div className="mx-auto max-w-3xl space-y-6">
-        {/* NIIT AMS Identity Banner */}
+        {/* Identity Banner */}
         <section className="portal-chrome rounded-sm border border-[#6ee7b7]/25 p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 border-[#6ee7b7] bg-[#f5f8f6]/15 font-display text-xl font-bold text-[#f5f8f6]">
@@ -105,9 +105,6 @@ export default function ProfilePage() {
             </div>
 
             <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#6ee7b7]">
-                NIIT Institutional Identity
-              </p>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-display text-xl font-bold uppercase tracking-wide text-[#f5f8f6] truncate">
                   {user?.name ?? "Loading…"}
@@ -121,7 +118,7 @@ export default function ProfilePage() {
           </div>
         </section>
 
-        {/* NIIT AMS Academic & Identity Definition Grid */}
+        {/* Academic & Identity Definition Grid */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between gap-2">

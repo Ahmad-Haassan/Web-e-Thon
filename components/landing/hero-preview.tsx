@@ -53,7 +53,7 @@ export function HeroProductPreview() {
             }`}
           />
           <span className="font-display text-xs font-semibold uppercase tracking-[0.05em] text-foreground truncate">
-            NIIT CS-301 Midterm · Q7 of 20
+            CS-301 Midterm · Q7 of 20
           </span>
         </div>
 

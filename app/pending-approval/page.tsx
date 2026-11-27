@@ -72,9 +72,6 @@ export default function PendingApprovalPage() {
             <BrandMark className="h-8 w-8" />
           </span>
           <div className="leading-tight">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-              NASTP INSTITUTE
-            </p>
             <p className="font-display text-sm font-bold text-foreground">
               Examination Management Portal
             </p>

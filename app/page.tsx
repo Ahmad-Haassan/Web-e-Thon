@@ -11,8 +11,6 @@ import {
   UserCog,
   X,
 } from "lucide-react";
-import { InkCursor } from "@/components/landing/ink-cursor";
-import { WhaleBackground } from "@/components/landing/whale-background";
 
 const ROLES = [
   {
@@ -71,8 +69,6 @@ export default function HomePage() {
         <path d="M1260,820 Q1350,715 1440,685 L1440,820 Z" fill="#167c4f" />
         <path d="M1325,820 Q1385,748 1440,730 L1440,820 Z" fill="#0c482e" />
       </svg>
-
-      <WhaleBackground />
 
       {/* Top Navigation */}
       <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-6 sm:px-10">
@@ -239,8 +235,6 @@ export default function HomePage() {
           </div>
         </div>
       </main>
-
-      <InkCursor />
 
       {/* Inline Role Selection Pop-up Modal */}
       {roleModalOpen && (

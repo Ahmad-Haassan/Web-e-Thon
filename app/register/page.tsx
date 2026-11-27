@@ -171,14 +171,6 @@ export default function RegisterPage() {
           <span className="flex h-12 w-12 items-center justify-center rounded-[2px] border border-border bg-surface p-1.5 surface-card">
             <BrandMark className="h-9 w-9" />
           </span>
-          <div className="leading-tight">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
-              NASTP INSTITUTE
-            </p>
-            <p className="font-display text-sm sm:text-base font-bold text-foreground">
-              of Information Technology
-            </p>
-          </div>
         </Link>
 
         <div className="flex items-center gap-2">
@@ -294,7 +286,7 @@ export default function RegisterPage() {
                         type="email"
                         autoComplete="email"
                         required
-                        placeholder="f2025cs006@niit.edu.pk"
+                        placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />

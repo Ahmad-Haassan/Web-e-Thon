@@ -21,9 +21,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NIIT EMS — Examination Management Portal",
+  title: "Examination Management Portal",
   description:
-    "NASTP Institute of Information Technology — Failure-resilient, cryptographically verifiable examination management portal.",
+    "Failure-resilient, cryptographically verifiable examination management portal.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

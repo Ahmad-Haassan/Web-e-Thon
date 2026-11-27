@@ -10,7 +10,7 @@ export default function NotFound() {
           <div className="flex flex-col items-center gap-2">
             <BrandMark className="h-11 w-11" />
             <span className="font-display text-xs font-bold uppercase tracking-[0.12em] text-ink-subtle">
-              NIIT EMS · Error 404
+              Error 404
             </span>
           </div>
           <h1 className="font-display text-2xl font-bold uppercase tracking-wide text-foreground">

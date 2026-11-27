@@ -15,7 +15,7 @@ export function cn(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(" ");
 }
 
-/** Circular institutional NIIT EMS crest mark harmonized with #f5f8f6 / #113b32 palette. */
+/** Circular institutional crest mark harmonized with #f5f8f6 / #113b32 palette. */
 export function BrandMark({
   className,
   variant = "crest",

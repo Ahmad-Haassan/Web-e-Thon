@@ -146,9 +146,6 @@ function PublicVerifyInner() {
           <Link href="/" className="inline-flex items-center gap-2.5 text-foreground">
             <BrandMark className="h-8 w-8" />
             <div className="leading-tight">
-              <span className="block font-display text-sm font-bold uppercase tracking-[0.06em]">
-                NIIT EMS
-              </span>
               <span className="hidden sm:block text-[10px] uppercase tracking-[0.08em] text-ink-subtle">
                 Public Certificate Verifier
               </span>
