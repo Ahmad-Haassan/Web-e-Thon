@@ -72,8 +72,26 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // CANDIDATE: return enrolled published exams grouped into available / upcoming / completed
+    // CANDIDATE: every active student sees every PUBLISHED exam.
+    // Auto-enroll this candidate into all published exams they are not yet enrolled in
+    // (existing rows, e.g. manually changed statuses, are left untouched).
     await lazyFinalizeExpiredAttempts(supabase);
+
+    const { data: publishedExams } = await supabase
+      .from("exams")
+      .select("id")
+      .eq("status", "PUBLISHED");
+
+    if (publishedExams && publishedExams.length > 0) {
+      await supabase.from("enrollments").upsert(
+        publishedExams.map((ex) => ({
+          exam_id: ex.id,
+          candidate_id: user.id,
+          status: "ENROLLED" as const,
+        })),
+        { onConflict: "exam_id,candidate_id", ignoreDuplicates: true }
+      );
+    }
 
     const { data: enrollments, error: enrErr } = await supabase
       .from("enrollments")
@@ -231,33 +249,45 @@ export async function POST(req: NextRequest) {
 
     const totalMarks = allAttached.reduce((sum, q) => sum + q.marks, 0);
 
-    const { data: exam, error } = await supabase
+    const baseInsert = {
+      owner_id: user.id,
+      title: d.title,
+      instructions: d.instructions,
+      start_at: d.startAt,
+      end_at: d.endAt,
+      duration_min: d.durationMin,
+      total_marks: totalMarks,
+      status: "DRAFT",
+      shuffle_questions: d.shuffleQuestions,
+      shuffle_options: d.shuffleOptions,
+      blueprint: d.blueprint ?? null,
+      grace_sec: d.graceSec,
+      partial_credit_config: d.partialCreditConfig,
+      per_question_timer_sec: d.perQuestionTimerSec ?? null,
+      no_backtrack: d.noBacktrack,
+      seed_secret: seedSecret,
+      seed_commitment: seedCommitment,
+    };
+
+    let { data: exam, error } = await supabase
       .from("exams")
       .insert({
-        owner_id: user.id,
-        title: d.title,
+        ...baseInsert,
         category: d.category || null,
         class_name: d.className || null,
         section: d.section || null,
         rules: d.rules ?? [],
-        instructions: d.instructions,
-        start_at: d.startAt,
-        end_at: d.endAt,
-        duration_min: d.durationMin,
-        total_marks: totalMarks,
-        status: "DRAFT",
-        shuffle_questions: d.shuffleQuestions,
-        shuffle_options: d.shuffleOptions,
-        blueprint: d.blueprint ?? null,
-        grace_sec: d.graceSec,
-        partial_credit_config: d.partialCreditConfig,
-        per_question_timer_sec: d.perQuestionTimerSec ?? null,
-        no_backtrack: d.noBacktrack,
-        seed_secret: seedSecret,
-        seed_commitment: seedCommitment,
       })
       .select("*")
       .single();
+
+    if (error && (error.code === "42703" || error.message?.includes("does not exist"))) {
+      ({ data: exam, error } = await supabase
+        .from("exams")
+        .insert(baseInsert)
+        .select("*")
+        .single());
+    }
 
     if (error || !exam) throw new HttpError(500, error?.message ?? "Failed to create exam");
 
