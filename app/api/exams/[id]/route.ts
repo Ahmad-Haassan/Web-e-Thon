@@ -69,9 +69,31 @@ export async function GET(
       .eq("exam_id", id)
       .eq("status", "ENROLLED");
 
+    const questions = (attached ?? []).map((row) => {
+      const q = (Array.isArray(row.questions) ? row.questions[0] : row.questions) as {
+        id: string;
+        type: string;
+        difficulty: number;
+        text: string;
+        category_id: string | null;
+        options?: unknown[];
+      } | null;
+      return {
+        id: q?.id ?? "",
+        type: q?.type ?? "SINGLE",
+        difficulty: q?.difficulty ?? 1,
+        text: q?.text ?? "",
+        category_id: q?.category_id ?? null,
+        options: q?.options ?? [],
+        marks: Number(row.marks),
+        order_index: row.order_index,
+        questions: q,
+      };
+    });
+
     return jsonOk({
       exam: { ...safeExam, total_marks: Number(safeExam.total_marks), lifecycle },
-      questions: attached ?? [],
+      questions,
       enrollmentCount: enrollmentCount ?? 0,
     });
   } catch (err) {
