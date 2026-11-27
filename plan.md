@@ -329,3 +329,46 @@ Person B codes against mocked responses until A's endpoints are merged.
 - Hour 4: first end-to-end test (login -> exam -> offline answers -> sync -> submit -> verify).
 - Hour 5: feature freeze. Last 45 min: rehearse; record a fallback demo video.
 
+
+## 14. FINAL STACK (overrides Sections 2, 3, 11, 13 where they conflict)
+**Next.js (App Router) + TypeScript + Supabase (Auth, Postgres, optional Realtime). No Express, no Prisma.**
+
+| Layer | Choice |
+|---|---|
+| Frontend | Next.js + TS, Tailwind + shadcn/ui, TanStack Query, `idb-keyval`, Serwist (service worker, if time) |
+| Backend | Next.js Route Handlers (`app/api/**/route.ts`) for trusted logic, using the service-role key (server env only) |
+| Data/Auth | Supabase Auth + Postgres, `@supabase/ssr`, generated types (`supabase gen types typescript`) |
+| Access control | Row Level Security (required) + role checks in route handlers |
+| Validation | Zod |
+| Hash chain / receipts | Node `crypto` inside route handlers (`lib/server/chain.ts`) |
+| Deploy | Vercel + Supabase (or local for the demo) |
+
+### Layout (single app)
+```
+app/(pages)/...        Person B
+components/ hooks/ lib/offline/   Person B
+app/api/**/route.ts    Person A
+lib/server/ (auth, chain, grading) Person A
+supabase/migrations/ (SQL + RLS) seed.sql  Person A
+lib/shared/ (zod schemas, types)   agree together
+```
+
+### Rules
+- Browser uses `supabase-js` (anon key) only for login and simple RLS-protected reads.
+- Anything touching deadlines, answers, receipts, grading, answer keys goes through `app/api` only.
+- Correct answers live in a separate table `question_keys` with no client-readable policy.
+- Service-role key and DB URL: server env only (`.env.local`, never committed, never `NEXT_PUBLIC_`).
+
+### Person A (branch person-a/backend)
+1. Supabase project, email confirmation off, schema + RLS migrations, `question_keys` table, seed (admin, examiner, candidates).
+2. `lib/server/auth.ts`: get user + role from session; `requireRole`.
+3. Route handlers: exams, questions, enroll, start attempt (snapshot, deadline, no keys), answers sync (idempotent clientSeq, deadline+grace, hash chain, receipt), submit + grade, results, events, verify.
+4. Optional: Postgres RPC for atomic answer insert + chain.
+
+### Person B (branch person-b/frontend)
+1. Next.js scaffold, Tailwind, shadcn, Supabase client/SSR helpers, `.env.local`.
+2. Login/register, middleware for role-based routing.
+3. Examiner pages, candidate dashboard.
+4. Exam page (client component): server-offset timer, palette, IndexedDB-first autosave, sync by clientSeq, offline badge, resume, token refresh.
+5. Soft lock + indicators, result page, receipts, `/verify` page.
+6. Polish, demo script, offline rehearsal.
