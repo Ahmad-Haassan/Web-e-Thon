@@ -476,19 +476,6 @@ export default function CandidateDashboardPage() {
                   </p>
                   <div className="mt-4 h-1 w-14 rounded-full bg-accent" />
                 </div>
-
-                {/* Decorative Shield + Laptop Emblem */}
-                <div className="pointer-events-none absolute right-6 top-1/2 hidden -translate-y-1/2 items-center gap-4 md:flex">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-lg shadow-teal-500/20">
-                    <ShieldCheck className="h-9 w-9" />
-                  </div>
-                  <div className="flex h-24 w-32 flex-col items-center justify-center rounded-2xl border border-border-strong/70 bg-surface/75 backdrop-blur-xs shadow-sm">
-                    <Laptop className="h-10 w-10 text-accent" />
-                    <span className="mt-1 text-[10px] font-semibold text-accent">
-                      Offline-Safe Sync
-                    </span>
-                  </div>
-                </div>
               </div>
 
               {/* 2-Column Main Grid */}
@@ -678,43 +665,6 @@ export default function CandidateDashboardPage() {
 
                 {/* Right Column */}
                 <div className="space-y-6">
-                  {/* Quick Info */}
-                  <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
-                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-foreground">
-                      <Zap className="h-4.5 w-4.5 text-accent" />
-                      Quick Info
-                    </h2>
-                    <div className="space-y-3.5">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-                          <ShieldCheck className="h-5 w-5" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">Secure &amp; Fair Exam</p>
-                          <p className="text-xs text-ink-subtle">Your answers are protected</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
-                          <Lock className="h-5 w-5" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">Auto-Save Enabled</p>
-                          <p className="text-xs text-ink-subtle">No data will be lost offline</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                          <Award className="h-5 w-5" />
-                        </span>
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">Verified Results</p>
-                          <p className="text-xs text-ink-subtle">With signed digital receipt</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   {/* My Results Ring Card */}
                   <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
                     <div className="mb-4 flex items-center justify-between">
