@@ -17,13 +17,13 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
 });
 
 const DEMO_USERS = [
-  { email: "admin@exam.edu.pk", password: "Password123!", name: "Dr. Tariq Mehmood (Admin)", role: "ADMIN" as const },
-  { email: "examiner@exam.edu.pk", password: "Password123!", name: "Prof. Ayesha Siddiqui", role: "EXAMINER" as const },
-  { email: "student1@exam.edu.pk", password: "Password123!", name: "Ali Raza", role: "CANDIDATE" as const },
-  { email: "student2@exam.edu.pk", password: "Password123!", name: "Fatima Noor", role: "CANDIDATE" as const },
-  { email: "student3@exam.edu.pk", password: "Password123!", name: "Bilal Ahmed", role: "CANDIDATE" as const },
-  { email: "student4@exam.edu.pk", password: "Password123!", name: "Zainab Malik", role: "CANDIDATE" as const },
-  { email: "student5@exam.edu.pk", password: "Password123!", name: "Usman Farooq", role: "CANDIDATE" as const },
+  { email: "admin@exam.edu.pk", password: "Password123!", name: "Dr. Tariq Mehmood (Admin)", role: "ADMIN" as const, phone: "+92 300 0000001", className: null, section: null },
+  { email: "examiner@exam.edu.pk", password: "Password123!", name: "Prof. Ayesha Siddiqui", role: "EXAMINER" as const, phone: "+92 300 0000002", className: null, section: null },
+  { email: "student1@exam.edu.pk", password: "Password123!", name: "Ali Raza", role: "CANDIDATE" as const, phone: "+92 300 1111101", className: "BSCS-4", section: "A" },
+  { email: "student2@exam.edu.pk", password: "Password123!", name: "Fatima Noor", role: "CANDIDATE" as const, phone: "+92 300 1111102", className: "BSCS-4", section: "A" },
+  { email: "student3@exam.edu.pk", password: "Password123!", name: "Bilal Ahmed", role: "CANDIDATE" as const, phone: "+92 300 1111103", className: "BSCS-4", section: "B" },
+  { email: "student4@exam.edu.pk", password: "Password123!", name: "Zainab Malik", role: "CANDIDATE" as const, phone: "+92 300 1111104", className: "IX", section: "A" },
+  { email: "student5@exam.edu.pk", password: "Password123!", name: "Usman Farooq", role: "CANDIDATE" as const, phone: "+92 300 1111105", className: "IX", section: "B" },
 ];
 
 async function upsertDemoUser(u: (typeof DEMO_USERS)[number]) {
@@ -57,6 +57,10 @@ async function upsertDemoUser(u: (typeof DEMO_USERS)[number]) {
         name: u.name,
         role: u.role,
         active: true,
+        phone: u.phone,
+        class_name: u.className,
+        section: u.section,
+        email_verified: true,
       },
       { onConflict: "supabase_user_id" }
     )
@@ -306,6 +310,15 @@ async function seed() {
       .insert({
         owner_id: examiner.id,
         title: examTitle,
+        category: "Computer Science",
+        class_name: "BSCS-4",
+        section: "A",
+        rules: [
+          "Only one attempt is permitted per candidate.",
+          "The server-synchronized countdown timer auto-submits when time ends.",
+          "Use Flag / Review to revisit uncertain questions or Clear Response to reset a choice.",
+          "If Wi-Fi drops, keep answering—responses queue locally in IndexedDB and sync automatically.",
+        ],
         instructions:
           "Answer all questions. Your answers are saved locally first and cryptographically receipted on sync. Integrity indicators are logged transparently (indicators, not proof).",
         start_at: startAt,

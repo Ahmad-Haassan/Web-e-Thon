@@ -10,6 +10,14 @@ export const workspacePrefsSchema = z.object({
   splitLayout: z.boolean().optional(),
 });
 
+// Self Profile Update
+export const updateProfileSchema = z.object({
+  name: z.string().min(2).max(120).trim().optional(),
+  phone: z.string().max(30).trim().nullable().optional(),
+  className: z.string().max(40).trim().nullable().optional(),
+  section: z.string().max(20).trim().nullable().optional(),
+});
+
 // Admin User CRUD
 export const createUserSchema = z.object({
   name: z.string().min(2).max(120),
@@ -80,6 +88,11 @@ export const blueprintRuleSchema = z.object({
 export const createExamSchema = z
   .object({
     title: z.string().min(3).max(200),
+    category: z.string().max(80).trim().nullable().optional(),
+    className: z.string().max(40).trim().nullable().optional(),
+    section: z.string().max(20).trim().nullable().optional(),
+    rules: z.array(z.string().min(1).max(500)).max(30).optional().default([]),
+    autoEnrollClass: z.boolean().optional().default(false),
     instructions: z.string().max(5000).optional().default(""),
     startAt: z.string().datetime(),
     endAt: z.string().datetime(),
@@ -106,6 +119,7 @@ export const createExamSchema = z
         })
       )
       .optional(),
+    inlineQuestions: z.array(createQuestionSchema).max(100).optional(),
   })
   .refine((e) => new Date(e.endAt) > new Date(e.startAt), {
     message: "endAt must be after startAt",
@@ -113,6 +127,10 @@ export const createExamSchema = z
 
 export const updateExamSchema = z.object({
   title: z.string().min(3).max(200).optional(),
+  category: z.string().max(80).trim().nullable().optional(),
+  className: z.string().max(40).trim().nullable().optional(),
+  section: z.string().max(20).trim().nullable().optional(),
+  rules: z.array(z.string().min(1).max(500)).max(30).optional(),
   instructions: z.string().max(5000).optional(),
   startAt: z.string().datetime().optional(),
   endAt: z.string().datetime().optional(),
@@ -140,10 +158,17 @@ export const updateExamSchema = z.object({
     .optional(),
 });
 
-// Enrollments
-export const enrollSchema = z.object({
-  emails: z.array(z.string().email()).min(1).max(500),
-});
+// Enrollments (supports email list OR class/section batch enrollment)
+export const enrollSchema = z
+  .object({
+    emails: z.array(z.string().email()).max(500).optional(),
+    className: z.string().min(1).max(40).trim().optional(),
+    section: z.string().max(20).trim().nullable().optional(),
+  })
+  .refine(
+    (d) => (d.emails && d.emails.length > 0) || Boolean(d.className && d.className.trim().length > 0),
+    { message: "Provide candidate emails or a className to enroll" }
+  );
 
 // Attempts & Offline Answer Sync
 export const startAttemptSchema = z.object({

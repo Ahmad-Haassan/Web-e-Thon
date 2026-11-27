@@ -61,6 +61,7 @@ import {
   Label,
   Select,
   Spinner,
+  ThemeToggleButton,
 } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
 import type { UserRole, WorkspacePrefs } from "@/lib/client/api-types";
@@ -281,9 +282,9 @@ export default function AdminDashboardPage() {
 
   if (loading || !user || user.role !== "ADMIN") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f6fb]">
-        <div className="flex items-center gap-3 text-sm text-slate-600">
-          <Spinner className="h-5 w-5 text-indigo-600" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-sm text-ink-muted">
+          <Spinner className="h-5 w-5 text-accent" />
           Loading Admin Panel…
         </div>
       </div>
@@ -313,8 +314,8 @@ export default function AdminDashboardPage() {
     switch (kind) {
       case "exam":
         return {
-          dot: "bg-blue-600",
-          box: "bg-blue-50 text-blue-600",
+          dot: "bg-accent",
+          box: "bg-accent-soft text-accent",
           Icon: Plus,
         };
       case "submit":
@@ -343,15 +344,15 @@ export default function AdminDashboardPage() {
         };
       default:
         return {
-          dot: "bg-indigo-500",
-          box: "bg-indigo-50 text-indigo-600",
+          dot: "bg-accent",
+          box: "bg-accent-soft text-accent",
           Icon: ShieldCheck,
         };
     }
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f4f6fb] text-slate-900">
+    <div className="flex min-h-screen bg-background text-foreground">
       {/* Mobile Sidebar Backdrop */}
       {mobileMenuOpen && (
         <div
@@ -362,7 +363,7 @@ export default function AdminDashboardPage() {
 
       {/* Left Dark Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#141824] text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col portal-chrome text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -380,7 +381,7 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:bg-white/10 lg:hidden"
+            className="rounded-lg p-1 text-slate-400 hover:bg-surface/10 lg:hidden"
             aria-label="Close sidebar"
           >
             <X className="h-5 w-5" />
@@ -401,11 +402,11 @@ export default function AdminDashboardPage() {
                 }}
                 className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                   active
-                    ? "bg-gradient-to-r from-[#4f46e5] to-[#4338ca] text-white shadow-md shadow-indigo-950/40"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                    ? "bg-[var(--portal-chrome-accent)] text-[#241a0b] font-semibold shadow-sm"
+                    : "text-slate-300 hover:bg-surface/5 hover:text-white"
                 }`}
               >
-                <Icon className={`h-4.5 w-4.5 ${active ? "text-white" : "text-slate-400"}`} />
+                <Icon className={`h-4.5 w-4.5 ${active ? "text-[#241a0b]" : "text-[var(--portal-chrome-muted)]"}`} />
                 <span>{label}</span>
               </button>
             );
@@ -414,7 +415,7 @@ export default function AdminDashboardPage() {
 
         {/* Bottom System Status Card */}
         <div className="p-4">
-          <div className="rounded-xl border border-white/10 bg-[#1d2233] p-3.5">
+          <div className="rounded-xl border border-white/10 bg-black/20 p-3.5">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
                 <ShieldCheck className="h-5 w-5" />
@@ -434,12 +435,12 @@ export default function AdminDashboardPage() {
       {/* Right Workspace */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 sm:px-7">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-surface px-4 sm:px-7">
           <div className="flex flex-1 items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+              className="rounded-lg p-2 text-ink-muted hover:bg-surface-muted lg:hidden"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
@@ -457,12 +458,13 @@ export default function AdminDashboardPage() {
                   }
                 }}
                 placeholder="Search users, exams, questions, or logs..."
-                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-100"
+                className="h-9 w-full rounded-xl border border-border bg-surface-subtle pl-10 pr-4 text-sm text-foreground placeholder:text-slate-400 focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggleButton />
             {/* Notifications Bell */}
             <div className="relative">
               <button
@@ -471,7 +473,7 @@ export default function AdminDashboardPage() {
                   setShowNotifications((v) => !v);
                   setShowProfileMenu(false);
                 }}
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-ink-muted hover:bg-surface-muted cursor-pointer"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5" />
@@ -483,24 +485,24 @@ export default function AdminDashboardPage() {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                    <p className="text-sm font-semibold text-slate-900">Platform Alerts</p>
-                    <span className="text-xs text-slate-500">{unreadCount} active</span>
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-border bg-surface p-4 shadow-xl">
+                  <div className="flex items-center justify-between pb-2 border-b border-border">
+                    <p className="text-sm font-semibold text-foreground">Platform Alerts</p>
+                    <span className="text-xs text-ink-subtle">{unreadCount} active</span>
                   </div>
                   <div className="mt-3 space-y-2.5 text-xs">
-                    <div className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5">
-                      <span className="text-slate-700">Open Disputes</span>
+                    <div className="flex items-center justify-between rounded-xl bg-surface-subtle p-2.5">
+                      <span className="text-ink-muted">Open Disputes</span>
                       <Link
                         href="/disputes"
                         onClick={() => setShowNotifications(false)}
-                        className="font-semibold text-indigo-600 hover:underline"
+                        className="font-semibold text-accent hover:underline"
                       >
                         {overview?.notifications.openDisputes ?? 0} view →
                       </Link>
                     </div>
-                    <div className="flex items-center justify-between rounded-xl bg-slate-50 p-2.5">
-                      <span className="text-slate-700">Live In-Progress Attempts</span>
+                    <div className="flex items-center justify-between rounded-xl bg-surface-subtle p-2.5">
+                      <span className="text-ink-muted">Live In-Progress Attempts</span>
                       <button
                         type="button"
                         onClick={() => {
@@ -525,39 +527,39 @@ export default function AdminDashboardPage() {
                   setShowProfileMenu((v) => !v);
                   setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-slate-100 cursor-pointer"
+                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-surface-muted cursor-pointer"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#312e81] text-xs font-bold text-white">
                   {(user.name?.[0] ?? "A").toUpperCase()}
                 </span>
-                <span className="hidden text-sm font-medium text-slate-700 sm:inline">
+                <span className="hidden text-sm font-medium text-ink-muted sm:inline">
                   Admin
                 </span>
                 <ChevronDown className="h-4 w-4 text-slate-400" />
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-                  <div className="border-b border-slate-100 px-3 py-2.5">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{user.name}</p>
-                    <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                <div className="absolute right-0 mt-2 w-60 rounded-2xl border border-border bg-surface p-2 shadow-xl">
+                  <div className="border-b border-border px-3 py-2.5">
+                    <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                    <p className="text-xs text-ink-subtle truncate">{user.email}</p>
                   </div>
                   <div className="mt-1 space-y-0.5">
                     <Link
                       href="/examiner"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle"
                     >
                       <ClipboardList className="h-4 w-4 text-slate-400" /> Examiner Portal
                     </Link>
                     <Link
                       href="/disputes"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle"
                     >
                       <AlertTriangle className="h-4 w-4 text-slate-400" /> Disputes Queue
                     </Link>
                     <Link
                       href="/verify"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle"
                     >
                       <ShieldCheck className="h-4 w-4 text-emerald-500" /> Public Verifier
                     </Link>
@@ -609,7 +611,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/verify"
-                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50"
+                  className="rounded-lg bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted shadow-xs hover:bg-surface-subtle"
                 >
                   Open Public Verifier
                 </Link>
@@ -631,15 +633,15 @@ export default function AdminDashboardPage() {
               {/* Welcome Row */}
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground">
                     Welcome, Admin!
                   </h1>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-ink-subtle">
                     Here&apos;s what&apos;s happening on your examination platform today.
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-2xs">
-                  <Calendar className="h-3.5 w-3.5 text-indigo-600" />
+                <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-medium text-ink-muted shadow-2xs">
+                  <Calendar className="h-3.5 w-3.5 text-accent" />
                   <span>{format(nowDisplay, "MMM dd, yyyy • hh:mm a")}</span>
                 </div>
               </div>
@@ -652,14 +654,14 @@ export default function AdminDashboardPage() {
                   onClick={() => setActiveTab("users")}
                   className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-[#eef4ff] to-[#f8faff] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
                 >
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-ink shadow-sm">
                     <Users className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-slate-900">
+                    <p className="text-2xl font-bold tracking-tight text-foreground">
                       {overviewQuery.isLoading ? "…" : (stats?.totalStudents ?? 0).toLocaleString()}
                     </p>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
                       <span>Total Students</span>
                       <span className="font-semibold text-emerald-600">
                         {stats?.activeStudents ?? 0} active
@@ -678,10 +680,10 @@ export default function AdminDashboardPage() {
                     <FileText className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-slate-900">
+                    <p className="text-2xl font-bold tracking-tight text-foreground">
                       {overviewQuery.isLoading ? "…" : (stats?.totalExams ?? 0).toLocaleString()}
                     </p>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
                       <span>Total Exams</span>
                       <span className="font-semibold text-emerald-600">
                         {stats?.ongoingExams ?? 0} live
@@ -700,10 +702,10 @@ export default function AdminDashboardPage() {
                     <Check className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-slate-900">
+                    <p className="text-2xl font-bold tracking-tight text-foreground">
                       {overviewQuery.isLoading ? "…" : (stats?.totalAttempts ?? 0).toLocaleString()}
                     </p>
-                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
                       <span>Total Attempts</span>
                       <span className="font-semibold text-violet-600">
                         {stats?.gradedAttempts ?? 0} graded
@@ -722,10 +724,10 @@ export default function AdminDashboardPage() {
                     <Activity className="h-6 w-6" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-2xl font-bold tracking-tight text-slate-900">
+                    <p className="text-2xl font-bold tracking-tight text-foreground">
                       {stats ? `${stats.platformHealthPct}%` : "99.9%"}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-600">Platform Uptime</p>
+                    <p className="mt-0.5 text-xs text-ink-muted">Platform Uptime</p>
                   </div>
                 </button>
               </div>
@@ -733,24 +735,24 @@ export default function AdminDashboardPage() {
               {/* Middle Row: Recent Activities + Quick Actions */}
               <div className="grid gap-5 lg:grid-cols-5">
                 {/* Recent Activities */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-3">
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-3">
                   <div className="mb-4 flex items-center justify-between">
-                    <h2 className="text-base font-bold text-slate-900">Recent Activities</h2>
+                    <h2 className="text-base font-bold text-foreground">Recent Activities</h2>
                     <button
                       type="button"
                       onClick={() => setActiveTab("logs")}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent cursor-pointer"
                     >
                       View All <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
 
                   {overviewQuery.isLoading ? (
-                    <div className="flex items-center justify-center gap-2 py-10 text-sm text-slate-500">
+                    <div className="flex items-center justify-center gap-2 py-10 text-sm text-ink-subtle">
                       <Spinner /> Loading live activity feed…
                     </div>
                   ) : activities.length === 0 ? (
-                    <p className="py-8 text-center text-sm text-slate-500">
+                    <p className="py-8 text-center text-sm text-ink-subtle">
                       No platform activity recorded yet.
                     </p>
                   ) : (
@@ -767,10 +769,10 @@ export default function AdminDashboardPage() {
                                 <Icon className="h-4 w-4" />
                               </span>
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-slate-800">
+                                <p className="truncate text-sm font-semibold text-foreground">
                                   {item.title}
                                 </p>
-                                <p className="truncate text-xs text-slate-500">{item.subtitle}</p>
+                                <p className="truncate text-xs text-ink-subtle">{item.subtitle}</p>
                               </div>
                             </div>
                             <span className="shrink-0 text-xs text-slate-400">
@@ -784,14 +786,14 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-2">
-                  <h2 className="mb-4 text-base font-bold text-slate-900">Quick Actions</h2>
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-2">
+                  <h2 className="mb-4 text-base font-bold text-foreground">Quick Actions</h2>
                   <div className="grid grid-cols-2 gap-3">
                     <Link
                       href="/examiner/exams/new"
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#4f46e5] to-[#3730a3] px-4 py-6 text-center text-white shadow-md shadow-indigo-200 transition hover:brightness-110"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-[#46351a] to-[#3730a3] px-4 py-6 text-center text-white shadow-md shadow-indigo-200 transition hover:brightness-110"
                     >
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-white/15">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-surface/15">
                         <Plus className="h-5 w-5" />
                       </span>
                       <span className="text-xs font-semibold leading-tight">
@@ -804,9 +806,9 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("users")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-slate-800 transition hover:bg-indigo-50 cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
                     >
-                      <Users className="h-6 w-6 text-indigo-600" />
+                      <Users className="h-6 w-6 text-accent" />
                       <span className="text-xs font-semibold leading-tight">
                         Manage
                         <br />
@@ -817,9 +819,9 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("exams")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-slate-800 transition hover:bg-indigo-50 cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
                     >
-                      <FileText className="h-6 w-6 text-indigo-600" />
+                      <FileText className="h-6 w-6 text-accent" />
                       <span className="text-xs font-semibold leading-tight">
                         View
                         <br />
@@ -830,9 +832,9 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("analytics")}
-                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-slate-800 transition hover:bg-indigo-50 cursor-pointer"
+                      className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f5f7ff] px-4 py-6 text-center text-foreground transition hover:bg-accent-soft cursor-pointer"
                     >
-                      <BarChart3 className="h-6 w-6 text-indigo-600" />
+                      <BarChart3 className="h-6 w-6 text-accent" />
                       <span className="text-xs font-semibold leading-tight">
                         Check
                         <br />
@@ -846,13 +848,13 @@ export default function AdminDashboardPage() {
               {/* Bottom Row: Platform Analytics Chart + System Tools */}
               <div className="grid gap-5 lg:grid-cols-5">
                 {/* Platform Analytics */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-3">
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-3">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <h2 className="text-base font-bold text-slate-900">Platform Analytics</h2>
-                      <div className="mt-1 flex items-center gap-4 text-xs text-slate-500">
+                      <h2 className="text-base font-bold text-foreground">Platform Analytics</h2>
+                      <div className="mt-1 flex items-center gap-4 text-xs text-ink-subtle">
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="h-2 w-2 rounded-full bg-blue-600" /> Exam Attempts
+                          <span className="h-2 w-2 rounded-full bg-accent" /> Exam Attempts
                         </span>
                         <span className="inline-flex items-center gap-1.5">
                           <span className="h-2 w-2 rounded-full bg-emerald-500" /> Active Users
@@ -864,7 +866,7 @@ export default function AdminDashboardPage() {
                       aria-label="Analytics range"
                       value={analyticsDays}
                       onChange={(e) => setAnalyticsDays(Number(e.target.value) as 7 | 30)}
-                      className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 focus:border-indigo-500 focus:outline-none"
+                      className="h-8 rounded-lg border border-border bg-surface-subtle px-2.5 text-xs font-medium text-ink-muted focus:border-accent focus:outline-none"
                     >
                       <option value={7}>Last 7 Days</option>
                       <option value={30}>Last 30 Days</option>
@@ -876,8 +878,8 @@ export default function AdminDashboardPage() {
                       <AreaChart data={series} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                         <defs>
                           <linearGradient id="attemptsGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#2563eb" stopOpacity={0.22} />
-                            <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#46351a" stopOpacity={0.22} />
+                            <stop offset="95%" stopColor="#46351a" stopOpacity={0} />
                           </linearGradient>
                           <linearGradient id="usersGrad" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -908,10 +910,10 @@ export default function AdminDashboardPage() {
                           type="monotone"
                           dataKey="examAttempts"
                           name="Exam Attempts"
-                          stroke="#2563eb"
+                          stroke="#46351a"
                           strokeWidth={2.5}
                           fill="url(#attemptsGrad)"
-                          dot={{ r: 3, fill: "#ffffff", stroke: "#2563eb", strokeWidth: 2 }}
+                          dot={{ r: 3, fill: "#ffffff", stroke: "#46351a", strokeWidth: 2 }}
                         />
                         <Area
                           type="monotone"
@@ -928,28 +930,28 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* System Tools */}
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-2">
-                  <h2 className="mb-4 text-base font-bold text-slate-900">System Tools</h2>
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-2">
+                  <h2 className="mb-4 text-base font-bold text-foreground">System Tools</h2>
                   <div className="space-y-2.5">
                     <button
                       type="button"
                       disabled={integrityMut.isPending}
                       onClick={() => integrityMut.mutate()}
-                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50 cursor-pointer"
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-3.5 text-left transition hover:border-border-strong hover:bg-accent-soft/50 cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-accent">
                           {integrityMut.isPending ? (
-                            <Spinner className="h-4 w-4 text-blue-600" />
+                            <Spinner className="h-4 w-4 text-accent" />
                           ) : (
                             <ShieldCheck className="h-5 w-5" />
                           )}
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">
+                          <p className="text-sm font-semibold text-foreground">
                             Verify Records Integrity
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-ink-subtle">
                             Check hash chain and audit logs
                           </p>
                         </div>
@@ -961,7 +963,7 @@ export default function AdminDashboardPage() {
                       type="button"
                       disabled={exportMut.isPending}
                       onClick={() => exportMut.mutate("json")}
-                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50 cursor-pointer"
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-3.5 text-left transition hover:border-border-strong hover:bg-accent-soft/50 cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-600">
@@ -972,8 +974,8 @@ export default function AdminDashboardPage() {
                           )}
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">Export Data</p>
-                          <p className="text-xs text-slate-500">Download reports and backups</p>
+                          <p className="text-sm font-semibold text-foreground">Export Data</p>
+                          <p className="text-xs text-ink-subtle">Download reports and backups</p>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -982,17 +984,17 @@ export default function AdminDashboardPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTab("settings")}
-                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3.5 text-left transition hover:border-indigo-200 hover:bg-indigo-50/50 cursor-pointer"
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-3.5 text-left transition hover:border-border-strong hover:bg-accent-soft/50 cursor-pointer"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-accent">
                           <Settings className="h-5 w-5" />
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-slate-800">
+                          <p className="text-sm font-semibold text-foreground">
                             Configure Settings
                           </p>
-                          <p className="text-xs text-slate-500">Manage platform settings</p>
+                          <p className="text-xs text-ink-subtle">Manage platform settings</p>
                         </div>
                       </div>
                       <ChevronRight className="h-4 w-4 text-slate-400" />
@@ -1008,8 +1010,8 @@ export default function AdminDashboardPage() {
             <div className="mx-auto max-w-6xl space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">User Management</h1>
-                  <p className="text-sm text-slate-500">
+                  <h1 className="text-xl font-bold text-foreground">User Management</h1>
+                  <p className="text-sm text-ink-subtle">
                     Provision Admins, Examiners, and Candidates with server-enforced RBAC roles.
                   </p>
                 </div>
@@ -1020,8 +1022,8 @@ export default function AdminDashboardPage() {
               </div>
 
               {showCreateUser && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                  <h2 className="mb-4 text-sm font-bold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                  <h2 className="mb-4 text-sm font-bold text-foreground">
                     Create or Invite Institutional Account
                   </h2>
                   <form onSubmit={handleCreateUser} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -1073,7 +1075,7 @@ export default function AdminDashboardPage() {
                       />
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3 sm:col-span-2 lg:col-span-4">
-                      <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-slate-600">
+                      <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-ink-muted">
                         <input
                           type="checkbox"
                           checked={invite}
@@ -1095,9 +1097,9 @@ export default function AdminDashboardPage() {
                 </div>
               )}
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
-                  <p className="text-sm font-semibold text-slate-700">
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
+                  <p className="text-sm font-semibold text-ink-muted">
                     {(usersQuery.data?.users ?? []).length} account(s)
                   </p>
                   <Select
@@ -1114,7 +1116,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {usersQuery.isLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-subtle">
                     <Spinner /> Loading users…
                   </div>
                 ) : (usersQuery.data?.users ?? []).length === 0 ? (
@@ -1127,7 +1129,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase text-slate-500">
+                      <thead className="border-b border-border bg-surface-subtle text-xs uppercase text-ink-subtle">
                         <tr>
                           <th className="px-5 py-3">User</th>
                           <th className="px-5 py-3">Role</th>
@@ -1135,12 +1137,12 @@ export default function AdminDashboardPage() {
                           <th className="px-5 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-border">
                         {(usersQuery.data?.users ?? []).map((u) => (
-                          <tr key={u.id} className="hover:bg-slate-50/70">
+                          <tr key={u.id} className="hover:bg-surface-subtle">
                             <td className="px-5 py-3.5">
-                              <p className="font-semibold text-slate-900">{u.name}</p>
-                              <p className="text-xs text-slate-500">{u.email}</p>
+                              <p className="font-semibold text-foreground">{u.name}</p>
+                              <p className="text-xs text-ink-subtle">{u.email}</p>
                             </td>
                             <td className="px-5 py-3.5">
                               <Select
@@ -1202,8 +1204,8 @@ export default function AdminDashboardPage() {
             <div className="mx-auto max-w-6xl space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">Exam Management &amp; Results</h1>
-                  <p className="text-sm text-slate-500">
+                  <h1 className="text-xl font-bold text-foreground">Exam Management &amp; Results</h1>
+                  <p className="text-sm text-ink-subtle">
                     Oversee every examination, publish results, monitor live attempts, and export audit PDFs.
                   </p>
                 </div>
@@ -1214,9 +1216,9 @@ export default function AdminDashboardPage() {
                 </Link>
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-2xs">
                 {overviewQuery.isLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-subtle">
                     <Spinner /> Loading exams…
                   </div>
                 ) : examBreakdown.length === 0 ? (
@@ -1229,7 +1231,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="border-b border-slate-100 bg-slate-50 text-xs uppercase text-slate-500">
+                      <thead className="border-b border-border bg-surface-subtle text-xs uppercase text-ink-subtle">
                         <tr>
                           <th className="px-5 py-3">Examination</th>
                           <th className="px-5 py-3">Lifecycle</th>
@@ -1239,12 +1241,12 @@ export default function AdminDashboardPage() {
                           <th className="px-5 py-3 text-right">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-border">
                         {examBreakdown.map((ex) => (
-                          <tr key={ex.id} className="hover:bg-slate-50/70">
+                          <tr key={ex.id} className="hover:bg-surface-subtle">
                             <td className="px-5 py-3.5">
-                              <p className="font-semibold text-slate-900">{ex.title}</p>
-                              <p className="text-xs text-slate-500">
+                              <p className="font-semibold text-foreground">{ex.title}</p>
+                              <p className="text-xs text-ink-subtle">
                                 {format(new Date(ex.startAt), "MMM d, HH:mm")} –{" "}
                                 {format(new Date(ex.endAt), "MMM d, HH:mm")}
                               </p>
@@ -1262,10 +1264,10 @@ export default function AdminDashboardPage() {
                                 {ex.lifecycle}
                               </Badge>
                             </td>
-                            <td className="px-5 py-3.5 font-mono text-xs text-slate-700">
+                            <td className="px-5 py-3.5 font-mono text-xs text-ink-muted">
                               {ex.enrolledCount} enrolled · {ex.submittedCount} submitted
                             </td>
-                            <td className="px-5 py-3.5 font-mono text-xs text-slate-700">
+                            <td className="px-5 py-3.5 font-mono text-xs text-ink-muted">
                               {ex.submittedCount > 0 ? `${ex.avgPct}% avg · ${ex.passRate}% pass` : "—"}
                             </td>
                             <td className="px-5 py-3.5">
@@ -1296,7 +1298,7 @@ export default function AdminDashboardPage() {
                                   onClick={() => api.reports.downloadExamPdf(ex.id, ex.title)}
                                   title="Download Summary PDF"
                                 >
-                                  <FileDown className="h-4 w-4 text-indigo-600" />
+                                  <FileDown className="h-4 w-4 text-accent" />
                                 </Button>
                               </div>
                             </td>
@@ -1315,8 +1317,8 @@ export default function AdminDashboardPage() {
             <div className="mx-auto max-w-6xl space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">Question Bank</h1>
-                  <p className="text-sm text-slate-500">
+                  <h1 className="text-xl font-bold text-foreground">Question Bank</h1>
+                  <p className="text-sm text-ink-subtle">
                     All institutional questions (answer keys remain isolated in server-only RLS table).
                   </p>
                 </div>
@@ -1327,9 +1329,9 @@ export default function AdminDashboardPage() {
                 </Link>
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-4">
-                  <p className="text-sm font-semibold text-slate-700">
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-4">
+                  <p className="text-sm font-semibold text-ink-muted">
                     {(questionsQuery.data?.questions ?? []).length} question(s)
                   </p>
                   <div className="flex items-center gap-2">
@@ -1359,7 +1361,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {questionsQuery.isLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-subtle">
                     <Spinner /> Loading questions…
                   </div>
                 ) : (questionsQuery.data?.questions ?? []).length === 0 ? (
@@ -1370,12 +1372,12 @@ export default function AdminDashboardPage() {
                     />
                   </div>
                 ) : (
-                  <div className="divide-y divide-slate-100">
+                  <div className="divide-y divide-border">
                     {(questionsQuery.data?.questions ?? []).map((q) => (
-                      <div key={q.id} className="flex items-start justify-between gap-4 p-4 hover:bg-slate-50/70">
+                      <div key={q.id} className="flex items-start justify-between gap-4 p-4 hover:bg-surface-subtle">
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-900">{q.text}</p>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="text-sm font-medium text-foreground">{q.text}</p>
+                          <p className="mt-1 text-xs text-ink-subtle">
                             {q.category?.name ?? "Uncategorized"} · {q.options?.length ?? 0} option(s)
                           </p>
                         </div>
@@ -1399,8 +1401,8 @@ export default function AdminDashboardPage() {
             <div className="mx-auto max-w-6xl space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">Platform Analytics</h1>
-                  <p className="text-sm text-slate-500">
+                  <h1 className="text-xl font-bold text-foreground">Platform Analytics</h1>
+                  <p className="text-sm text-ink-subtle">
                     Live submission velocity, user engagement, and per-exam score &amp; pass-rate metrics.
                   </p>
                 </div>
@@ -1408,7 +1410,7 @@ export default function AdminDashboardPage() {
                   <select
                     value={analyticsDays}
                     onChange={(e) => setAnalyticsDays(Number(e.target.value) as 7 | 30)}
-                    className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700"
+                    className="h-9 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-ink-muted"
                   >
                     <option value={7}>Last 7 Days</option>
                     <option value={30}>Last 30 Days</option>
@@ -1420,8 +1422,8 @@ export default function AdminDashboardPage() {
               </div>
 
               <div className="grid gap-5 lg:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                  <h2 className="mb-4 text-sm font-bold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                  <h2 className="mb-4 text-sm font-bold text-foreground">
                     Daily Attempts &amp; Active Users
                   </h2>
                   <div className="h-64 w-full">
@@ -1435,7 +1437,7 @@ export default function AdminDashboardPage() {
                           type="monotone"
                           dataKey="examAttempts"
                           name="Exam Attempts"
-                          stroke="#2563eb"
+                          stroke="#46351a"
                           fill="#dbeafe"
                           strokeWidth={2}
                         />
@@ -1452,8 +1454,8 @@ export default function AdminDashboardPage() {
                   </div>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                  <h2 className="mb-4 text-sm font-bold text-slate-900">
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                  <h2 className="mb-4 text-sm font-bold text-foreground">
                     Exam Performance (Avg % vs Pass Rate %)
                   </h2>
                   <div className="h-64 w-full">
@@ -1470,7 +1472,7 @@ export default function AdminDashboardPage() {
                         <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#64748b" }} />
                         <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
                         <Tooltip />
-                        <Bar dataKey="avgPct" name="Avg Score %" fill="#4f46e5" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="avgPct" name="Avg Score %" fill="#46351a" radius={[6, 6, 0, 0]} />
                         <Bar dataKey="passRate" name="Pass Rate %" fill="#10b981" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
@@ -1485,8 +1487,8 @@ export default function AdminDashboardPage() {
             <div className="mx-auto max-w-6xl space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">System Audit Logs</h1>
-                  <p className="text-sm text-slate-500">
+                  <h1 className="text-xl font-bold text-foreground">System Audit Logs</h1>
+                  <p className="text-sm text-ink-subtle">
                     Immutable trail of administrative actions, exam submissions, emergency unlocks, and disputes.
                   </p>
                 </div>
@@ -1511,9 +1513,9 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs">
+              <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-2xs">
                 {logsQuery.isLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+                  <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-subtle">
                     <Spinner /> Loading audit logs…
                   </div>
                 ) : filteredLogs.length === 0 ? (
@@ -1526,7 +1528,7 @@ export default function AdminDashboardPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="border-b border-slate-100 bg-slate-50 uppercase text-slate-500">
+                      <thead className="border-b border-border bg-surface-subtle uppercase text-ink-subtle">
                         <tr>
                           <th className="px-4 py-3">Timestamp</th>
                           <th className="px-4 py-3">Action</th>
@@ -1535,23 +1537,23 @@ export default function AdminDashboardPage() {
                           <th className="px-4 py-3">Details</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-border">
                         {filteredLogs.map((log) => (
-                          <tr key={log.id} className="hover:bg-slate-50/70">
-                            <td className="whitespace-nowrap px-4 py-3 font-mono text-slate-500">
+                          <tr key={log.id} className="hover:bg-surface-subtle">
+                            <td className="whitespace-nowrap px-4 py-3 font-mono text-ink-subtle">
                               {format(new Date(log.at), "MMM d, HH:mm:ss")}
                             </td>
                             <td className="px-4 py-3">
                               <Badge tone="accent">{log.action}</Badge>
                             </td>
-                            <td className="px-4 py-3 text-slate-700">
+                            <td className="px-4 py-3 text-ink-muted">
                               {log.users?.email ?? "System"}
                             </td>
-                            <td className="px-4 py-3 font-mono text-slate-600">
+                            <td className="px-4 py-3 font-mono text-ink-muted">
                               {log.entity}
                               {log.entity_id ? `:${log.entity_id.slice(0, 8)}` : ""}
                             </td>
-                            <td className="max-w-xs truncate px-4 py-3 font-mono text-[11px] text-slate-500">
+                            <td className="max-w-xs truncate px-4 py-3 font-mono text-[11px] text-ink-subtle">
                               {log.after ? JSON.stringify(log.after) : "—"}
                             </td>
                           </tr>
@@ -1568,20 +1570,20 @@ export default function AdminDashboardPage() {
           {activeTab === "settings" && (
             <div className="mx-auto max-w-4xl space-y-5">
               <div>
-                <h1 className="text-xl font-bold text-slate-900">Platform Settings &amp; Maintenance</h1>
-                <p className="text-sm text-slate-500">
+                <h1 className="text-xl font-bold text-foreground">Platform Settings &amp; Maintenance</h1>
+                <p className="text-sm text-ink-subtle">
                   Run system maintenance jobs, export backups, verify hash chains, and configure display preferences.
                 </p>
               </div>
 
               {/* Cryptographic & Cron Maintenance */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
                   <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="h-5 w-5 text-indigo-600" />
-                    <h2 className="text-sm font-bold text-slate-900">Cryptographic Integrity Audit</h2>
+                    <ShieldCheck className="h-5 w-5 text-accent" />
+                    <h2 className="text-sm font-bold text-foreground">Cryptographic Integrity Audit</h2>
                   </div>
-                  <p className="mt-1.5 text-xs text-slate-500">
+                  <p className="mt-1.5 text-xs text-ink-subtle">
                     Recompute SHA-256 chains across every answer, event, lock event, and exam checkpoint signature.
                   </p>
                   <Button
@@ -1593,12 +1595,12 @@ export default function AdminDashboardPage() {
                   </Button>
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
+                <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
                   <div className="flex items-center gap-2.5">
                     <Clock className="h-5 w-5 text-emerald-600" />
-                    <h2 className="text-sm font-bold text-slate-900">Expiry Finalizer Job</h2>
+                    <h2 className="text-sm font-bold text-foreground">Expiry Finalizer Job</h2>
                   </div>
-                  <p className="mt-1.5 text-xs text-slate-500">
+                  <p className="mt-1.5 text-xs text-ink-subtle">
                     Immediately expire any overdue IN_PROGRESS attempts past their deadline + grace window and auto-grade them.
                   </p>
                   <Button
@@ -1613,9 +1615,9 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Export & Backup */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                <h2 className="text-sm font-bold text-slate-900">Data Export &amp; Backups</h2>
-                <p className="mt-1 text-xs text-slate-500">
+              <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                <h2 className="text-sm font-bold text-foreground">Data Export &amp; Backups</h2>
+                <p className="mt-1 text-xs text-ink-subtle">
                   Exports exclude answer keys and secret seeds to preserve examination confidentiality.
                 </p>
                 <div className="mt-4 flex flex-wrap gap-3">
@@ -1629,9 +1631,9 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Workspace Display Preferences */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                <h2 className="text-sm font-bold text-slate-900">Admin Display Preferences</h2>
-                <p className="mt-1 text-xs text-slate-500">
+              <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                <h2 className="text-sm font-bold text-foreground">Admin Display Preferences</h2>
+                <p className="mt-1 text-xs text-ink-subtle">
                   Saved directly to your account via <code className="font-mono">/api/me/prefs</code>.
                 </p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -1667,7 +1669,7 @@ export default function AdminDashboardPage() {
                     </Select>
                   </div>
                   <div className="flex items-end pb-2">
-                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
                       <input
                         type="checkbox"
                         checked={Boolean(user.prefs?.highContrast)}

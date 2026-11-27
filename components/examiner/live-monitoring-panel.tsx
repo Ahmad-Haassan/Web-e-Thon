@@ -29,11 +29,11 @@ export function LiveMonitoringPanel({
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-            <Radio className="h-5 w-5 text-blue-600" />
+          <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
+            <Radio className="h-5 w-5 text-accent" />
             Live Session Monitoring
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-ink-subtle">
             Real-time candidate progress, privacy-first review indicators, live announcements, and emergency one-time unlock codes.
           </p>
         </div>
@@ -44,7 +44,7 @@ export function LiveMonitoringPanel({
               aria-label="Select exam to monitor"
               value={activeExam.id}
               onChange={(e) => onSelectExam(e.target.value)}
-              className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 shadow-2xs focus:border-blue-500 focus:outline-none"
+              className="h-10 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-foreground shadow-2xs focus:border-accent focus:outline-none"
             >
               {exams.map((ex) => (
                 <option key={ex.id} value={ex.id}>
@@ -71,22 +71,22 @@ export function LiveMonitoringPanel({
         <>
           {/* Live Strip */}
           <div className="grid gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl border border-emerald-100 bg-white p-4 shadow-2xs">
+            <div className="rounded-2xl border border-emerald-100 bg-surface p-4 shadow-2xs">
               <p className="text-xs font-semibold uppercase text-slate-400">In Progress</p>
               <div className="mt-1 flex items-center justify-between">
                 <p className="text-2xl font-bold text-emerald-600">{activeExam.inProgressCount}</p>
                 <Badge tone="verified">Live</Badge>
               </div>
             </div>
-            <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-2xs">
+            <div className="rounded-2xl border border-blue-100 bg-surface p-4 shadow-2xs">
               <p className="text-xs font-semibold uppercase text-slate-400">Submitted</p>
-              <p className="mt-1 text-2xl font-bold text-blue-600">{activeExam.submittedCount}</p>
+              <p className="mt-1 text-2xl font-bold text-accent">{activeExam.submittedCount}</p>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+            <div className="rounded-2xl border border-border bg-surface p-4 shadow-2xs">
               <p className="text-xs font-semibold uppercase text-slate-400">Not Started</p>
-              <p className="mt-1 text-2xl font-bold text-slate-700">{activeExam.notStartedCount}</p>
+              <p className="mt-1 text-2xl font-bold text-ink-muted">{activeExam.notStartedCount}</p>
             </div>
-            <div className="rounded-2xl border border-rose-100 bg-white p-4 shadow-2xs">
+            <div className="rounded-2xl border border-rose-100 bg-surface p-4 shadow-2xs">
               <p className="text-xs font-semibold uppercase text-slate-400">Flagged Queue</p>
               <p className="mt-1 text-2xl font-bold text-rose-600">{activeExam.flaggedCount}</p>
             </div>

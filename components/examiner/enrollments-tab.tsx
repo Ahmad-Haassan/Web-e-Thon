@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Papa from "papaparse";
-import { MailPlus, Upload, Users } from "lucide-react";
+import { GraduationCap, MailPlus, Upload, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   Badge,
@@ -12,7 +12,9 @@ import {
   CardContent,
   CardHeader,
   EmptyState,
+  Input,
   Label,
+  Select,
   Spinner,
   Textarea,
 } from "@/components/ui/primitives";
@@ -22,6 +24,8 @@ import type { BulkImportResponse } from "@/lib/client/api-types";
 export function EnrollmentsTab({ examId }: { examId: string }) {
   const qc = useQueryClient();
   const [emailsInput, setEmailsInput] = useState("");
+  const [classInput, setClassInput] = useState("");
+  const [sectionInput, setSectionInput] = useState("");
   const [csvText, setCsvText] = useState("");
   const [csvRowCount, setCsvRowCount] = useState<number | null>(null);
   const [importRes, setImportRes] = useState<BulkImportResponse | null>(null);
@@ -29,6 +33,11 @@ export function EnrollmentsTab({ examId }: { examId: string }) {
   const enrollmentsQuery = useQuery({
     queryKey: ["exam-enrollments", examId],
     queryFn: () => api.exams.listEnrollments(examId),
+  });
+
+  const classesQuery = useQuery({
+    queryKey: ["registered-classes"],
+    queryFn: () => api.classes.list(),
   });
 
   const enrollMut = useMutation({
@@ -45,6 +54,22 @@ export function EnrollmentsTab({ examId }: { examId: string }) {
       setEmailsInput("");
       qc.invalidateQueries({ queryKey: ["exam-enrollments", examId] });
       qc.invalidateQueries({ queryKey: ["exam-detail", examId] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const enrollClassMut = useMutation({
+    mutationFn: ({ className, section }: { className: string; section?: string }) =>
+      api.exams.enrollByClass(examId, className, section),
+    onSuccess: (res, vars) => {
+      toast.success(
+        `Enrolled ${res.enrolled} student(s) from Class ${vars.className}${
+          vars.section ? ` Section ${vars.section}` : ""
+        }`
+      );
+      qc.invalidateQueries({ queryKey: ["exam-enrollments", examId] });
+      qc.invalidateQueries({ queryKey: ["exam-detail", examId] });
+      qc.invalidateQueries({ queryKey: ["registered-classes"] });
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -77,6 +102,18 @@ export function EnrollmentsTab({ examId }: { examId: string }) {
     enrollMut.mutate(emails);
   }
 
+  function handleClassEnroll(e: FormEvent) {
+    e.preventDefault();
+    if (!classInput.trim()) {
+      toast.error("Enter or select a Class to enroll");
+      return;
+    }
+    enrollClassMut.mutate({
+      className: classInput.trim(),
+      section: sectionInput.trim() || undefined,
+    });
+  }
+
   function handleCsvUpload(file: File) {
     const reader = new FileReader();
     reader.onload = () => {
@@ -90,10 +127,76 @@ export function EnrollmentsTab({ examId }: { examId: string }) {
   }
 
   const enrollments = enrollmentsQuery.data?.enrollments ?? [];
+  const classes = classesQuery.data?.classes ?? [];
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
       <div className="space-y-5">
+        {/* Assign / Enroll by Class & Section (EMS workflow) */}
+        <Card>
+          <CardHeader>
+            <h3 className="flex items-center gap-2 text-base font-semibold">
+              <GraduationCap className="h-4.5 w-4.5 text-accent" />
+              Assign Entire Class / Section
+            </h3>
+            <p className="text-xs text-ink-muted">
+              Quickly enroll every active candidate registered in a Class (and optional Section).
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {classes.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {classes.map((c) => (
+                  <button
+                    key={c.className}
+                    type="button"
+                    onClick={() => {
+                      setClassInput(c.className);
+                      setSectionInput("");
+                    }}
+                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                      classInput === c.className
+                        ? "border-accent bg-accent-soft text-accent"
+                        : "border-border bg-surface-subtle text-ink-muted hover:border-border-strong"
+                    }`}
+                  >
+                    {c.className} ({c.totalStudents})
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <form onSubmit={handleClassEnroll} className="grid gap-3 sm:grid-cols-3 items-end">
+              <div>
+                <Label htmlFor="enroll-class">Class</Label>
+                <Input
+                  id="enroll-class"
+                  placeholder="e.g. IX or BSCS-4"
+                  value={classInput}
+                  onChange={(e) => setClassInput(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="enroll-section">Section (optional)</Label>
+                <Select
+                  id="enroll-section"
+                  value={sectionInput}
+                  onChange={(e) => setSectionInput(e.target.value)}
+                >
+                  <option value="">All Sections</option>
+                  <option value="A">Section A</option>
+                  <option value="B">Section B</option>
+                  <option value="C">Section C</option>
+                  <option value="D">Section D</option>
+                </Select>
+              </div>
+              <Button type="submit" disabled={enrollClassMut.isPending}>
+                {enrollClassMut.isPending ? <Spinner /> : "Enroll Class"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <h3 className="text-base font-semibold">Enroll Existing Candidates by Email</h3>
@@ -107,7 +210,7 @@ export function EnrollmentsTab({ examId }: { examId: string }) {
                 <Label htmlFor="enroll-emails">Candidate Emails</Label>
                 <Textarea
                   id="enroll-emails"
-                  rows={4}
+                  rows={3}
                   placeholder="student1@university.edu&#10;student2@university.edu"
                   value={emailsInput}
                   onChange={(e) => setEmailsInput(e.target.value)}
@@ -148,7 +251,7 @@ export function EnrollmentsTab({ examId }: { examId: string }) {
             </div>
 
             <Textarea
-              rows={4}
+              rows={3}
               placeholder="name,email,password&#10;Ali Raza,ali@university.edu,TempPass123!"
               value={csvText}
               onChange={(e) => {
@@ -217,23 +320,33 @@ export function EnrollmentsTab({ examId }: { examId: string }) {
             <div className="p-6">
               <EmptyState
                 title="No candidates enrolled"
-                description="Add student emails or upload a CSV roster on the left."
+                description="Assign a Class/Section, add student emails, or upload a CSV roster on the left."
               />
             </div>
           ) : (
-            <div className="divide-y divide-border max-h-[540px] overflow-y-auto">
+            <div className="divide-y divide-border max-h-[680px] overflow-y-auto">
               {enrollments.map((enr, idx) => {
-                const person = enr.candidate ?? enr.user;
+                const person = enr.candidate ?? enr.user ?? enr.users;
                 const displayName = person?.name ?? enr.name ?? "Candidate";
                 const displayEmail = person?.email ?? enr.email ?? enr.candidate_id ?? "";
+                const cls = person?.class_name;
+                const sec = person?.section;
                 return (
                   <div
                     key={enr.candidate_id ?? displayEmail ?? idx}
-                    className="flex items-center justify-between px-5 py-3 text-sm"
+                    className="flex items-center justify-between gap-2 px-5 py-3 text-sm"
                   >
-                    <div>
-                      <p className="font-medium text-foreground">{displayName}</p>
-                      <p className="text-xs text-ink-subtle">{displayEmail}</p>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-foreground truncate">{displayName}</p>
+                        {cls && (
+                          <Badge tone="neutral">
+                            {cls}
+                            {sec ? `-${sec}` : ""}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-ink-subtle truncate">{displayEmail}</p>
                     </div>
                     <Badge tone={enr.status === "REVOKED" ? "danger" : "verified"}>
                       {enr.status ?? "ENROLLED"}

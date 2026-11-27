@@ -100,11 +100,11 @@ export function AnalyticsPanel({
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
+          <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
+            <BarChart3 className="h-5 w-5 text-accent" />
             Question Analytics &amp; Fairness Insights
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-ink-subtle">
             Cross-exam trends, question psychometrics, ambiguity auto-detection, and cryptographic seed fairness.
           </p>
         </div>
@@ -113,7 +113,7 @@ export function AnalyticsPanel({
           aria-label="Trend window"
           value={days}
           onChange={(e) => onChangeDays(Number(e.target.value) as 7 | 30)}
-          className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700"
+          className="h-9 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-ink-muted"
         >
           <option value={7}>Last 7 Days</option>
           <option value={30}>Last 30 Days</option>
@@ -122,8 +122,8 @@ export function AnalyticsPanel({
 
       {/* Top Row Charts */}
       <div className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-          <h2 className="mb-3 text-sm font-bold text-slate-900">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+          <h2 className="mb-3 text-sm font-bold text-foreground">
             Attempts &amp; Pass Rate Trend ({days} Days)
           </h2>
           <div className="h-60 w-full min-w-0">
@@ -154,7 +154,7 @@ export function AnalyticsPanel({
                   type="monotone"
                   dataKey="attempts"
                   name="Attempts"
-                  stroke="#2563eb"
+                  stroke="#46351a"
                   fill="#dbeafe"
                   strokeWidth={2}
                 />
@@ -172,12 +172,12 @@ export function AnalyticsPanel({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-          <h2 className="mb-3 text-sm font-bold text-slate-900">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+          <h2 className="mb-3 text-sm font-bold text-foreground">
             Per-Exam Performance (Avg % vs Pass Rate %)
           </h2>
           {comparisonData.length === 0 ? (
-            <div className="flex h-60 items-center justify-center text-xs text-slate-500">
+            <div className="flex h-60 items-center justify-center text-xs text-ink-subtle">
               No submitted attempts across exams yet.
             </div>
           ) : (
@@ -188,7 +188,7 @@ export function AnalyticsPanel({
                   <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#64748b" }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "#64748b" }} />
                   <Tooltip />
-                  <Bar dataKey="avgPct" name="Avg Score %" fill="#2563eb" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="avgPct" name="Avg Score %" fill="#46351a" radius={[6, 6, 0, 0]} />
                   <Bar dataKey="passRate" name="Pass Rate %" fill="#10b981" radius={[6, 6, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -205,11 +205,11 @@ export function AnalyticsPanel({
         />
       ) : (
         <div className="space-y-5">
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-2xs">
             <div className="flex flex-wrap items-center gap-3">
               <label
                 htmlFor="analytics-exam-select"
-                className="text-xs font-semibold text-slate-600"
+                className="text-xs font-semibold text-ink-muted"
               >
                 Inspect Exam Psychometrics:
               </label>
@@ -217,7 +217,7 @@ export function AnalyticsPanel({
                 id="analytics-exam-select"
                 value={activeExam.id}
                 onChange={(e) => onSelectExam(e.target.value)}
-                className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-800 focus:border-blue-500 focus:outline-none"
+                className="h-9 rounded-xl border border-border bg-surface-subtle px-3 text-sm font-medium text-foreground focus:border-accent focus:outline-none"
               >
                 {exams.map((ex) => (
                   <option key={ex.id} value={ex.id}>
@@ -236,28 +236,28 @@ export function AnalyticsPanel({
 
           <div className="grid gap-5 lg:grid-cols-3">
             {/* Question Psychometrics */}
-            <Card className="rounded-2xl border-slate-200/80 shadow-2xs lg:col-span-2">
+            <Card className="rounded-2xl border-border shadow-2xs lg:col-span-2">
               <CardHeader>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-foreground">
                   Question Psychometrics &amp; Ambiguity Auto-Detection
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-ink-subtle">
                   Flags items with &lt;25% correct rate or where a wrong distractor fooled more candidates than the key.
                 </p>
               </CardHeader>
               <CardContent className="p-0">
                 {examAnalyticsQuery.isLoading ? (
-                  <div className="flex items-center justify-center gap-2 py-12 text-xs text-slate-500">
+                  <div className="flex items-center justify-center gap-2 py-12 text-xs text-ink-subtle">
                     <Spinner /> Computing psychometrics…
                   </div>
                 ) : questionAnalytics.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-slate-500">
+                  <div className="p-6 text-center text-xs text-ink-subtle">
                     No submitted responses yet for this examination.
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="border-b border-slate-100 bg-slate-50 uppercase text-slate-500">
+                      <thead className="border-b border-border bg-surface-subtle uppercase text-ink-subtle">
                         <tr>
                           <th className="px-4 py-3">Question</th>
                           <th className="px-4 py-3">% Correct</th>
@@ -266,7 +266,7 @@ export function AnalyticsPanel({
                           <th className="px-4 py-3">Status</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-border">
                         {questionAnalytics.map((qa, idx) => {
                           const pct = qa.pctCorrect ?? qa.correctRate ?? 0;
                           const skip = qa.skipRate ?? 0;
@@ -276,11 +276,11 @@ export function AnalyticsPanel({
                           return (
                             <tr key={qa.questionId ?? qa.id ?? idx}>
                               <td className="max-w-sm px-4 py-3">
-                                <p className="line-clamp-2 text-sm font-medium text-slate-900">
+                                <p className="line-clamp-2 text-sm font-medium text-foreground">
                                   {qa.text ?? qa.questionId}
                                 </p>
                                 {qa.mostCommonWrongOption && (
-                                  <p className="mt-0.5 text-[11px] text-slate-500">
+                                  <p className="mt-0.5 text-[11px] text-ink-subtle">
                                     Top distractor: {qa.mostCommonWrongOption}
                                   </p>
                                 )}
@@ -317,9 +317,9 @@ export function AnalyticsPanel({
             </Card>
 
             {/* Cryptographic Fairness & Seed Audit */}
-            <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+            <Card className="rounded-2xl border-border shadow-2xs">
               <CardHeader>
-                <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
                   <ShieldCheck className="h-4 w-4 text-emerald-600" />
                   Fairness &amp; Seed Audit
                 </h3>
@@ -329,7 +329,7 @@ export function AnalyticsPanel({
                   <p className="font-semibold uppercase text-slate-400">
                     Seed Commitment (SHA-256)
                   </p>
-                  <p className="mt-1 break-all rounded-lg border border-slate-200 bg-slate-50 p-2 font-mono text-[11px] text-slate-700">
+                  <p className="mt-1 break-all rounded-lg border border-border bg-surface-subtle p-2 font-mono text-[11px] text-ink-muted">
                     {fairness?.seedCommitment ?? activeExam.seedCommitment ?? "—"}
                   </p>
                 </div>
@@ -345,30 +345,30 @@ export function AnalyticsPanel({
 
                 {fairness && (
                   <div className="grid grid-cols-2 gap-2 pt-1">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                      <p className="text-slate-500">Papers Audited</p>
-                      <p className="text-base font-bold font-mono text-slate-900">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                      <p className="text-ink-subtle">Papers Audited</p>
+                      <p className="text-base font-bold font-mono text-foreground">
                         {fairness.attemptsCount}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                      <p className="text-slate-500">Difficulty Spread</p>
-                      <p className="text-base font-bold font-mono text-slate-900">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                      <p className="text-ink-subtle">Difficulty Spread</p>
+                      <p className="text-base font-bold font-mono text-foreground">
                         {fairness.spread !== null && fairness.spread !== undefined
                           ? Number(fairness.spread).toFixed(3)
                           : "—"}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                      <p className="text-slate-500">Min / Max Balance</p>
-                      <p className="font-mono font-semibold text-slate-800">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                      <p className="text-ink-subtle">Min / Max Balance</p>
+                      <p className="font-mono font-semibold text-foreground">
                         {fairness.min !== null ? Number(fairness.min).toFixed(2) : "—"} /{" "}
                         {fairness.max !== null ? Number(fairness.max).toFixed(2) : "—"}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                      <p className="text-slate-500">Mean Balance</p>
-                      <p className="font-mono font-semibold text-slate-800">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                      <p className="text-ink-subtle">Mean Balance</p>
+                      <p className="font-mono font-semibold text-foreground">
                         {fairness.mean !== null ? Number(fairness.mean).toFixed(2) : "—"}
                       </p>
                     </div>
@@ -413,9 +413,9 @@ export function AnalyticsPanel({
                 {similarityFlags.map((flag, idx) => (
                   <div
                     key={idx}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-white px-3.5 py-2.5"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-amber-200 bg-surface px-3.5 py-2.5"
                   >
-                    <span className="font-medium text-slate-800">
+                    <span className="font-medium text-foreground">
                       {flag.candidateA} ↔ {flag.candidateB}
                     </span>
                     <Badge tone="warning">{flag.similarityPct}% lexical overlap</Badge>

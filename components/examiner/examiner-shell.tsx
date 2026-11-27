@@ -26,7 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth, roleHomePath } from "@/hooks/use-auth";
-import { Badge, Spinner } from "@/components/ui/primitives";
+import { Badge, Spinner, ThemeToggleButton } from "@/components/ui/primitives";
 import type {
   ExaminerIntegrityReport,
   ExaminerOverviewResponse,
@@ -116,9 +116,9 @@ export function ExaminerShell({
 
   if (loading || !user || (user.role !== "EXAMINER" && user.role !== "ADMIN")) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f6fb]">
-        <div className="flex items-center gap-3 text-sm text-slate-600">
-          <Spinner className="h-5 w-5 text-blue-600" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-sm text-ink-muted">
+          <Spinner className="h-5 w-5 text-accent" />
           Loading Examiner Panel…
         </div>
       </div>
@@ -131,7 +131,7 @@ export function ExaminerShell({
   const initial = (user.name?.[0] ?? "E").toUpperCase();
 
   return (
-    <div className="flex min-h-screen bg-[#f4f6fb] text-slate-900">
+    <div className="flex min-h-screen bg-background text-foreground">
       {/* Mobile Sidebar Backdrop */}
       {mobileMenuOpen && (
         <div
@@ -142,7 +142,7 @@ export function ExaminerShell({
 
       {/* Left Dark Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col bg-[#141824] text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col portal-chrome text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -160,7 +160,7 @@ export function ExaminerShell({
           <button
             type="button"
             onClick={() => setMobileMenuOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:bg-white/10 lg:hidden"
+            className="rounded-lg p-1 text-slate-400 hover:bg-surface/10 lg:hidden"
             aria-label="Close sidebar"
           >
             <X className="h-5 w-5" />
@@ -181,13 +181,13 @@ export function ExaminerShell({
                 }}
                 className={`flex w-full items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                   active
-                    ? "bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white shadow-md shadow-blue-950/40"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                    ? "bg-[var(--portal-chrome-accent)] text-[#241a0b] font-semibold shadow-sm"
+                    : "text-slate-300 hover:bg-surface/5 hover:text-white"
                 }`}
               >
                 <span className="flex items-center gap-3 min-w-0">
                   <Icon
-                    className={`h-4.5 w-4.5 shrink-0 ${active ? "text-white" : "text-slate-400"}`}
+                    className={`h-4.5 w-4.5 shrink-0 ${active ? "text-[#241a0b]" : "text-[var(--portal-chrome-muted)]"}`}
                   />
                   <span className="truncate">{label}</span>
                 </span>
@@ -207,7 +207,7 @@ export function ExaminerShell({
             type="button"
             disabled={isVerifyingIntegrity}
             onClick={onVerifyIntegrity}
-            className="w-full rounded-xl border border-white/10 bg-[#1d2233] p-3 text-left transition hover:border-emerald-400/40 hover:bg-[#23293d] cursor-pointer"
+            className="w-full rounded-xl border border-white/10 bg-black/20 p-3 text-left transition hover:border-emerald-400/40 hover:bg-black/35 cursor-pointer"
           >
             <div className="flex items-center gap-2.5">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400">
@@ -236,10 +236,10 @@ export function ExaminerShell({
               onSelectTab("settings");
               setMobileMenuOpen(false);
             }}
-            className="flex w-full items-center justify-between gap-2.5 rounded-xl border border-white/10 bg-[#181d2c] px-3 py-2.5 text-left transition hover:bg-[#20263a] cursor-pointer"
+            className="flex w-full items-center justify-between gap-2.5 rounded-xl border border-white/10 bg-black/25 px-3 py-2.5 text-left transition hover:bg-black/35 cursor-pointer"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2563eb] text-xs font-bold text-white">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
                 {initial}
               </span>
               <div className="min-w-0">
@@ -257,12 +257,12 @@ export function ExaminerShell({
       {/* Right Workspace */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 sm:px-7">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-surface px-4 sm:px-7">
           <div className="flex flex-1 items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+              className="rounded-lg p-2 text-ink-muted hover:bg-surface-muted lg:hidden"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
@@ -286,14 +286,14 @@ export function ExaminerShell({
                   }
                 }}
                 placeholder="Search exams, candidates..."
-                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="h-9 w-full rounded-xl border border-border bg-surface-subtle pl-10 pr-4 text-sm text-foreground placeholder:text-slate-400 focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
 
               {/* Instant Global Search Results Dropdown */}
               {showSearchDropdown && searchQuery.trim().length > 0 && (
-                <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl z-50">
+                <div className="absolute left-0 right-0 mt-2 rounded-2xl border border-border bg-surface p-2 shadow-xl z-50">
                   {searchMatches.exams.length === 0 && searchMatches.candidates.length === 0 ? (
-                    <p className="px-3 py-3 text-xs text-slate-500">
+                    <p className="px-3 py-3 text-xs text-ink-subtle">
                       No matching exams or candidates found for &ldquo;{searchQuery}&rdquo;.
                     </p>
                   ) : (
@@ -316,9 +316,9 @@ export function ExaminerShell({
                                   router.push(`/examiner/exams/${ex.id}`);
                                 }
                               }}
-                              className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs hover:bg-slate-50 cursor-pointer"
+                              className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs hover:bg-surface-subtle cursor-pointer"
                             >
-                              <span className="truncate font-semibold text-slate-800">
+                              <span className="truncate font-semibold text-foreground">
                                 {ex.title}
                               </span>
                               <Badge
@@ -355,16 +355,16 @@ export function ExaminerShell({
                                   onSelectTab("results");
                                 }
                               }}
-                              className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs hover:bg-slate-50 cursor-pointer"
+                              className="flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs hover:bg-surface-subtle cursor-pointer"
                             >
                               <div className="min-w-0">
-                                <p className="truncate font-semibold text-slate-800">{c.name}</p>
-                                <p className="truncate text-[11px] text-slate-500">
+                                <p className="truncate font-semibold text-foreground">{c.name}</p>
+                                <p className="truncate text-[11px] text-ink-subtle">
                                   {c.email} · {c.latestExamTitle}
                                 </p>
                               </div>
                               {c.latestScorePct !== null && c.latestScorePct !== undefined ? (
-                                <span className="shrink-0 font-mono font-semibold text-blue-600">
+                                <span className="shrink-0 font-mono font-semibold text-accent">
                                   {c.latestScorePct}%
                                 </span>
                               ) : (
@@ -384,6 +384,7 @@ export function ExaminerShell({
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggleButton />
             {/* Notifications Bell */}
             <div className="relative">
               <button
@@ -392,7 +393,7 @@ export function ExaminerShell({
                   setShowNotifications((v) => !v);
                   setShowProfileMenu(false);
                 }}
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-ink-muted hover:bg-surface-muted cursor-pointer"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5" />
@@ -409,10 +410,10 @@ export function ExaminerShell({
                     className="fixed inset-0 z-40"
                     onClick={() => setShowNotifications(false)}
                   />
-                  <div className="absolute right-0 z-50 mt-2 w-84 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                      <p className="text-sm font-semibold text-slate-900">Examiner Alerts</p>
-                      <span className="text-xs font-medium text-slate-500">
+                  <div className="absolute right-0 z-50 mt-2 w-84 rounded-2xl border border-border bg-surface p-4 shadow-xl">
+                    <div className="flex items-center justify-between border-b border-border pb-2.5">
+                      <p className="text-sm font-semibold text-foreground">Examiner Alerts</p>
+                      <span className="text-xs font-medium text-ink-subtle">
                         {unreadNotifs} needing attention
                       </span>
                     </div>
@@ -447,7 +448,7 @@ export function ExaminerShell({
                       <Link
                         href="/disputes"
                         onClick={() => setShowNotifications(false)}
-                        className="rounded-xl bg-blue-50 p-2 text-blue-700 hover:bg-blue-100"
+                        className="rounded-xl bg-accent-soft p-2 text-accent hover:bg-blue-100"
                       >
                         <p className="text-sm font-bold">
                           {overview?.notifications.openDisputes ?? 0}
@@ -472,7 +473,7 @@ export function ExaminerShell({
                                 onSelectExamForResults(n.examId);
                               }
                             }}
-                            className="flex w-full items-start gap-2.5 rounded-xl bg-slate-50 p-2.5 text-left text-xs hover:bg-slate-100 cursor-pointer"
+                            className="flex w-full items-start gap-2.5 rounded-xl bg-surface-subtle p-2.5 text-left text-xs hover:bg-surface-muted cursor-pointer"
                           >
                             <span
                               className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg ${
@@ -480,7 +481,7 @@ export function ExaminerShell({
                                   ? "bg-rose-100 text-rose-600"
                                   : n.kind === "grading"
                                     ? "bg-amber-100 text-amber-600"
-                                    : "bg-blue-100 text-blue-600"
+                                    : "bg-blue-100 text-accent"
                               }`}
                             >
                               {n.kind === "flag" ? (
@@ -492,14 +493,14 @@ export function ExaminerShell({
                               )}
                             </span>
                             <div className="min-w-0">
-                              <p className="truncate font-semibold text-slate-800">{n.title}</p>
-                              <p className="truncate text-[11px] text-slate-500">{n.subtitle}</p>
+                              <p className="truncate font-semibold text-foreground">{n.title}</p>
+                              <p className="truncate text-[11px] text-ink-subtle">{n.subtitle}</p>
                             </div>
                           </button>
                         ))}
                       </div>
                     ) : (
-                      <p className="mt-3 py-3 text-center text-xs text-slate-500">
+                      <p className="mt-3 py-3 text-center text-xs text-ink-subtle">
                         All caught up — no pending flags, grades, or disputes.
                       </p>
                     )}
@@ -516,12 +517,12 @@ export function ExaminerShell({
                   setShowProfileMenu((v) => !v);
                   setShowNotifications(false);
                 }}
-                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-slate-100 cursor-pointer"
+                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-surface-muted cursor-pointer"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#1e3a8a] text-xs font-bold text-white">
                   {initial}
                 </span>
-                <span className="hidden text-sm font-medium text-slate-700 sm:inline max-w-36 truncate">
+                <span className="hidden text-sm font-medium text-ink-muted sm:inline max-w-36 truncate">
                   {user.name}
                 </span>
                 <ChevronDown className="h-4 w-4 text-slate-400" />
@@ -533,10 +534,10 @@ export function ExaminerShell({
                     className="fixed inset-0 z-40"
                     onClick={() => setShowProfileMenu(false)}
                   />
-                  <div className="absolute right-0 z-50 mt-2 w-60 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-                    <div className="border-b border-slate-100 px-3 py-2.5">
-                      <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
-                      <p className="truncate text-xs text-slate-500">{user.email}</p>
+                  <div className="absolute right-0 z-50 mt-2 w-60 rounded-2xl border border-border bg-surface p-2 shadow-xl">
+                    <div className="border-b border-border px-3 py-2.5">
+                      <p className="truncate text-sm font-semibold text-foreground">{user.name}</p>
+                      <p className="truncate text-xs text-ink-subtle">{user.email}</p>
                     </div>
                     <div className="mt-1 space-y-0.5">
                       <button
@@ -545,21 +546,21 @@ export function ExaminerShell({
                           setShowProfileMenu(false);
                           onSelectTab("settings");
                         }}
-                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                        className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                       >
                         <Settings className="h-4 w-4 text-slate-400" /> Examiner Settings
                       </button>
                       <Link
                         href="/disputes"
                         onClick={() => setShowProfileMenu(false)}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle"
                       >
                         <AlertTriangle className="h-4 w-4 text-slate-400" /> Disputes Queue
                       </Link>
                       <Link
                         href="/verify"
                         onClick={() => setShowProfileMenu(false)}
-                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle"
                       >
                         <ShieldCheck className="h-4 w-4 text-emerald-500" /> Public Verifier
                       </Link>
@@ -567,7 +568,7 @@ export function ExaminerShell({
                         <Link
                           href="/admin"
                           onClick={() => setShowProfileMenu(false)}
-                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                          className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-accent hover:bg-accent-soft"
                         >
                           <Users className="h-4 w-4" /> Admin Panel
                         </Link>
@@ -624,7 +625,7 @@ export function ExaminerShell({
               <div className="flex items-center gap-2">
                 <Link
                   href="/verify"
-                  className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-xs hover:bg-slate-50"
+                  className="rounded-lg bg-surface px-3 py-1.5 text-xs font-semibold text-ink-muted shadow-xs hover:bg-surface-subtle"
                 >
                   Open Public Verifier
                 </Link>

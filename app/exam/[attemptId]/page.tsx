@@ -12,6 +12,7 @@ import {
   Clock,
   Cloud,
   CloudOff,
+  Eraser,
   FileText,
   FlaskConical,
   KeyRound,
@@ -33,6 +34,7 @@ import { ReceiptsDrawer } from "@/components/exam/receipts-drawer";
 import { ScratchpadDrawer } from "@/components/exam/scratchpad-drawer";
 import {
   Badge,
+  BrandMark,
   Button,
   Card,
   CardContent,
@@ -718,15 +720,31 @@ export default function ExamWorkspacePage() {
     <Card className="h-fit">
       <CardHeader className="py-3 px-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
-            Question Palette
+          <span className="text-xs font-medium text-ink-muted">
+            Question palette
           </span>
-          <span className="text-xs font-mono text-ink-subtle">
+          <span className="text-xs font-mono tabular-nums text-ink-subtle">
             {stats.answered}/{questions.length}
           </span>
         </div>
       </CardHeader>
       <CardContent className="p-4 space-y-4">
+        {/* EMS-style Answered / Flagged / Pending Counters */}
+        <div className="grid grid-cols-3 gap-1.5 text-center text-[11px]">
+          <div className="rounded-lg border border-verified/30 bg-verified-soft px-1.5 py-2">
+            <p className="text-sm font-bold text-verified font-mono">{stats.answered}</p>
+            <p className="text-ink-muted">Answered</p>
+          </div>
+          <div className="rounded-lg border border-warning/40 bg-warning-soft px-1.5 py-2">
+            <p className="text-sm font-bold text-warning font-mono">{stats.marked}</p>
+            <p className="text-ink-muted">Flagged</p>
+          </div>
+          <div className="rounded-lg border border-border bg-surface-subtle px-1.5 py-2">
+            <p className="text-sm font-bold text-foreground font-mono">{stats.unanswered}</p>
+            <p className="text-ink-muted">Pending</p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-5 gap-1.5">
           {questions.map((q, idx) => {
             const a = answers[q.id];
@@ -747,9 +765,9 @@ export default function ExamWorkspacePage() {
                 aria-label={`Question ${idx + 1}${isAns ? ", answered" : ", unanswered"}${isMarked ? ", marked for review" : ""}`}
                 aria-current={isCurrent ? "step" : undefined}
                 onClick={() => setCurrentIdx(idx)}
-                className={`relative flex h-9 items-center justify-center rounded-lg border text-xs font-semibold transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`relative flex h-9 items-center justify-center rounded-lg border text-xs font-medium tabular-nums cursor-pointer transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.96] disabled:opacity-40 disabled:cursor-not-allowed ${
                   isCurrent
-                    ? "border-accent bg-accent text-accent-ink ring-2 ring-accent/30"
+                    ? "border-accent bg-accent text-accent-ink ring-2 ring-accent/25"
                     : isMarked
                     ? "border-warning bg-warning-soft text-warning"
                     : isAns
@@ -829,13 +847,11 @@ export default function ExamWorkspacePage() {
       </a>
 
       {/* Distraction-Free Sticky Top Bar */}
-      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur-xs">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
+      <header className="sticky top-0 z-30 border-b border-border bg-surface/95 backdrop-blur-md">
+        <div className="mx-auto flex h-15 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-ink">
-              <ShieldCheck className="h-4 w-4" />
-            </span>
-            <span className="truncate text-sm font-semibold">{examTitle}</span>
+            <BrandMark className="h-7 w-7" />
+            <span className="truncate text-sm font-medium">{examTitle}</span>
             {isSandbox && (
               <Badge tone="warning">
                 <FlaskConical className="h-3 w-3" /> Sandbox
@@ -847,16 +863,16 @@ export default function ExamWorkspacePage() {
           <div
             role="timer"
             aria-live="polite"
-            className={`flex items-center gap-2 rounded-lg border px-3 py-1 font-mono text-sm font-bold ${
+            className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 font-mono text-sm font-semibold tabular-nums ${
               clock.isCriticalTime
-                ? "border-danger bg-danger-soft text-danger animate-pulse"
+                ? "border-danger bg-danger-soft text-danger"
                 : clock.isLowTime
                 ? "border-warning bg-warning-soft text-warning"
                 : "border-border bg-surface-subtle text-foreground"
             }`}
             title="Server-synchronized deadline countdown"
           >
-            <Clock className="h-4 w-4" />
+            <Clock className="h-4 w-4" strokeWidth={1.6} />
             <span>{clock.formatted}</span>
           </div>
 
@@ -1042,21 +1058,46 @@ export default function ExamWorkspacePage() {
                   )}
                 </div>
 
-                <Button
-                  size="sm"
-                  variant={currentAns?.marked ? "primary" : "secondary"}
-                  onClick={() =>
-                    saveAnswer(
-                      currentQuestion.id,
-                      currentAns?.selected ?? (currentQuestion.type === "WRITTEN" ? "" : []),
-                      !(currentAns?.marked ?? false),
-                      250
-                    )
-                  }
-                >
-                  <Bookmark className="h-3.5 w-3.5" />
-                  {currentAns?.marked ? "Marked for Review" : "Mark for Review"}
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={
+                      !currentAns ||
+                      (Array.isArray(currentAns.selected)
+                        ? currentAns.selected.length === 0
+                        : String(currentAns.selected ?? "").trim().length === 0)
+                    }
+                    onClick={() => {
+                      saveAnswer(
+                        currentQuestion.id,
+                        currentQuestion.type === "WRITTEN" ? "" : [],
+                        currentAns?.marked ?? false,
+                        250
+                      );
+                      toast.info("Response cleared for this question");
+                    }}
+                  >
+                    <Eraser className="h-3.5 w-3.5" />
+                    Clear Response
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    variant={currentAns?.marked ? "primary" : "secondary"}
+                    onClick={() =>
+                      saveAnswer(
+                        currentQuestion.id,
+                        currentAns?.selected ?? (currentQuestion.type === "WRITTEN" ? "" : []),
+                        !(currentAns?.marked ?? false),
+                        250
+                      )
+                    }
+                  >
+                    <Bookmark className="h-3.5 w-3.5" />
+                    {currentAns?.marked ? "Flagged" : "Flag / Review"}
+                  </Button>
+                </div>
               </CardHeader>
 
               <CardContent className="space-y-6">

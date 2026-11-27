@@ -17,7 +17,9 @@ import {
   CheckCircle2,
   ClipboardEdit,
   FileDown,
+  LayoutGrid,
   ShieldCheck,
+  Table as TableIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -30,6 +32,7 @@ import {
   Input,
   Label,
   Spinner,
+  StatCard,
   Textarea,
 } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
@@ -37,6 +40,7 @@ import type { AttemptResultResponse } from "@/lib/client/api-types";
 
 export function GradingAnalyticsTab({ examId }: { examId: string }) {
   const qc = useQueryClient();
+  const [viewMode, setViewMode] = useState<"cards" | "table">("cards");
   const [gradingAttemptId, setGradingAttemptId] = useState<string | null>(null);
   const [gradeInputs, setGradeInputs] = useState<Record<string, { awarded: string; feedback: string }>>({});
 
@@ -100,32 +104,24 @@ export function GradingAnalyticsTab({ examId }: { examId: string }) {
         <>
           {/* Summary KPIs */}
           <div className="grid gap-4 sm:grid-cols-3">
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs font-semibold uppercase text-ink-subtle">Total Submitted</p>
-                <p className="mt-1 text-2xl font-bold">{analytics.summary.totalSubmitted}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs font-semibold uppercase text-ink-subtle">Average Score</p>
-                <p className="mt-1 text-2xl font-bold">
-                  {analytics.summary.avg !== null && analytics.summary.avg !== undefined
-                    ? Number(analytics.summary.avg).toFixed(1)
-                    : "—"}
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-xs font-semibold uppercase text-ink-subtle">Pass Rate</p>
-                <p className="mt-1 text-2xl font-bold text-verified">
-                  {analytics.summary.passRate !== null && analytics.summary.passRate !== undefined
-                    ? `${Math.round(Number(analytics.summary.passRate) * (Number(analytics.summary.passRate) <= 1 ? 100 : 1))}%`
-                    : "—"}
-                </p>
-              </CardContent>
-            </Card>
+            <StatCard label="Total submitted" value={analytics.summary.totalSubmitted} />
+            <StatCard
+              label="Average score"
+              value={
+                analytics.summary.avg !== null && analytics.summary.avg !== undefined
+                  ? Number(analytics.summary.avg).toFixed(1)
+                  : "—"
+              }
+            />
+            <StatCard
+              label="Pass rate"
+              tone="verified"
+              value={
+                analytics.summary.passRate !== null && analytics.summary.passRate !== undefined
+                  ? `${Math.round(Number(analytics.summary.passRate) * (Number(analytics.summary.passRate) <= 1 ? 100 : 1))}%`
+                  : "—"
+              }
+            />
           </div>
 
           {/* Score Distribution Chart */}
@@ -157,17 +153,45 @@ export function GradingAnalyticsTab({ examId }: { examId: string }) {
             </Card>
           )}
 
-          {/* Candidate Results & Manual Grading Table */}
+          {/* Candidate Results & Manual Grading (EMS Marks Cards + Table Toggle) */}
           <Card>
             <CardHeader>
-              <h3 className="text-base font-semibold">
-                Candidate Submissions &amp; Grading ({analytics.candidates.length})
-              </h3>
-              <p className="text-xs text-ink-muted">
-                MCQs are auto-graded atomically. Click <strong>Grade / Inspect</strong> to grade written responses or verify receipt hash chains.
-              </p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-base font-semibold">
+                    Student Marks Analysis &amp; Grading ({analytics.candidates.length})
+                  </h3>
+                  <p className="text-xs text-ink-muted">
+                    MCQs are auto-graded atomically. Switch between Marks Breakdown Cards and compact Table view, or click <strong>Grade / Inspect</strong>.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 rounded-lg border border-border bg-surface-subtle p-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("cards")}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium cursor-pointer ${
+                      viewMode === "cards"
+                        ? "bg-accent text-accent-ink"
+                        : "text-ink-muted hover:text-foreground"
+                    }`}
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" /> Marks Cards
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode("table")}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium cursor-pointer ${
+                      viewMode === "table"
+                        ? "bg-accent text-accent-ink"
+                        : "text-ink-muted hover:text-foreground"
+                    }`}
+                  >
+                    <TableIcon className="h-3.5 w-3.5" /> Table
+                  </button>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="p-0">
+            <CardContent className={viewMode === "table" ? "p-0" : "p-5"}>
               {analytics.candidates.length === 0 ? (
                 <div className="p-6">
                   <EmptyState
@@ -175,16 +199,119 @@ export function GradingAnalyticsTab({ examId }: { examId: string }) {
                     description="Submitted and expired candidate attempts will appear here."
                   />
                 </div>
+              ) : viewMode === "cards" ? (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {analytics.candidates.map((c) => {
+                    const attId = c.attemptId ?? c.id ?? "";
+                    const max = c.maxScore ?? c.max_score ?? 0;
+                    const code = c.verifyCode ?? c.verify_code ?? "";
+                    const cls = c.candidate?.class_name;
+                    const sec = c.candidate?.section;
+                    return (
+                      <div
+                        key={attId}
+                        className="flex flex-col justify-between rounded-xl border border-border bg-surface-subtle p-4 space-y-3"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="font-semibold text-sm text-foreground uppercase tracking-tight">
+                              {c.candidate?.name ?? c.name ?? "Candidate"}
+                            </p>
+                            <Badge
+                              tone={
+                                c.status === "GRADED"
+                                  ? "verified"
+                                  : (c.pendingManualCount ?? 0) > 0
+                                  ? "warning"
+                                  : "accent"
+                              }
+                            >
+                              {c.status}
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-ink-subtle truncate">
+                            {c.candidate?.email ?? c.email ?? ""}
+                            {cls ? ` · Class ${cls}${sec ? `-${sec}` : ""}` : ""}
+                          </p>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-surface p-3 text-xs">
+                          <div>
+                            <span className="text-ink-subtle block">Obtained / Total</span>
+                            <span className="font-mono font-bold text-foreground">
+                              {c.score !== null && c.score !== undefined ? c.score : "—"} / {max}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-ink-subtle block">Time Taken</span>
+                            <span className="font-mono font-semibold text-foreground">
+                              {c.timeTakenMin ? `${c.timeTakenMin} min` : "—"}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-ink-subtle block">Correct</span>
+                            <span className="font-mono font-bold text-verified">
+                              {c.correctCount ?? 0}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-ink-subtle block">Wrong / Skipped</span>
+                            <span className="font-mono font-bold text-danger">
+                              {c.wrongCount ?? 0}
+                            </span>
+                            <span className="text-ink-subtle"> / </span>
+                            <span className="font-mono font-semibold text-ink-muted">
+                              {c.unansweredCount ?? 0}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-1.5 pt-1">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setGradingAttemptId(attId)}
+                          >
+                            <ClipboardEdit className="h-3.5 w-3.5" /> Grade / Inspect
+                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Link href={`/verify?attemptId=${encodeURIComponent(attId)}`}>
+                              <Button size="sm" variant="ghost" title="Verify Hash Chain">
+                                <ShieldCheck className="h-3.5 w-3.5 text-verified" />
+                              </Button>
+                            </Link>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              title="Download Candidate Result PDF"
+                              onClick={async () => {
+                                try {
+                                  await api.reports.downloadAttemptPdf(attId, code);
+                                  toast.success("Candidate result PDF downloaded");
+                                } catch (e) {
+                                  toast.error((e as Error).message);
+                                }
+                              }}
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="border-b border-border bg-surface-subtle text-xs uppercase tracking-wide text-ink-muted">
+                    <thead className="border-b border-border bg-surface-subtle text-xs font-medium text-ink-muted">
                       <tr>
-                        <th className="px-4 py-3">Candidate</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Score</th>
-                        <th className="px-4 py-3">Verify Code</th>
-                        <th className="px-4 py-3 text-right">Actions</th>
+                        <th className="px-4 py-3 font-medium">Candidate</th>
+                        <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium">Score</th>
+                        <th className="px-4 py-3 font-medium">Correct / wrong / skip</th>
+                        <th className="px-4 py-3 font-medium">Verify code</th>
+                        <th className="px-4 py-3 font-medium text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
@@ -222,6 +349,13 @@ export function GradingAnalyticsTab({ examId }: { examId: string }) {
                               {c.score !== null && c.score !== undefined
                                 ? `${c.score} / ${max}`
                                 : `Pending / ${max}`}
+                            </td>
+                            <td className="px-4 py-3 font-mono text-xs">
+                              <span className="text-verified font-semibold">{c.correctCount ?? 0}</span>
+                              {" / "}
+                              <span className="text-danger font-semibold">{c.wrongCount ?? 0}</span>
+                              {" / "}
+                              <span className="text-ink-muted">{c.unansweredCount ?? 0}</span>
                             </td>
                             <td className="px-4 py-3 font-mono text-xs">
                               {code ? (

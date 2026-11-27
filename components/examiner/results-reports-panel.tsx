@@ -102,11 +102,11 @@ export function ResultsReportsPanel({
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-bold text-slate-900">
-            <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+          <h1 className="flex items-center gap-2 text-xl font-bold text-foreground">
+            <FileSpreadsheet className="h-5 w-5 text-accent" />
             Results, Manual Grading &amp; Reports
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-ink-subtle">
             Grade written answers, publish candidate results, download cryptographic PDFs, and export CSV mark sheets.
           </p>
         </div>
@@ -127,16 +127,16 @@ export function ResultsReportsPanel({
       ) : (
         <>
           {/* Exam Switcher & Report Actions */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-2xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-2xs">
             <div className="flex flex-wrap items-center gap-3">
-              <label htmlFor="results-exam-select" className="text-xs font-semibold text-slate-600">
+              <label htmlFor="results-exam-select" className="text-xs font-semibold text-ink-muted">
                 Examination:
               </label>
               <select
                 id="results-exam-select"
                 value={activeExam.id}
                 onChange={(e) => onSelectExam(e.target.value)}
-                className="h-9 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-800 focus:border-blue-500 focus:outline-none"
+                className="h-9 rounded-xl border border-border bg-surface-subtle px-3 text-sm font-medium text-foreground focus:border-accent focus:outline-none"
               >
                 {exams.map((ex) => (
                   <option key={ex.id} value={ex.id}>

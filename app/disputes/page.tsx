@@ -257,8 +257,8 @@ export default function DisputesPage() {
 
                 {/* Chronological Evidence Timeline */}
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted mb-2.5">
-                    Chronological Evidence Timeline ({detail.evidenceTimeline?.length ?? 0} events)
+                  <h3 className="text-xs font-medium text-ink-muted mb-2.5 tabular-nums">
+                    Chronological evidence timeline ({detail.evidenceTimeline?.length ?? 0} events)
                   </h3>
                   <ol className="space-y-2 border-l-2 border-border pl-4 max-h-72 overflow-y-auto">
                     {(detail.evidenceTimeline ?? []).map((ev, i) => (

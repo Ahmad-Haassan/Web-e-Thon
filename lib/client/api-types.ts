@@ -12,6 +12,7 @@ import type {
   LockEventType,
   PartialCreditConfig,
   QuestionType,
+  RegisteredClassSummary,
   SignedReceipt,
   UserRole,
   WorkspacePrefs,
@@ -31,6 +32,7 @@ export type {
   LockEventType,
   PartialCreditConfig,
   QuestionType,
+  RegisteredClassSummary,
   SignedReceipt,
   UserRole,
   WorkspacePrefs,
@@ -81,6 +83,12 @@ export interface ExamRecord {
   owner_id?: string;
   ownerId?: string;
   title: string;
+  category?: string | null;
+  class_name?: string | null;
+  className?: string | null;
+  section?: string | null;
+  rules?: string[];
+  questionCount?: number;
   instructions?: string;
   start_at?: string;
   startAt?: string;
@@ -176,8 +184,9 @@ export interface EnrollmentRecord {
   candidate_id?: string;
   status?: string;
   enrolled_at?: string;
-  candidate?: Pick<AppUser, "id" | "name" | "email" | "role" | "active">;
-  user?: Pick<AppUser, "id" | "name" | "email" | "role" | "active">;
+  candidate?: Pick<AppUser, "id" | "name" | "email" | "role" | "active" | "class_name" | "section" | "phone">;
+  user?: Pick<AppUser, "id" | "name" | "email" | "role" | "active" | "class_name" | "section" | "phone">;
+  users?: Pick<AppUser, "id" | "name" | "email" | "role" | "active" | "class_name" | "section" | "phone">;
   email?: string;
   name?: string;
 }
@@ -236,10 +245,14 @@ export interface MonitorResponse {
 }
 
 export interface ExamAnalyticsResponse {
+  examTitle?: string;
+  className?: string | null;
+  section?: string | null;
   summary: {
     avg: number | null;
-    passRate: number | null;
+    averageScore?: number;
     averagePct?: number;
+    passRate: number | null;
     passRatePct?: number;
     distribution: Array<{ bucket?: string; label?: string; range?: string; count: number }>;
     totalSubmitted: number;
@@ -250,11 +263,16 @@ export interface ExamAnalyticsResponse {
     candidateId?: string;
     name?: string;
     email?: string;
-    candidate?: { name: string; email: string };
+    candidate?: { name: string; email: string; class_name?: string | null; section?: string | null };
     status: AttemptStatus;
     score: number | null;
     maxScore?: number;
     max_score?: number;
+    totalQuestions?: number;
+    correctCount?: number;
+    wrongCount?: number;
+    unansweredCount?: number;
+    timeTakenMin?: number | null;
     pendingManualCount?: number;
     submittedAt?: string | null;
     submitted_at?: string | null;
@@ -272,6 +290,7 @@ export interface ExamAnalyticsResponse {
     difficultyIndex?: number;
     mostCommonWrongOption?: string | null;
     ambiguityFlag?: boolean;
+    possiblyAmbiguous?: boolean;
     ambiguityFlags?: string[];
   }>;
   writtenSimilarityFlags?: Array<{
@@ -456,9 +475,20 @@ export interface ResultQuestionItem {
 export interface AttemptResultResponse {
   attempt: AttemptSummary;
   exam?: Partial<ExamRecord>;
+  candidate?: { name?: string; email?: string; class_name?: string | null; section?: string | null };
   grades?: AttemptGradeRecord[];
   questionsWithExplanations?: ResultQuestionItem[];
   questions?: ResultQuestionItem[];
+  breakdown?: ResultQuestionItem[];
+  summary?: {
+    totalQuestions: number;
+    attemptedCount: number;
+    correctCount: number;
+    wrongCount: number;
+    unansweredCount: number;
+    percentage: number;
+    timeTakenMin: number | null;
+  };
   savedAnswers?: SavedAnswerRecord[];
   receipts?: SignedReceipt[];
   verifyCode?: string;

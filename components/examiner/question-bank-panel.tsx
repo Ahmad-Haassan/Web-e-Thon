@@ -281,8 +281,8 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Question Bank</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-xl font-bold text-foreground">Question Bank</h1>
+          <p className="text-sm text-ink-subtle">
             Author, edit, and bulk-import Single, Multi-Select, and Written questions. Answer keys stay isolated server-side.
           </p>
         </div>
@@ -315,9 +315,9 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
       </div>
 
       {/* Category Chips & Quick Add */}
-      <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+      <Card className="rounded-2xl border-border shadow-2xs">
         <CardContent className="flex flex-wrap items-center gap-3 py-3.5">
-          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-subtle">
             Categories ({categories.length}):
           </span>
           <div className="flex flex-1 flex-wrap gap-1.5">
@@ -328,8 +328,8 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
                 onClick={() => setCategoryId((prev) => (prev === c.id ? "" : c.id))}
                 className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors cursor-pointer ${
                   categoryId === c.id
-                    ? "border-blue-600 bg-blue-50 text-blue-700"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:text-slate-900"
+                    ? "border-blue-600 bg-accent-soft text-accent"
+                    : "border-border bg-surface-subtle text-ink-muted hover:text-foreground"
                 }`}
               >
                 {c.name}
@@ -364,12 +364,12 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
 
       {/* Bulk CSV Import Panel */}
       {showImport && (
-        <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+        <Card className="rounded-2xl border-border shadow-2xs">
           <CardHeader>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-base font-bold text-slate-900">Bulk CSV Question Import</h2>
-                <p className="text-xs text-slate-500">
+                <h2 className="text-base font-bold text-foreground">Bulk CSV Question Import</h2>
+                <p className="text-xs text-ink-subtle">
                   Columns:{" "}
                   <code className="font-mono">
                     type,difficulty,text,marks,category,optionA,optionB,optionC,optionD,correct,explanation
@@ -398,7 +398,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
                   const f = e.target.files?.[0];
                   if (f) handleCsvFile(f);
                 }}
-                className="text-xs text-slate-500 file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium"
+                className="text-xs text-ink-subtle file:mr-3 file:rounded-lg file:border file:border-border file:bg-surface-muted file:px-3 file:py-1.5 file:text-xs file:font-medium"
               />
               {csvPreviewCount !== null && (
                 <Badge tone="accent">{csvPreviewCount} rows detected</Badge>
@@ -429,7 +429,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
             </div>
 
             {importResult && (
-              <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+              <div className="space-y-2 rounded-xl border border-border bg-surface-subtle p-4 text-sm">
                 <div className="flex items-center gap-2">
                   <Badge tone="verified">Created: {importResult.created}</Badge>
                   <Badge tone={importResult.failed > 0 ? "danger" : "neutral"}>
@@ -464,12 +464,12 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
 
       {/* Question Editor (Create / Edit) */}
       {showEditor && (
-        <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+        <Card className="rounded-2xl border-border shadow-2xs">
           <CardHeader>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold text-foreground">
               {editingId ? "Edit Question" : "Author New Question"}
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-ink-subtle">
               Answer keys are stored server-side in <code className="font-mono">question_keys</code> and never sent to candidates during an active attempt.
             </p>
           </CardHeader>
@@ -668,7 +668,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
       )}
 
       {/* Filter Bar & Question List */}
-      <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+      <Card className="rounded-2xl border-border shadow-2xs">
         <CardHeader>
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="relative max-w-md flex-1">
@@ -710,7 +710,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
 
         <CardContent>
           {questionsQuery.isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-subtle">
               <Spinner /> Loading question bank…
             </div>
           ) : questionsQuery.error ? (
@@ -742,7 +742,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
                 return (
                   <div
                     key={q.id}
-                    className="rounded-xl border border-slate-200 bg-slate-50/60 p-4"
+                    className="rounded-xl border border-border bg-surface-subtle/60 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="space-y-1.5">
@@ -762,7 +762,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
                           <Badge tone="neutral">{q.marks} pts</Badge>
                           {catName && <Badge tone="neutral">{catName}</Badge>}
                         </div>
-                        <p className="text-sm font-medium text-slate-900">{q.text}</p>
+                        <p className="text-sm font-medium text-foreground">{q.text}</p>
                       </div>
 
                       <div className="flex shrink-0 items-center gap-1">
@@ -772,7 +772,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
                           aria-label="Edit question"
                           onClick={() => handleStartEdit(q)}
                         >
-                          <Pencil className="h-4 w-4 text-slate-600" />
+                          <Pencil className="h-4 w-4 text-ink-muted" />
                         </Button>
                         <Button
                           size="sm"
@@ -795,7 +795,7 @@ export function QuestionBankPanel({ globalSearch = "" }: { globalSearch?: string
                               className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs ${
                                 isCorr
                                   ? "border-emerald-300 bg-emerald-50 font-medium text-emerald-700"
-                                  : "border-slate-200 bg-white text-slate-600"
+                                  : "border-border bg-surface text-ink-muted"
                               }`}
                             >
                               {isCorr && <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />}

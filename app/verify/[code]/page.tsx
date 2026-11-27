@@ -9,11 +9,13 @@ import { api } from "@/lib/client/api";
 import type { PublicVerifyCodeResponse } from "@/lib/client/api-types";
 import {
   Badge,
+  BrandMark,
   Button,
   Card,
   CardContent,
   CardHeader,
   Spinner,
+  ThemeToggleButton,
 } from "@/components/ui/primitives";
 
 export default function PublicVerifyCodePage() {
@@ -48,11 +50,17 @@ export default function PublicVerifyCodePage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
-          <Link href="/verify" className="inline-flex items-center gap-2 text-sm font-semibold text-accent">
+        <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4 sm:px-6">
+          <Link href="/verify" className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.05em] text-accent">
             <ArrowLeft className="h-4 w-4" /> All Verification Tools
           </Link>
-          <span className="font-mono text-xs text-ink-subtle">{code}</span>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline-flex items-center gap-1.5 font-mono text-xs text-ink-subtle">
+              <BrandMark className="h-5 w-5" />
+              {code}
+            </span>
+            <ThemeToggleButton />
+          </div>
         </div>
       </header>
 

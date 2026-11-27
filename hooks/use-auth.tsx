@@ -174,6 +174,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [refreshUser]);
 
+  // Keep document theme reactive if user explicitly selected "system"
+  useEffect(() => {
+    if (prefs.theme !== "system" || typeof window === "undefined") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => applyPrefsToDocument(prefs);
+    mq.addEventListener?.("change", handler);
+    return () => mq.removeEventListener?.("change", handler);
+  }, [prefs]);
+
   const updatePrefs = useCallback(
     async (partial: Partial<WorkspacePrefs>) => {
       const next = { ...prefs, ...partial };

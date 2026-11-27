@@ -25,6 +25,7 @@ import type {
   PublicVerifyCodeResponse,
   PublicVerifyExamResponse,
   QuestionRecord,
+  RegisteredClassSummary,
   SignedReceipt,
   StartAttemptResponse,
   UserRole,
@@ -136,8 +137,18 @@ export const api = {
 
   me: {
     get: () => apiFetch<{ user: AppUser }>("/api/me"),
+    updateProfile: (body: {
+      name?: string;
+      phone?: string | null;
+      className?: string | null;
+      section?: string | null;
+    }) => apiFetch<{ user: AppUser }>("/api/me", { method: "PATCH", body }),
     updatePrefs: (prefs: Partial<WorkspacePrefs>) =>
       apiFetch<{ prefs: WorkspacePrefs }>("/api/me/prefs", { method: "PATCH", body: prefs }),
+  },
+
+  classes: {
+    list: () => apiFetch<{ classes: RegisteredClassSummary[] }>("/api/classes"),
   },
 
   admin: {
@@ -332,6 +343,11 @@ export const api = {
       apiFetch<{ enrolled: number; notFound: string[] }>(`/api/exams/${id}/enroll`, {
         method: "POST",
         body: { emails },
+      }),
+    enrollByClass: (id: string, className: string, section?: string) =>
+      apiFetch<{ enrolled: number; notFound: string[] }>(`/api/exams/${id}/enroll`, {
+        method: "POST",
+        body: { className, section: section || undefined },
       }),
     fairness: (id: string) => apiFetch<FairnessReport>(`/api/exams/${id}/fairness`),
     monitor: (id: string) => apiFetch<MonitorResponse>(`/api/exams/${id}/monitor`),

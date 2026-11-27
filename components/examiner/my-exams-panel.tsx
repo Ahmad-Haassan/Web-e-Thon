@@ -127,8 +127,8 @@ export function MyExamsPanel({
     <div className="mx-auto max-w-6xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">My Examinations</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-xl font-bold text-foreground">My Examinations</h1>
+          <p className="text-sm text-ink-subtle">
             Manage exam lifecycle, publish schedules, preview in Sandbox mode, and access monitoring or grading hubs.
           </p>
         </div>
@@ -154,14 +154,14 @@ export function MyExamsPanel({
             onClick={() => setFilter(tab.id)}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition cursor-pointer ${
               filter === tab.id
-                ? "border-blue-600 bg-blue-600 text-white"
-                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                ? "border-blue-600 bg-accent text-accent-ink"
+                : "border-border bg-surface text-ink-muted hover:bg-surface-subtle"
             }`}
           >
             {tab.label}
             <span
               className={`rounded-full px-1.5 py-0.2 text-[10px] ${
-                filter === tab.id ? "bg-white/20 text-white" : "bg-slate-100 text-slate-700"
+                filter === tab.id ? "bg-surface/20 text-white" : "bg-surface-muted text-ink-muted"
               }`}
             >
               {counts[tab.id]}
@@ -171,7 +171,7 @@ export function MyExamsPanel({
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-subtle">
           <Spinner /> Loading examinations…
         </div>
       ) : filtered.length === 0 ? (
@@ -194,7 +194,7 @@ export function MyExamsPanel({
           {filtered.map((exam) => (
             <Card
               key={exam.id}
-              className="flex flex-col justify-between rounded-2xl border-slate-200/80 shadow-2xs"
+              className="flex flex-col justify-between rounded-2xl border-border shadow-2xs"
             >
               <CardContent className="space-y-4">
                 <div className="flex items-start justify-between gap-3">
@@ -213,14 +213,14 @@ export function MyExamsPanel({
                     </div>
                     <Link
                       href={`/examiner/exams/${exam.id}`}
-                      className="block truncate text-lg font-bold text-slate-900 transition-colors hover:text-blue-600"
+                      className="block truncate text-lg font-bold text-foreground transition-colors hover:text-accent"
                     >
                       {exam.title}
                     </Link>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 text-xs text-slate-600">
+                <div className="grid grid-cols-2 gap-2.5 rounded-xl border border-border bg-surface-subtle p-3 text-xs text-ink-muted">
                   <div className="flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                     <span className="truncate">

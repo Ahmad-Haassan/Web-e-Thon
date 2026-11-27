@@ -159,14 +159,14 @@ function ExaminerExamHubInner() {
           <div>
             <Link
               href="/examiner?tab=exams"
-              className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
+              className="mb-2 inline-flex items-center gap-1.5 text-xs font-semibold text-accent hover:text-accent"
             >
               <ArrowLeft className="h-3.5 w-3.5" /> Back to My Exams
             </Link>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {exam?.title ?? "Exam Management"}
             </h1>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-ink-subtle">
               {exam
                 ? `${lifecycle} · ${examDurationMin(exam)} min · ${examTotalMarks(exam)} marks · ${detailQuery.data?.enrollmentCount ?? 0} enrolled`
                 : "Loading exam configuration…"}
@@ -212,7 +212,7 @@ function ExaminerExamHubInner() {
         </div>
 
         {/* Sub-Tabs */}
-        <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-3">
+        <div className="flex flex-wrap gap-1.5 border-b border-border pb-3">
           {(
             [
               { id: "overview", label: "Overview & Fairness", icon: <Eye className="h-4 w-4" /> },
@@ -239,8 +239,8 @@ function ExaminerExamHubInner() {
               onClick={() => setTab(t.id)}
               className={`inline-flex cursor-pointer items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors ${
                 tab === t.id
-                  ? "bg-blue-600 text-white shadow-xs"
-                  : "border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  ? "bg-accent text-accent-ink shadow-xs"
+                  : "border border-border bg-surface text-ink-muted hover:bg-surface-subtle hover:text-foreground"
               }`}
             >
               {t.icon}
@@ -250,7 +250,7 @@ function ExaminerExamHubInner() {
         </div>
 
         {detailQuery.isLoading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
+          <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-subtle">
             <Spinner /> Loading exam hub…
           </div>
         ) : detailQuery.error || !exam ? (
@@ -262,10 +262,10 @@ function ExaminerExamHubInner() {
         ) : tab === "overview" ? (
           <div className="grid gap-5 lg:grid-cols-3">
             <div className="space-y-5 lg:col-span-2">
-              <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+              <Card className="rounded-2xl border-border shadow-2xs">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-base font-bold text-slate-900">
+                    <h3 className="text-base font-bold text-foreground">
                       Lifecycle &amp; Result Controls
                     </h3>
                     <Badge tone={lifecycle === "ONGOING" ? "verified" : "accent"}>
@@ -275,38 +275,38 @@ function ExaminerExamHubInner() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-3 text-sm sm:grid-cols-2">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-3">
                       <p className="text-xs font-semibold uppercase text-slate-400">Opens</p>
-                      <p className="mt-0.5 font-medium text-slate-900">
+                      <p className="mt-0.5 font-medium text-foreground">
                         {new Date(examStartAt(exam)).toLocaleString()}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-3">
                       <p className="text-xs font-semibold uppercase text-slate-400">Closes</p>
-                      <p className="mt-0.5 font-medium text-slate-900">
+                      <p className="mt-0.5 font-medium text-foreground">
                         {new Date(examEndAt(exam)).toLocaleString()}
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-3">
                       <p className="text-xs font-semibold uppercase text-slate-400">
                         Duration / Grace
                       </p>
-                      <p className="mt-0.5 font-medium text-slate-900">
+                      <p className="mt-0.5 font-medium text-foreground">
                         {examDurationMin(exam)} min (+{examGraceSec(exam)}s sync grace)
                       </p>
                     </div>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-3">
                       <p className="text-xs font-semibold uppercase text-slate-400">
                         Attached Pool
                       </p>
-                      <p className="mt-0.5 font-medium text-slate-900">
+                      <p className="mt-0.5 font-medium text-foreground">
                         {questions.length} question(s) · {examTotalMarks(exam)} marks
                       </p>
                     </div>
                   </div>
 
                   {exam.instructions && (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 text-sm text-slate-600">
+                    <div className="rounded-xl border border-border bg-surface-subtle p-3.5 text-sm text-ink-muted">
                       <p className="mb-1 text-xs font-semibold uppercase text-slate-400">
                         Instructions
                       </p>
@@ -352,28 +352,28 @@ function ExaminerExamHubInner() {
               </Card>
 
               {/* Attached Questions Preview */}
-              <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+              <Card className="rounded-2xl border-border shadow-2xs">
                 <CardHeader>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-base font-bold text-foreground">
                     Exam Questions ({questions.length})
                   </h3>
                 </CardHeader>
                 <CardContent className="space-y-2.5">
                   {questions.length === 0 ? (
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-ink-subtle">
                       No fixed questions attached (using blueprint or pending question selection).
                     </p>
                   ) : (
                     questions.map((q, i) => (
                       <div
                         key={q.id || i}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm"
+                        className="flex items-start justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-3 text-sm"
                       >
                         <div>
-                          <span className="mr-2 font-mono text-xs font-semibold text-blue-600">
+                          <span className="mr-2 font-mono text-xs font-semibold text-accent">
                             Q{i + 1}
                           </span>
-                          <span className="font-medium text-slate-900">{q.text}</span>
+                          <span className="font-medium text-foreground">{q.text}</span>
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5">
                           <Badge tone="neutral">{q.type}</Badge>
@@ -388,9 +388,9 @@ function ExaminerExamHubInner() {
 
             {/* Right column: Cryptographic Commitment & Fairness Report */}
             <div className="space-y-5">
-              <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+              <Card className="rounded-2xl border-border shadow-2xs">
                 <CardHeader>
-                  <h3 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                  <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
                     <ShieldCheck className="h-4 w-4 text-emerald-600" /> Fairness &amp; Seed Audit
                   </h3>
                 </CardHeader>
@@ -399,7 +399,7 @@ function ExaminerExamHubInner() {
                     <p className="font-semibold uppercase text-slate-400">
                       Seed Commitment (SHA-256)
                     </p>
-                    <p className="mt-1 break-all rounded-lg border border-slate-200 bg-slate-50 p-2 font-mono text-[11px] text-slate-700">
+                    <p className="mt-1 break-all rounded-lg border border-border bg-surface-subtle p-2 font-mono text-[11px] text-ink-muted">
                       {fairness?.seedCommitment ??
                         exam.seed_commitment ??
                         exam.seedCommitment ??
@@ -424,30 +424,30 @@ function ExaminerExamHubInner() {
 
                   {fairness && (
                     <div className="grid grid-cols-2 gap-2 pt-2">
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                        <p className="text-slate-500">Papers Audited</p>
-                        <p className="text-base font-bold font-mono text-slate-900">
+                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Papers Audited</p>
+                        <p className="text-base font-bold font-mono text-foreground">
                           {fairness.attemptsCount}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                        <p className="text-slate-500">Difficulty Spread</p>
-                        <p className="text-base font-bold font-mono text-slate-900">
+                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Difficulty Spread</p>
+                        <p className="text-base font-bold font-mono text-foreground">
                           {fairness.spread !== null && fairness.spread !== undefined
                             ? Number(fairness.spread).toFixed(3)
                             : "—"}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                        <p className="text-slate-500">Min / Max Balance</p>
-                        <p className="font-mono font-semibold text-slate-800">
+                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Min / Max Balance</p>
+                        <p className="font-mono font-semibold text-foreground">
                           {fairness.min !== null ? Number(fairness.min).toFixed(2) : "—"} /{" "}
                           {fairness.max !== null ? Number(fairness.max).toFixed(2) : "—"}
                         </p>
                       </div>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5">
-                        <p className="text-slate-500">Mean Balance</p>
-                        <p className="font-mono font-semibold text-slate-800">
+                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Mean Balance</p>
+                        <p className="font-mono font-semibold text-foreground">
                           {fairness.mean !== null ? Number(fairness.mean).toFixed(2) : "—"}
                         </p>
                       </div>
@@ -473,8 +473,8 @@ export default function ExaminerExamHubPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#f4f6fb]">
-          <Spinner className="h-5 w-5 text-blue-600" />
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <Spinner className="h-5 w-5 text-accent" />
         </div>
       }
     >

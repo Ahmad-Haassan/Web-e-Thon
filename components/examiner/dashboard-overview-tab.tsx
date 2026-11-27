@@ -74,13 +74,13 @@ interface DashboardOverviewTabProps {
 function getExamTileVisual(exam: ExaminerExamSummary, idx: number) {
   const t = exam.title.toLowerCase();
   if (t.includes("calc") || t.includes("math") || t.includes("stat")) {
-    return { Icon: Calculator, bg: "bg-indigo-100 text-indigo-600" };
+    return { Icon: Calculator, bg: "bg-indigo-100 text-accent" };
   }
   if (t.includes("web") || t.includes("net") || t.includes("cloud")) {
     return { Icon: Globe, bg: "bg-sky-100 text-sky-600" };
   }
   if (t.includes("data") || t.includes("algo") || t.includes("cs-") || idx === 0) {
-    return { Icon: Laptop, bg: "bg-blue-100 text-blue-600" };
+    return { Icon: Laptop, bg: "bg-blue-100 text-accent" };
   }
   return { Icon: BookOpen, bg: "bg-violet-100 text-violet-600" };
 }
@@ -90,11 +90,11 @@ function getLifecyclePill(lifecycle: ExaminerExamSummary["lifecycle"]) {
     case "ONGOING":
       return { label: "Ongoing", cls: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" };
     case "PUBLISHED":
-      return { label: "Scheduled", cls: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500" };
+      return { label: "Scheduled", cls: "bg-accent-soft text-accent border-border-strong", dot: "bg-accent" };
     case "COMPLETED":
-      return { label: "Completed", cls: "bg-indigo-50 text-indigo-700 border-indigo-200", dot: "bg-indigo-500" };
+      return { label: "Completed", cls: "bg-accent-soft text-accent border-border-strong", dot: "bg-accent" };
     default:
-      return { label: "Draft", cls: "bg-slate-100 text-slate-600 border-slate-200", dot: "bg-slate-400" };
+      return { label: "Draft", cls: "bg-surface-muted text-ink-muted border-border", dot: "bg-slate-400" };
   }
 }
 
@@ -215,7 +215,7 @@ export function DashboardOverviewTab({
   const donutData = hasDonutData
     ? [
         { name: "In Progress", value: inProgressCount, color: "#16a34a" },
-        { name: "Submitted", value: submittedCount, color: "#2563eb" },
+        { name: "Submitted", value: submittedCount, color: "#46351a" },
         { name: "Not Started", value: notStartedCount, color: "#cbd5e1" },
       ].filter((d) => d.value > 0)
     : [{ name: "No Activity", value: 1, color: "#e2e8f0" }];
@@ -237,15 +237,15 @@ export function DashboardOverviewTab({
       {/* Welcome Row */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             Welcome Back, {userName}!
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-ink-subtle">
             Manage your examinations and monitor active sessions
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-2xs">
-          <Calendar className="h-3.5 w-3.5 text-blue-600" />
+        <div className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-medium text-ink-muted shadow-2xs">
+          <Calendar className="h-3.5 w-3.5 text-accent" />
           <span>{format(nowDisplay, "MMM dd, yyyy • hh:mm a")}</span>
         </div>
       </div>
@@ -264,14 +264,14 @@ export function DashboardOverviewTab({
           onClick={() => onNavigateTab("exams")}
           className="flex items-center gap-4 rounded-2xl border border-blue-100 bg-gradient-to-br from-[#edf4ff] to-[#f8faff] p-5 text-left shadow-2xs transition hover:shadow-md cursor-pointer"
         >
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#2563eb] text-white shadow-sm">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-ink shadow-sm">
             <FileText className="h-6 w-6" />
           </span>
           <div className="min-w-0">
-            <p className="text-2xl font-bold tracking-tight text-slate-900">
+            <p className="text-2xl font-bold tracking-tight text-foreground">
               {isLoading ? "…" : (stats?.totalExams ?? 0).toLocaleString()}
             </p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
               <span className="truncate">Total Exams</span>
               <span className="font-semibold text-emerald-600 shrink-0">
                 ↑ {stats?.examsCreatedLast30Days ?? 0}
@@ -290,12 +290,12 @@ export function DashboardOverviewTab({
             <Play className="h-5 w-5 fill-current" />
           </span>
           <div className="min-w-0">
-            <p className="text-2xl font-bold tracking-tight text-slate-900">
+            <p className="text-2xl font-bold tracking-tight text-foreground">
               {isLoading ? "…" : (stats?.ongoingExams ?? 0).toLocaleString()}
             </p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
               <span className="truncate">Ongoing Exam</span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 shrink-0">
+              <span className="inline-flex items-center gap-1 rounded-full bg-surface/80 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 shrink-0">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 Live
               </span>
@@ -313,10 +313,10 @@ export function DashboardOverviewTab({
             <Users className="h-6 w-6" />
           </span>
           <div className="min-w-0">
-            <p className="text-2xl font-bold tracking-tight text-slate-900">
+            <p className="text-2xl font-bold tracking-tight text-foreground">
               {isLoading ? "…" : (stats?.enrolledCandidates ?? 0).toLocaleString()}
             </p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
               <span className="truncate">Enrolled Candidates</span>
               <span className="font-semibold text-emerald-600 shrink-0">
                 {stats?.totalSubmitted ?? 0} done
@@ -335,14 +335,14 @@ export function DashboardOverviewTab({
             <Check className="h-6 w-6 stroke-[2.5]" />
           </span>
           <div className="min-w-0">
-            <p className="text-2xl font-bold tracking-tight text-slate-900">
+            <p className="text-2xl font-bold tracking-tight text-foreground">
               {isLoading
                 ? "…"
                 : stats?.avgPerformancePct !== null && stats?.avgPerformancePct !== undefined
                   ? `${stats.avgPerformancePct}%`
                   : "—"}
             </p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-600">
+            <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-muted">
               <span className="truncate">Avg Performance</span>
               <span className="font-semibold text-emerald-600 shrink-0">
                 {stats?.passRatePct !== null && stats?.passRatePct !== undefined
@@ -357,26 +357,26 @@ export function DashboardOverviewTab({
       {/* Middle Row: My Exams + Live Monitoring */}
       <div className="grid gap-5 lg:grid-cols-12">
         {/* My Exams */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-7">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-7">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">My Exams</h2>
+            <h2 className="text-base font-bold text-foreground">My Exams</h2>
             <button
               type="button"
               onClick={() => onNavigateTab("exams")}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent cursor-pointer"
             >
               View All <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-sm text-slate-500">
+            <div className="flex items-center justify-center gap-2 py-12 text-sm text-ink-subtle">
               <Spinner /> Loading examinations…
             </div>
           ) : exams.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-8 text-center">
-              <p className="text-sm font-semibold text-slate-800">No examinations created yet</p>
-              <p className="mt-1 text-xs text-slate-500">
+            <div className="rounded-xl border border-dashed border-border bg-surface-subtle p-8 text-center">
+              <p className="text-sm font-semibold text-foreground">No examinations created yet</p>
+              <p className="mt-1 text-xs text-ink-subtle">
                 Create a new exam or pick a preset template below to get started.
               </p>
               <Button size="sm" className="mt-4" onClick={onCreateNew}>
@@ -393,7 +393,7 @@ export function DashboardOverviewTab({
                 return (
                   <div
                     key={exam.id}
-                    className="relative flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-[#f9fbff] p-3.5 transition hover:border-blue-100"
+                    className="relative flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-[#f9fbff] p-3.5 transition hover:border-blue-100"
                   >
                     <div className="flex min-w-0 flex-1 items-center gap-3.5">
                       <span
@@ -404,11 +404,11 @@ export function DashboardOverviewTab({
                       <div className="min-w-0">
                         <Link
                           href={`/examiner/exams/${exam.id}`}
-                          className="block truncate text-sm font-bold text-slate-900 hover:text-blue-600"
+                          className="block truncate text-sm font-bold text-foreground hover:text-accent"
                         >
                           {exam.title}
                         </Link>
-                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-slate-500">
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-ink-subtle">
                           <span className="inline-flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {format(new Date(exam.startAt), "MMM d, yyyy · hh:mm a")}
@@ -440,7 +440,7 @@ export function DashboardOverviewTab({
                       ) : exam.lifecycle === "PUBLISHED" ? (
                         <Link
                           href={`/examiner/exams/${exam.id}`}
-                          className="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
+                          className="inline-flex h-8 items-center rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-ink-muted transition hover:bg-surface-subtle"
                         >
                           Manage
                         </Link>
@@ -448,7 +448,7 @@ export function DashboardOverviewTab({
                         <button
                           type="button"
                           onClick={() => onEditExam(exam.id)}
-                          className="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 cursor-pointer"
+                          className="inline-flex h-8 items-center rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-ink-muted transition hover:bg-surface-subtle cursor-pointer"
                         >
                           Edit
                         </button>
@@ -456,7 +456,7 @@ export function DashboardOverviewTab({
                         <button
                           type="button"
                           onClick={() => onOpenResults(exam.id)}
-                          className="inline-flex h-8 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 cursor-pointer"
+                          className="inline-flex h-8 items-center rounded-lg border border-border bg-surface px-3 text-xs font-semibold text-ink-muted transition hover:bg-surface-subtle cursor-pointer"
                         >
                           Results
                         </button>
@@ -467,7 +467,7 @@ export function DashboardOverviewTab({
                           type="button"
                           aria-label={`More actions for ${exam.title}`}
                           onClick={() => setOpenMenuExamId(menuOpen ? null : exam.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200/60 cursor-pointer"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-subtle hover:bg-slate-200/60 cursor-pointer"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </button>
@@ -478,13 +478,13 @@ export function DashboardOverviewTab({
                               className="fixed inset-0 z-30"
                               onClick={() => setOpenMenuExamId(null)}
                             />
-                            <div className="absolute right-0 z-40 mt-1 w-52 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl text-xs">
+                            <div className="absolute right-0 z-40 mt-1 w-52 rounded-xl border border-border bg-surface p-1.5 shadow-xl text-xs">
                               <Link
                                 href={`/examiner/exams/${exam.id}`}
                                 onClick={() => setOpenMenuExamId(null)}
-                                className="flex items-center gap-2 rounded-lg px-2.5 py-2 font-medium text-slate-700 hover:bg-slate-50"
+                                className="flex items-center gap-2 rounded-lg px-2.5 py-2 font-medium text-ink-muted hover:bg-surface-subtle"
                               >
-                                <ClipboardCheck className="h-3.5 w-3.5 text-blue-600" /> Manage Exam Hub
+                                <ClipboardCheck className="h-3.5 w-3.5 text-accent" /> Manage Exam Hub
                               </Link>
                               <button
                                 type="button"
@@ -492,9 +492,9 @@ export function DashboardOverviewTab({
                                   setOpenMenuExamId(null);
                                   onEditExam(exam.id);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
-                                <FileText className="h-3.5 w-3.5 text-slate-500" /> Edit Exam Details
+                                <FileText className="h-3.5 w-3.5 text-ink-subtle" /> Edit Exam Details
                               </button>
                               <button
                                 type="button"
@@ -502,7 +502,7 @@ export function DashboardOverviewTab({
                                   setOpenMenuExamId(null);
                                   onMonitorExam(exam.id);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
                                 <Radio className="h-3.5 w-3.5 text-emerald-600" /> Live Monitor
                               </button>
@@ -512,9 +512,9 @@ export function DashboardOverviewTab({
                                   setOpenMenuExamId(null);
                                   onOpenResults(exam.id);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
-                                <BarChart3 className="h-3.5 w-3.5 text-indigo-600" /> Results &amp; Grading
+                                <BarChart3 className="h-3.5 w-3.5 text-accent" /> Results &amp; Grading
                               </button>
                               {exam.status === "DRAFT" && (
                                 <button
@@ -538,7 +538,7 @@ export function DashboardOverviewTab({
                                     body: { resultsPublished: !exam.resultsPublished },
                                   })
                                 }
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
                                 <Check className="h-3.5 w-3.5 text-emerald-600" />
                                 {exam.resultsPublished ? "Unpublish Results" : "Publish Results"}
@@ -549,7 +549,7 @@ export function DashboardOverviewTab({
                                   setOpenMenuExamId(null);
                                   sandboxMut.mutate(exam.id);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
                                 <FlaskConical className="h-3.5 w-3.5 text-violet-600" /> Sandbox Preview
                               </button>
@@ -564,7 +564,7 @@ export function DashboardOverviewTab({
                                     toast.error((e as Error).message);
                                   }
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
                                 <FileDown className="h-3.5 w-3.5 text-rose-600" /> Download PDF
                               </button>
@@ -574,11 +574,11 @@ export function DashboardOverviewTab({
                                   setOpenMenuExamId(null);
                                   onVerifyIntegrity(exam.id);
                                 }}
-                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                                className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left font-medium text-ink-muted hover:bg-surface-subtle cursor-pointer"
                               >
                                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" /> Verify Integrity
                               </button>
-                              <div className="my-1 border-t border-slate-100" />
+                              <div className="my-1 border-t border-border" />
                               {confirmDeleteId === exam.id ? (
                                 <div className="flex items-center justify-between gap-1 px-2 py-1">
                                   <button
@@ -591,7 +591,7 @@ export function DashboardOverviewTab({
                                   <button
                                     type="button"
                                     onClick={() => setConfirmDeleteId(null)}
-                                    className="rounded px-2 py-1 text-[11px] text-slate-500 hover:bg-slate-100 cursor-pointer"
+                                    className="rounded px-2 py-1 text-[11px] text-ink-subtle hover:bg-surface-muted cursor-pointer"
                                   >
                                     Cancel
                                   </button>
@@ -618,11 +618,11 @@ export function DashboardOverviewTab({
         </div>
 
         {/* Live Monitoring */}
-        <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-5">
+        <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-5">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                <Radio className="h-4.5 w-4.5 text-blue-600" />
+              <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+                <Radio className="h-4.5 w-4.5 text-accent" />
                 Live Monitoring
               </h2>
 
@@ -630,7 +630,7 @@ export function DashboardOverviewTab({
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                   inProgressCount > 0
                     ? "bg-emerald-50 text-emerald-700"
-                    : "bg-slate-100 text-slate-600"
+                    : "bg-surface-muted text-ink-muted"
                 }`}
               >
                 <span
@@ -651,7 +651,7 @@ export function DashboardOverviewTab({
                   aria-label="Live monitoring exam"
                   value={focusExamId || live?.examId || exams[0]?.id || ""}
                   onChange={(e) => onChangeFocusExamId(e.target.value)}
-                  className="h-8 w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 focus:border-blue-500 focus:outline-none"
+                  className="h-8 w-full rounded-lg border border-border bg-surface-subtle px-2.5 text-xs font-medium text-ink-muted focus:border-accent focus:outline-none"
                 >
                   {exams.map((ex) => (
                     <option key={ex.id} value={ex.id}>
@@ -685,10 +685,10 @@ export function DashboardOverviewTab({
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl font-bold leading-none text-slate-900">
+                  <span className="text-2xl font-bold leading-none text-foreground">
                     {centerPct}%
                   </span>
-                  <span className="mt-1 text-[11px] font-medium text-slate-500">
+                  <span className="mt-1 text-[11px] font-medium text-ink-subtle">
                     {centerLabel}
                   </span>
                 </div>
@@ -696,33 +696,33 @@ export function DashboardOverviewTab({
 
               <div className="flex-1 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-2 text-slate-600">
+                  <span className="inline-flex items-center gap-2 text-ink-muted">
                     <span className="h-2 w-2 rounded-full bg-emerald-600" />
                     In Progress
                   </span>
-                  <span className="font-bold text-slate-900">{inProgressCount}</span>
+                  <span className="font-bold text-foreground">{inProgressCount}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-2 text-slate-600">
-                    <span className="h-2 w-2 rounded-full bg-blue-600" />
+                  <span className="inline-flex items-center gap-2 text-ink-muted">
+                    <span className="h-2 w-2 rounded-full bg-accent" />
                     Submitted
                   </span>
-                  <span className="font-bold text-slate-900">{submittedCount}</span>
+                  <span className="font-bold text-foreground">{submittedCount}</span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-2 text-slate-600">
+                  <span className="inline-flex items-center gap-2 text-ink-muted">
                     <span className="h-2 w-2 rounded-full bg-slate-400" />
                     Not Started
                   </span>
-                  <span className="font-bold text-slate-900">{notStartedCount}</span>
+                  <span className="font-bold text-foreground">{notStartedCount}</span>
                 </div>
               </div>
             </div>
 
             {/* Live Activity Feed */}
-            <div className="mt-4 space-y-2 rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+            <div className="mt-4 space-y-2 rounded-xl border border-border bg-surface-subtle p-3">
               {!live || live.feed.length === 0 ? (
-                <p className="py-2 text-center text-xs text-slate-500">
+                <p className="py-2 text-center text-xs text-ink-subtle">
                   No recent live session events recorded yet.
                 </p>
               ) : (
@@ -731,7 +731,7 @@ export function DashboardOverviewTab({
                     ev.kind === "alert"
                       ? "bg-amber-500"
                       : ev.kind === "announcement"
-                        ? "bg-blue-500"
+                        ? "bg-accent"
                         : "bg-emerald-500";
                   return (
                     <div key={ev.id} className="flex items-start gap-2.5 text-xs">
@@ -742,7 +742,7 @@ export function DashboardOverviewTab({
                           ""
                         )}
                       </span>
-                      <span className="min-w-0 flex-1 truncate text-slate-700">{ev.message}</span>
+                      <span className="min-w-0 flex-1 truncate text-ink-muted">{ev.message}</span>
                     </div>
                   );
                 })
@@ -771,7 +771,7 @@ export function DashboardOverviewTab({
                 <button
                   type="button"
                   onClick={() => setShowAnnouncementBox(false)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 cursor-pointer"
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-surface-muted cursor-pointer"
                   aria-label="Cancel announcement"
                 >
                   <X className="h-4 w-4" />
@@ -787,7 +787,7 @@ export function DashboardOverviewTab({
                   }
                   setShowAnnouncementBox(true);
                 }}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-slate-50/80 py-2 text-xs font-semibold text-blue-600 transition hover:bg-blue-50 cursor-pointer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface-subtle py-2 text-xs font-semibold text-accent transition hover:bg-accent-soft cursor-pointer"
               >
                 <Radio className="h-3.5 w-3.5" /> Send Announcement
               </button>
@@ -799,22 +799,22 @@ export function DashboardOverviewTab({
       {/* Bottom Row: Create New Exam + Insights + Quick Tools */}
       <div className="grid gap-5 lg:grid-cols-12">
         {/* Create New Exam */}
-        <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-3">
+        <div className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-3">
           <div>
-            <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-              <PlusCircle className="h-4.5 w-4.5 text-blue-600" />
+            <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+              <PlusCircle className="h-4.5 w-4.5 text-accent" />
               Create New Exam
             </h2>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-ink-subtle">
               Set up a new examination in minutes
             </p>
           </div>
 
           <div className="my-4 flex items-center gap-3">
-            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-accent">
               <div className="relative">
                 <ClipboardCheck className="h-10 w-10" />
-                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-blue-600 shadow-xs">
+                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface text-accent shadow-xs">
                   <Clock className="h-3 w-3" />
                 </span>
               </div>
@@ -830,7 +830,7 @@ export function DashboardOverviewTab({
               <button
                 type="button"
                 onClick={() => setShowTemplatesModal(true)}
-                className="flex w-full items-center justify-center rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 cursor-pointer"
+                className="flex w-full items-center justify-center rounded-xl bg-surface-muted px-3 py-2 text-xs font-semibold text-ink-muted transition hover:bg-slate-200 cursor-pointer"
               >
                 Use Template
               </button>
@@ -839,16 +839,16 @@ export function DashboardOverviewTab({
         </div>
 
         {/* Insights Chart */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-5">
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                <BarChart3 className="h-4.5 w-4.5 text-blue-600" />
+              <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+                <BarChart3 className="h-4.5 w-4.5 text-accent" />
                 Insights
               </h2>
-              <div className="mt-1 flex items-center gap-4 text-xs text-slate-500">
+              <div className="mt-1 flex items-center gap-4 text-xs text-ink-subtle">
                 <span className="inline-flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-blue-600" /> Attempts
+                  <span className="h-2 w-2 rounded-full bg-accent" /> Attempts
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" /> Pass Rate
@@ -860,7 +860,7 @@ export function DashboardOverviewTab({
               aria-label="Insights time range"
               value={days}
               onChange={(e) => onChangeDays(Number(e.target.value) as 7 | 30)}
-              className="h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-700 focus:border-blue-500 focus:outline-none"
+              className="h-8 rounded-lg border border-border bg-surface-subtle px-2.5 text-xs font-medium text-ink-muted focus:border-accent focus:outline-none"
             >
               <option value={7}>Last 7 Days</option>
               <option value={30}>Last 30 Days</option>
@@ -872,8 +872,8 @@ export function DashboardOverviewTab({
               <AreaChart data={series} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
                 <defs>
                   <linearGradient id="examinerAttemptsGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.22} />
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#46351a" stopOpacity={0.22} />
+                    <stop offset="95%" stopColor="#46351a" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="examinerPassGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
@@ -915,7 +915,7 @@ export function DashboardOverviewTab({
                   type="monotone"
                   dataKey="attempts"
                   name="Attempts"
-                  stroke="#2563eb"
+                  stroke="#46351a"
                   strokeWidth={2}
                   fill="url(#examinerAttemptsGrad)"
                 />
@@ -934,9 +934,9 @@ export function DashboardOverviewTab({
         </div>
 
         {/* Quick Tools */}
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs lg:col-span-4">
-          <h2 className="mb-3.5 flex items-center gap-2 text-base font-bold text-slate-900">
-            <Wrench className="h-4.5 w-4.5 text-blue-600" />
+        <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs lg:col-span-4">
+          <h2 className="mb-3.5 flex items-center gap-2 text-base font-bold text-foreground">
+            <Wrench className="h-4.5 w-4.5 text-accent" />
             Quick Tools
           </h2>
           <div className="grid grid-cols-2 gap-3">
@@ -945,8 +945,8 @@ export function DashboardOverviewTab({
               onClick={() => onNavigateTab("results")}
               className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-blue-100 bg-[#f0f6ff] px-3 py-4 text-center transition hover:bg-blue-100/60 cursor-pointer"
             >
-              <BarChart3 className="h-5 w-5 text-blue-600" />
-              <span className="text-xs font-semibold text-slate-800 leading-tight">
+              <BarChart3 className="h-5 w-5 text-accent" />
+              <span className="text-xs font-semibold text-foreground leading-tight">
                 View Results
               </span>
             </button>
@@ -957,7 +957,7 @@ export function DashboardOverviewTab({
               className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-[#fff3f2] px-3 py-4 text-center transition hover:bg-rose-100/60 cursor-pointer"
             >
               <FileDown className="h-5 w-5 text-rose-500" />
-              <span className="text-xs font-semibold text-slate-800 leading-tight">
+              <span className="text-xs font-semibold text-foreground leading-tight">
                 Generate PDF
                 <br />
                 Reports
@@ -969,8 +969,8 @@ export function DashboardOverviewTab({
               onClick={() => onNavigateTab("analytics")}
               className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-indigo-100 bg-[#f3f4ff] px-3 py-4 text-center transition hover:bg-indigo-100/60 cursor-pointer"
             >
-              <PieChartIcon className="h-5 w-5 text-indigo-600" />
-              <span className="text-xs font-semibold text-slate-800 leading-tight">
+              <PieChartIcon className="h-5 w-5 text-accent" />
+              <span className="text-xs font-semibold text-foreground leading-tight">
                 Question Analytics
               </span>
             </button>
@@ -981,7 +981,7 @@ export function DashboardOverviewTab({
               className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-violet-100 bg-[#f5f3ff] px-3 py-4 text-center transition hover:bg-violet-100/60 cursor-pointer"
             >
               <ShieldCheck className="h-5 w-5 text-violet-600" />
-              <span className="text-xs font-semibold text-slate-800 leading-tight">
+              <span className="text-xs font-semibold text-foreground leading-tight">
                 Verify Records
                 <br />
                 Integrity
@@ -999,20 +999,20 @@ export function DashboardOverviewTab({
           aria-modal="true"
           aria-label="Choose Exam Template"
         >
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="w-full max-w-2xl rounded-2xl border border-border bg-surface p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-foreground">
                   Choose an Examination Template
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-ink-subtle">
                   Pre-populates timing, randomization blueprint, partial credit, and security policies.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowTemplatesModal(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 cursor-pointer"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-surface-muted cursor-pointer"
                 aria-label="Close templates"
               >
                 <X className="h-5 w-5" />
@@ -1028,16 +1028,16 @@ export function DashboardOverviewTab({
                     setShowTemplatesModal(false);
                     onUseTemplate(tpl);
                   }}
-                  className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-left transition hover:border-blue-400 hover:bg-blue-50/40 cursor-pointer"
+                  className="flex flex-col justify-between rounded-xl border border-border bg-surface-subtle p-4 text-left transition hover:border-blue-400 hover:bg-accent-soft/40 cursor-pointer"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-bold text-slate-900">{tpl.name}</span>
+                      <span className="text-sm font-bold text-foreground">{tpl.name}</span>
                       <Badge tone="accent">{tpl.badge}</Badge>
                     </div>
-                    <p className="mt-1.5 text-xs text-slate-600">{tpl.description}</p>
+                    <p className="mt-1.5 text-xs text-ink-muted">{tpl.description}</p>
                   </div>
-                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-blue-600">
+                  <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-accent">
                     Use This Template <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </button>
@@ -1055,20 +1055,20 @@ export function DashboardOverviewTab({
           aria-modal="true"
           aria-label="Generate PDF Reports"
         >
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="w-full max-w-2xl rounded-2xl border border-border bg-surface p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <h3 className="text-base font-bold text-slate-900">
+                <h3 className="text-base font-bold text-foreground">
                   Generate Cryptographic PDF Reports
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-ink-subtle">
                   Download exam summary reports with fairness audits &amp; QR verification links, or individual candidate certificates.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowPdfModal(false)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 cursor-pointer"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-surface-muted cursor-pointer"
                 aria-label="Close PDF generator"
               >
                 <X className="h-5 w-5" />
@@ -1076,7 +1076,7 @@ export function DashboardOverviewTab({
             </div>
 
             {exams.length === 0 ? (
-              <p className="py-8 text-center text-sm text-slate-500">
+              <p className="py-8 text-center text-sm text-ink-subtle">
                 Create an exam first to generate PDF reports.
               </p>
             ) : (
@@ -1085,7 +1085,7 @@ export function DashboardOverviewTab({
                   <div className="flex-1 min-w-52">
                     <label
                       htmlFor="pdf-exam-select"
-                      className="mb-1 block text-xs font-semibold text-slate-700"
+                      className="mb-1 block text-xs font-semibold text-ink-muted"
                     >
                       Select Examination
                     </label>
@@ -1093,7 +1093,7 @@ export function DashboardOverviewTab({
                       id="pdf-exam-select"
                       value={activePdfExamId}
                       onChange={(e) => setPdfExamId(e.target.value)}
-                      className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-800"
+                      className="h-10 w-full rounded-xl border border-border bg-surface-subtle px-3 text-sm text-foreground"
                     >
                       {exams.map((ex) => (
                         <option key={ex.id} value={ex.id}>
@@ -1118,20 +1118,20 @@ export function DashboardOverviewTab({
                   </Button>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50/70">
-                  <div className="border-b border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-700">
+                <div className="rounded-xl border border-border bg-surface-subtle">
+                  <div className="border-b border-border px-4 py-2.5 text-xs font-semibold text-ink-muted">
                     Individual Candidate Result PDFs
                   </div>
                   {pdfExamAnalyticsQuery.isLoading ? (
-                    <div className="flex items-center justify-center gap-2 py-8 text-xs text-slate-500">
+                    <div className="flex items-center justify-center gap-2 py-8 text-xs text-ink-subtle">
                       <Spinner /> Loading submissions…
                     </div>
                   ) : (pdfExamAnalyticsQuery.data?.candidates ?? []).length === 0 ? (
-                    <p className="px-4 py-6 text-center text-xs text-slate-500">
+                    <p className="px-4 py-6 text-center text-xs text-ink-subtle">
                       No candidate attempts recorded for this exam yet.
                     </p>
                   ) : (
-                    <div className="max-h-60 divide-y divide-slate-200 overflow-y-auto">
+                    <div className="max-h-60 divide-y divide-border overflow-y-auto">
                       {(pdfExamAnalyticsQuery.data?.candidates ?? []).map((c) => {
                         const attId = c.attemptId ?? c.id ?? "";
                         const code = c.verifyCode ?? c.verify_code ?? "";
@@ -1142,10 +1142,10 @@ export function DashboardOverviewTab({
                             className="flex items-center justify-between gap-3 px-4 py-2.5 text-xs"
                           >
                             <div className="min-w-0">
-                              <p className="truncate font-semibold text-slate-800">
+                              <p className="truncate font-semibold text-foreground">
                                 {c.candidate?.name ?? c.name ?? "Candidate"}
                               </p>
-                              <p className="truncate text-[11px] text-slate-500">
+                              <p className="truncate text-[11px] text-ink-subtle">
                                 {c.status} ·{" "}
                                 {c.score !== null && c.score !== undefined
                                   ? `${c.score} / ${max}`

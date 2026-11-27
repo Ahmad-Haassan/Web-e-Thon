@@ -21,6 +21,7 @@ import type {
 } from "@/lib/client/api-types";
 import {
   Badge,
+  BrandMark,
   Button,
   Card,
   CardContent,
@@ -28,7 +29,9 @@ import {
   Input,
   Label,
   Spinner,
+  ThemeToggleButton,
 } from "@/components/ui/primitives";
+import { SiteFooter } from "@/components/site-footer";
 
 type VerifyMode = "code" | "attempt" | "exam";
 
@@ -41,32 +44,32 @@ function ChainCard({
 }) {
   return (
     <div
-      className={`rounded-xl border p-4 ${
+      className={`rounded-sm border p-4 ${
         chain.valid
-          ? "border-verified/40 bg-verified-soft/60"
-          : "border-danger bg-danger-soft"
+          ? "border-verified/30 bg-verified-soft/50"
+          : "border-danger/40 bg-danger-soft"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-semibold text-foreground">{title}</span>
+        <span className="text-sm font-medium text-foreground">{title}</span>
         {chain.valid ? (
           <Badge tone="verified">
-            <CheckCircle2 className="h-3.5 w-3.5" /> INTACT
+            <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.6} /> Intact
           </Badge>
         ) : (
           <Badge tone="danger">
-            <XCircle className="h-3.5 w-3.5" /> BROKEN AT #{chain.brokenAt}
+            <XCircle className="h-3.5 w-3.5" strokeWidth={1.6} /> Broken at #{chain.brokenAt}
           </Badge>
         )}
       </div>
-      <p className="mt-1.5 text-xs text-ink-muted">
-        Records verified: <strong className="font-mono">{chain.records}</strong>
+      <p className="mt-2 text-xs text-ink-muted">
+        Records verified: <strong className="font-mono tabular-nums text-foreground">{chain.records}</strong>
       </p>
       <p
-        className="mt-1 truncate font-mono text-[11px] text-ink-subtle"
+        className="mt-1 truncate font-mono text-xs text-ink-subtle tabular-nums"
         title={chain.headHash ?? ""}
       >
-        Head: {chain.headHash ?? "GENESIS (no records)"}
+        Head: {chain.headHash ?? "Genesis (no records)"}
       </p>
     </div>
   );
@@ -138,43 +141,55 @@ function PublicVerifyInner() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-accent-ink">
-              <ShieldCheck className="h-4.5 w-4.5" />
-            </span>
-            <span>VeriExam Public Audit</span>
+      <header className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur-sm">
+        <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="inline-flex items-center gap-2.5 text-foreground">
+            <BrandMark className="h-8 w-8" />
+            <div className="leading-tight">
+              <span className="block font-display text-sm font-bold uppercase tracking-[0.06em]">
+                NIIT EMS
+              </span>
+              <span className="hidden sm:block text-[10px] uppercase tracking-[0.08em] text-ink-subtle">
+                Public Certificate Verifier
+              </span>
+            </div>
           </Link>
-          <Link href="/login">
-            <Button size="sm" variant="secondary">
-              Sign In
-            </Button>
-          </Link>
+          <div className="flex items-center gap-2.5">
+            <ThemeToggleButton />
+            <Link href="/" className="text-xs font-medium uppercase tracking-[0.05em] text-ink-muted hover:text-foreground transition-colors">
+              Home
+            </Link>
+            <Link href="/login">
+              <Button size="sm" variant="primary">
+                Sign in
+              </Button>
+            </Link>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10 sm:px-6 space-y-6">
-        <div className="space-y-2">
-          <Badge tone="verified">
-            <Link2 className="h-3.5 w-3.5" /> Public Cryptographic Verifier
-          </Badge>
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Don&apos;t trust us — verify the hash chain.
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:px-6 space-y-6">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 text-xs font-medium text-verified">
+            <Link2 className="h-3.5 w-3.5" strokeWidth={1.6} />
+            Public cryptographic audit
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-medium tracking-[-0.02em]">
+            Verify any certificate or hash chain
           </h1>
-          <p className="text-sm text-ink-muted max-w-2xl">
-            Verify any result certificate code, inspect an attempt&apos;s SHA-256 answer/event hash chains, or audit an exam&apos;s seed commitment &amp; checkpoint signature. No private candidate data is ever leaked.
+          <p className="text-sm sm:text-base text-ink-muted max-w-2xl">
+            Check a result certificate code, audit an attempt&apos;s SHA-256 answer and event chains, or verify an exam&apos;s seed commitment and checkpoint signature. No private candidate data is exposed.
           </p>
         </div>
 
         <Card>
           <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-1.5">
+            <div className="inline-flex flex-wrap gap-1.5 rounded-xl border border-border bg-surface-subtle p-1">
               {(
                 [
-                  { id: "code", label: "Certificate Code (VER-...)" },
-                  { id: "attempt", label: "Attempt Hash Chain (UUID)" },
-                  { id: "exam", label: "Exam Seed & Checkpoint (UUID)" },
+                  { id: "code", label: "Certificate code" },
+                  { id: "attempt", label: "Attempt hash chain" },
+                  { id: "exam", label: "Exam seed & checkpoint" },
                 ] as const
               ).map((m) => (
                 <button
@@ -184,10 +199,10 @@ function PublicVerifyInner() {
                     setMode(m.id);
                     setError(null);
                   }}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-[background-color,color] duration-150 cursor-pointer ${
                     mode === m.id
-                      ? "bg-accent text-accent-ink"
-                      : "border border-border bg-surface-subtle text-ink-muted hover:text-foreground"
+                      ? "bg-surface text-foreground border border-border surface-card"
+                      : "text-ink-muted hover:text-foreground border border-transparent"
                   }`}
                 >
                   {m.label}
@@ -204,10 +219,10 @@ function PublicVerifyInner() {
                   id="verify-input"
                   placeholder={
                     mode === "code"
-                      ? "Enter certificate code, e.g. VER-A1B2C3D4E5"
+                      ? "VER-A1B2C3D4E5"
                       : mode === "attempt"
-                      ? "Paste Attempt UUID to audit its SHA-256 hash chains"
-                      : "Paste Exam UUID to audit seed commitment & checkpoint"
+                      ? "Attempt UUID"
+                      : "Exam UUID"
                   }
                   value={queryInput}
                   onChange={(e) => setQueryInput(e.target.value)}
@@ -219,7 +234,7 @@ function PublicVerifyInner() {
                   <Spinner />
                 ) : (
                   <>
-                    <Search className="h-4 w-4" /> Verify Now
+                    <Search className="h-4 w-4" strokeWidth={1.6} /> Verify
                   </>
                 )}
               </Button>
@@ -233,33 +248,32 @@ function PublicVerifyInner() {
           </CardContent>
         </Card>
 
-        {/* Certificate Code Result */}
         {codeResult && (
           <Card
             className={
-              codeResult.chainValid ? "border-2 border-verified" : "border-2 border-danger"
+              codeResult.chainValid ? "border-verified/40" : "border-danger/60"
             }
           >
             <CardHeader
               className={
-                codeResult.chainValid ? "bg-verified-soft/70" : "bg-danger-soft"
+                codeResult.chainValid ? "bg-verified-soft/60" : "bg-danger-soft"
               }
             >
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-3">
                   {codeResult.chainValid ? (
-                    <ShieldCheck className="h-7 w-7 text-verified" />
+                    <ShieldCheck className="h-6 w-6 text-verified" strokeWidth={1.6} />
                   ) : (
-                    <ShieldAlert className="h-7 w-7 text-danger" />
+                    <ShieldAlert className="h-6 w-6 text-danger" strokeWidth={1.6} />
                   )}
                   <div>
-                    <h2 className="text-lg font-bold">
+                    <h2 className="text-base font-semibold text-foreground">
                       {codeResult.chainValid
-                        ? "VERIFIED — Hash Chain Intact"
-                        : "TAMPERING DETECTED — Chain Broken"}
+                        ? "Verified — hash chain intact"
+                        : "Tampering detected — chain broken"}
                     </h2>
-                    <p className="text-xs text-ink-muted">
-                      {codeResult.recordCount} cryptographic record(s) checked
+                    <p className="text-xs text-ink-muted tabular-nums">
+                      {codeResult.recordCount} cryptographic record(s) verified
                     </p>
                   </div>
                 </div>
@@ -268,121 +282,127 @@ function PublicVerifyInner() {
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <CardContent className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
               <dl className="grid grid-cols-2 gap-4 text-sm flex-1">
                 <div>
-                  <dt className="text-xs uppercase font-semibold text-ink-subtle">Examination</dt>
-                  <dd className="font-semibold">{codeResult.examTitle}</dd>
+                  <dt className="text-xs font-medium text-ink-subtle">Examination</dt>
+                  <dd className="mt-0.5 font-medium text-foreground">{codeResult.examTitle}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase font-semibold text-ink-subtle">
-                    Candidate (Masked)
-                  </dt>
-                  <dd className="font-mono font-semibold">{codeResult.maskedName}</dd>
+                  <dt className="text-xs font-medium text-ink-subtle">Candidate (masked)</dt>
+                  <dd className="mt-0.5 font-mono font-medium text-foreground">{codeResult.maskedName}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase font-semibold text-ink-subtle">Score Band</dt>
-                  <dd className="font-semibold text-accent">{codeResult.scoreBand}</dd>
+                  <dt className="text-xs font-medium text-ink-subtle">Score band</dt>
+                  <dd className="mt-0.5 font-medium text-accent">{codeResult.scoreBand}</dd>
                 </div>
                 <div>
-                  <dt className="text-xs uppercase font-semibold text-ink-subtle">Issued At</dt>
-                  <dd>{new Date(codeResult.issuedAt).toLocaleString()}</dd>
+                  <dt className="text-xs font-medium text-ink-subtle">Issued at</dt>
+                  <dd className="mt-0.5 text-foreground tabular-nums">
+                    {new Date(codeResult.issuedAt).toLocaleString()}
+                  </dd>
                 </div>
               </dl>
 
-              <div className="rounded-lg border border-border bg-white p-2.5 self-start">
+              <div className="rounded-xl border border-border bg-white p-2.5 self-start shrink-0">
                 <QRCodeSVG value={codeResult.verifyCode} size={88} />
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Attempt Hash Chain Result (THE TAMPER DEMO MOMENT!) */}
         {attemptResult && (
           <Card
             className={
-              attemptResult.valid ? "border-2 border-verified" : "border-2 border-danger"
+              attemptResult.valid ? "border-verified/40" : "border-danger/60"
             }
           >
             <CardHeader
-              className={attemptResult.valid ? "bg-verified-soft" : "bg-danger-soft"}
+              className={
+                attemptResult.valid
+                  ? "bg-verified-soft/60"
+                  : "bg-danger-soft"
+              }
             >
               <div className="flex items-center gap-3">
                 {attemptResult.valid ? (
-                  <CheckCircle2 className="h-8 w-8 text-verified shrink-0" />
+                  <CheckCircle2 className="h-6 w-6 text-verified shrink-0" strokeWidth={1.6} />
                 ) : (
-                  <XCircle className="h-8 w-8 text-danger shrink-0" />
+                  <XCircle className="h-6 w-6 text-danger shrink-0" strokeWidth={1.6} />
                 )}
                 <div>
                   <h2
-                    className={`text-xl font-bold ${
+                    className={`text-lg font-medium ${
                       attemptResult.valid ? "text-verified" : "text-danger"
                     }`}
                   >
                     {attemptResult.valid
-                      ? "GREEN — All Attempt Hash Chains Verified"
-                      : "RED — Tampering Detected in Database Records"}
+                      ? "All attempt hash chains verified"
+                      : "Tampering detected in database records"}
                   </h2>
-                  <p className="text-xs text-ink-muted font-mono">
+                  <p className="text-xs text-ink-muted font-mono tabular-nums">
                     Attempt ID: {attemptResult.attemptId}
                   </p>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-3">
-              <ChainCard title="Answers Ledger" chain={attemptResult.answersChain} />
-              <ChainCard title="Events Timeline" chain={attemptResult.eventsChain} />
-              <ChainCard title="Lock Events Chain" chain={attemptResult.lockEventsChain} />
+              <ChainCard title="Answers ledger" chain={attemptResult.answersChain} />
+              <ChainCard title="Events timeline" chain={attemptResult.eventsChain} />
+              <ChainCard title="Lock events chain" chain={attemptResult.lockEventsChain} />
             </CardContent>
           </Card>
         )}
 
-        {/* Exam Seed & Checkpoint Result */}
         {examResult && (
           <Card
             className={
-              examResult.allChainsValid ? "border-2 border-verified" : "border-2 border-danger"
+              examResult.allChainsValid ? "border-verified/40" : "border-danger/60"
             }
           >
             <CardHeader
-              className={examResult.allChainsValid ? "bg-verified-soft" : "bg-danger-soft"}
+              className={
+                examResult.allChainsValid
+                  ? "bg-verified-soft/60"
+                  : "bg-danger-soft"
+              }
             >
               <div className="flex items-center gap-3">
                 {examResult.allChainsValid ? (
-                  <ShieldCheck className="h-7 w-7 text-verified" />
+                  <ShieldCheck className="h-6 w-6 text-verified" strokeWidth={1.6} />
                 ) : (
-                  <ShieldAlert className="h-7 w-7 text-danger" />
+                  <ShieldAlert className="h-6 w-6 text-danger" strokeWidth={1.6} />
                 )}
                 <div>
-                  <h2 className="text-lg font-bold">
+                  <h2 className="text-base font-semibold text-foreground">
                     {examResult.examTitle} —{" "}
                     {examResult.allChainsValid
-                      ? "All Chains Intact"
-                      : "Chain Integrity Failure Detected"}
+                      ? "All chains intact"
+                      : "Chain integrity failure detected"}
                   </h2>
-                  <p className="text-xs text-ink-muted">
+                  <p className="text-xs text-ink-muted tabular-nums">
                     {examResult.attemptsChecked} attempt(s) audited · Checkpoint signature{" "}
-                    {examResult.checkpointValid ? "valid" : "pending/unverified"}
+                    {examResult.checkpointValid ? "valid" : "pending"}
                   </p>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3 text-xs">
+            <CardContent className="space-y-4 text-xs">
               <div>
-                <p className="font-semibold uppercase text-ink-subtle">Seed Commitment (SHA-256)</p>
-                <p className="mt-1 break-all rounded-md border border-border bg-surface-subtle p-2 font-mono">
+                <p className="font-medium text-ink-subtle">Seed commitment (SHA-256)</p>
+                <p className="mt-1 break-all rounded-lg border border-border bg-surface-subtle p-2.5 font-mono">
                   {examResult.seedCommitment ?? "—"}
                 </p>
               </div>
               <div>
-                <p className="font-semibold uppercase text-ink-subtle">Seed Reveal</p>
-                <p className="mt-1 break-all rounded-md border border-border bg-surface-subtle p-2 font-mono">
-                  {examResult.seedReveal ?? "Sealed until examiner reveals post-exam"}
+                <p className="font-medium text-ink-subtle">Seed reveal</p>
+                <p className="mt-1 break-all rounded-lg border border-border bg-surface-subtle p-2.5 font-mono">
+                  {examResult.seedReveal ?? "Sealed until examiner reveals after completion"}
                 </p>
               </div>
               <div>
-                <p className="font-semibold uppercase text-ink-subtle">Exam Checkpoint Hash</p>
-                <p className="mt-1 break-all rounded-md border border-border bg-surface-subtle p-2 font-mono">
+                <p className="font-medium text-ink-subtle">Exam checkpoint hash</p>
+                <p className="mt-1 break-all rounded-lg border border-border bg-surface-subtle p-2.5 font-mono">
                   {examResult.checkpointHash ?? "—"}
                 </p>
               </div>
@@ -390,6 +410,8 @@ function PublicVerifyInner() {
           </Card>
         )}
       </main>
+
+      <SiteFooter />
     </div>
   );
 }

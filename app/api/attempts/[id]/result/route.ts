@@ -32,7 +32,7 @@ export async function GET(
 
     const { data: attempt } = await supabase
       .from("attempts")
-      .select("*, exams(id, owner_id, title, results_published), users(id, name, email)")
+      .select("*, exams(id, owner_id, title, results_published, category, class_name, section), users(id, name, email, class_name, section)")
       .eq("id", attemptId)
       .maybeSingle();
 
@@ -43,6 +43,9 @@ export async function GET(
       owner_id: string;
       title: string;
       results_published: boolean;
+      category?: string | null;
+      class_name?: string | null;
+      section?: string | null;
     };
 
     if (user.role === "CANDIDATE") {
@@ -81,19 +84,42 @@ export async function GET(
     const gradeByQ = new Map((grades ?? []).map((g) => [g.question_id, g]));
     const snapshot = attempt.paper_snapshot as ServerPaperSnapshot;
 
+    let correctCount = 0;
+    let wrongCount = 0;
+    let unansweredCount = 0;
+
     const breakdown = (snapshot.questions ?? []).map((q) => {
       const g = gradeByQ.get(q.id);
+      const sel = latestAccepted.get(q.id) ?? null;
+      const isSkipped =
+        sel === null ||
+        sel === undefined ||
+        (Array.isArray(sel) && sel.length === 0) ||
+        (typeof sel === "string" && sel.trim() === "");
+      const awarded = g?.awarded !== null && g?.awarded !== undefined ? Number(g.awarded) : null;
+      const maxMarks = Number(q.marks);
+
+      if (isSkipped) {
+        unansweredCount++;
+      } else if (awarded !== null) {
+        if (awarded >= maxMarks - 0.01) correctCount++;
+        else wrongCount++;
+      }
+
       return {
+        id: q.id,
         questionId: q.id,
         type: q.type,
         difficulty: q.difficulty,
         text: q.text,
         options: q.options,
-        selected: latestAccepted.get(q.id) ?? null,
+        selected: sel,
         correctOptionIds: q.correctOptionIds,
         explanation: q.explanation ?? null,
-        awarded: g?.awarded !== null && g?.awarded !== undefined ? Number(g.awarded) : null,
-        maxMarks: Number(q.marks),
+        writtenRubric: q.writtenRubric ?? null,
+        awarded,
+        marks: maxMarks,
+        maxMarks,
         feedback: g?.feedback ?? null,
         isPendingManual: Boolean(g?.is_pending_manual),
       };
@@ -116,6 +142,30 @@ export async function GET(
 
     const score = attempt.score !== null ? Number(attempt.score) : null;
     const maxScore = Number(attempt.max_score);
+    const totalQuestions = breakdown.length;
+    const attemptedCount = totalQuestions - unansweredCount;
+    const percentage =
+      score !== null && maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
+    const timeTakenMin =
+      attempt.started_at && attempt.submitted_at
+        ? Math.max(
+            1,
+            Math.round(
+              (new Date(attempt.submitted_at).getTime() - new Date(attempt.started_at).getTime()) /
+                60_000
+            )
+          )
+        : null;
+
+    const formattedReceipts = (receipts ?? []).map((r) => ({
+      id: r.id,
+      attemptId: r.attempt_id,
+      answerHash: r.answer_hash,
+      clientSeq: r.client_seq,
+      serverTime: r.server_time,
+      sig: r.sig,
+      accepted: true,
+    }));
 
     const questionsWithExplanations = breakdown.map((b) => ({
       id: b.questionId,
@@ -152,13 +202,25 @@ export async function GET(
         title: exam.title,
         results_published: exam.results_published,
         resultsPublished: exam.results_published,
+        category: exam.category ?? null,
+        class_name: exam.class_name ?? null,
+        section: exam.section ?? null,
       },
-      candidate: attempt.users,
-      grades: grades ?? [],
-      questionsWithExplanations,
-      breakdown,
-      receipts: receipts ?? [],
+      candidate: Array.isArray(attempt.users) ? attempt.users[0] : attempt.users,
       verifyCode: attempt.verify_code,
+      grades: grades ?? [],
+      breakdown,
+      questionsWithExplanations,
+      summary: {
+        totalQuestions,
+        attemptedCount,
+        correctCount,
+        wrongCount,
+        unansweredCount,
+        percentage,
+        timeTakenMin,
+      },
+      receipts: formattedReceipts,
       chain,
     });
   } catch (err) {

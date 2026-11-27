@@ -309,10 +309,10 @@ function CreateExamFormInner({
       {/* Header & Template Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="text-xl font-bold text-foreground">
             {isEditing ? `Edit Exam: ${existingExam?.title}` : "Create Examination"}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-ink-subtle">
             {isEditing
               ? "Update schedule, integrity policies, blueprint rules, or attached questions."
               : "Configure timing, fair randomization blueprint, and cryptographic seed commitment."}
@@ -326,8 +326,8 @@ function CreateExamFormInner({
       </div>
 
       {!isEditing && onApplyTemplate && (
-        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-blue-100 bg-white p-3.5 shadow-2xs">
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-700 mr-1">
+        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-blue-100 bg-surface p-3.5 shadow-2xs">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent mr-1">
             <Sparkles className="h-3.5 w-3.5" /> Quick Templates:
           </span>
           {EXAM_TEMPLATES.map((tpl) => {
@@ -339,8 +339,8 @@ function CreateExamFormInner({
                 onClick={() => onApplyTemplate(tpl)}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition cursor-pointer ${
                   active
-                    ? "border-blue-600 bg-blue-50 text-blue-700"
-                    : "border-slate-200 bg-slate-50 text-slate-600 hover:border-blue-300 hover:text-slate-900"
+                    ? "border-blue-600 bg-accent-soft text-accent"
+                    : "border-border bg-surface-subtle text-ink-muted hover:border-blue-300 hover:text-foreground"
                 }`}
               >
                 {tpl.name}
@@ -363,10 +363,10 @@ function CreateExamFormInner({
               onClick={() => setStep(s.num)}
               className={`flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-semibold transition-colors cursor-pointer ${
                 step === s.num
-                  ? "border-blue-600 bg-blue-50 text-blue-700"
+                  ? "border-blue-600 bg-accent-soft text-accent"
                   : step > s.num
                     ? "border-emerald-300 bg-emerald-50 text-emerald-700"
-                    : "border-slate-200 bg-white text-slate-500"
+                    : "border-border bg-surface text-ink-subtle"
               }`}
             >
               {step > s.num && <Check className="h-3.5 w-3.5" />}
@@ -377,9 +377,9 @@ function CreateExamFormInner({
       </ol>
 
       {step === 1 && (
-        <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+        <Card className="rounded-2xl border-border shadow-2xs">
           <CardHeader>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold text-foreground">
               Exam Details &amp; Authoritative Timing
             </h2>
           </CardHeader>
@@ -449,7 +449,7 @@ function CreateExamFormInner({
             </div>
 
             <div className="grid gap-3 pt-2 sm:grid-cols-2">
-              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
+              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-surface-subtle p-3 text-sm text-ink-muted">
                 <input
                   type="checkbox"
                   checked={shuffleQuestions}
@@ -458,7 +458,7 @@ function CreateExamFormInner({
                 />
                 <span>Shuffle question order per candidate</span>
               </label>
-              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
+              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-surface-subtle p-3 text-sm text-ink-muted">
                 <input
                   type="checkbox"
                   checked={shuffleOptions}
@@ -467,7 +467,7 @@ function CreateExamFormInner({
                 />
                 <span>Shuffle option order per candidate</span>
               </label>
-              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
+              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-surface-subtle p-3 text-sm text-ink-muted">
                 <input
                   type="checkbox"
                   checked={partialEnabled}
@@ -476,7 +476,7 @@ function CreateExamFormInner({
                 />
                 <span>Enable multi-select partial credit (+correct/n)</span>
               </label>
-              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
+              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-surface-subtle p-3 text-sm text-ink-muted">
                 <input
                   type="checkbox"
                   checked={wrongPenalty}
@@ -485,7 +485,7 @@ function CreateExamFormInner({
                 />
                 <span>Deduct wrong multi-select choices (−wrong/n, min 0)</span>
               </label>
-              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/70 p-3 text-sm text-slate-700">
+              <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-surface-subtle p-3 text-sm text-ink-muted">
                 <input
                   type="checkbox"
                   checked={noBacktrack}
@@ -520,18 +520,18 @@ function CreateExamFormInner({
       {step === 2 && (
         <div className="space-y-5">
           {/* Fair Randomization Blueprint */}
-          <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+          <Card className="rounded-2xl border-border shadow-2xs">
             <CardHeader>
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">
+                  <h2 className="text-base font-bold text-foreground">
                     Fair Randomization Blueprint (Optional)
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-ink-subtle">
                     Define exact difficulty/category quotas so every student receives an equally balanced paper drawn from a committed SHA-256 seed.
                   </p>
                 </div>
-                <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-slate-700 shrink-0">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-xs font-semibold text-ink-muted shrink-0">
                   <input
                     type="checkbox"
                     checked={useBlueprint}
@@ -631,14 +631,14 @@ function CreateExamFormInner({
           </Card>
 
           {/* Question Pool Selection */}
-          <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+          <Card className="rounded-2xl border-border shadow-2xs">
             <CardHeader>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">
+                  <h2 className="text-base font-bold text-foreground">
                     Attach Questions from Bank
                   </h2>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-ink-subtle">
                     Selected: <strong>{attachedCount}</strong> question(s) ·{" "}
                     <strong>{totalSelectedMarks}</strong> total marks
                   </p>
@@ -703,15 +703,15 @@ function CreateExamFormInner({
 
             <CardContent>
               {questionsQuery.isLoading ? (
-                <div className="flex items-center justify-center gap-2 py-8 text-sm text-slate-500">
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-ink-subtle">
                   <Spinner /> Loading questions…
                 </div>
               ) : allQuestions.length === 0 ? (
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-ink-subtle">
                   No questions found in your Question Bank yet. You can create this exam as a Draft and add questions later.
                 </p>
               ) : filteredQuestions.length === 0 ? (
-                <p className="py-6 text-center text-sm text-slate-500">
+                <p className="py-6 text-center text-sm text-ink-subtle">
                   No questions match your current filter.
                 </p>
               ) : (
@@ -723,8 +723,8 @@ function CreateExamFormInner({
                         key={q.id}
                         className={`flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors ${
                           checked
-                            ? "border-blue-500 bg-blue-50/50"
-                            : "border-slate-200 bg-slate-50/70"
+                            ? "border-blue-500 bg-accent-soft/50"
+                            : "border-border bg-surface-subtle"
                         }`}
                       >
                         <label className="flex flex-1 cursor-pointer items-start gap-3">
@@ -735,7 +735,7 @@ function CreateExamFormInner({
                             className="mt-1 h-4 w-4 accent-blue-600"
                           />
                           <div className="space-y-1">
-                            <p className="text-sm font-medium text-slate-900">{q.text}</p>
+                            <p className="text-sm font-medium text-foreground">{q.text}</p>
                             <div className="flex flex-wrap items-center gap-1.5">
                               <Badge tone="neutral">{q.type}</Badge>
                               <Badge tone="neutral">Diff {q.difficulty}</Badge>
@@ -747,7 +747,7 @@ function CreateExamFormInner({
                         </label>
                         {checked && (
                           <div className="flex shrink-0 items-center gap-1.5">
-                            <span className="text-xs text-slate-500">Marks:</span>
+                            <span className="text-xs text-ink-subtle">Marks:</span>
                             <Input
                               type="number"
                               min={0.5}
@@ -783,36 +783,36 @@ function CreateExamFormInner({
       )}
 
       {step === 3 && (
-        <Card className="rounded-2xl border-slate-200/80 shadow-2xs">
+        <Card className="rounded-2xl border-border shadow-2xs">
           <CardHeader>
-            <h2 className="text-base font-bold text-slate-900">Pre-Publication Review</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-base font-bold text-foreground">Pre-Publication Review</h2>
+            <p className="text-xs text-ink-subtle">
               Saving commits a cryptographic SHA-256 seed so per-student randomization can be audited after completion.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-4 text-sm sm:grid-cols-2">
+            <div className="grid gap-3 rounded-xl border border-border bg-surface-subtle p-4 text-sm sm:grid-cols-2">
               <div>
                 <p className="text-xs font-semibold uppercase text-slate-400">Title</p>
-                <p className="font-semibold text-slate-900">{title}</p>
+                <p className="font-semibold text-foreground">{title}</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase text-slate-400">
                   Duration &amp; Grace
                 </p>
-                <p className="text-slate-700">
+                <p className="text-ink-muted">
                   {durationMin} min (+{graceSec}s offline sync grace)
                 </p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase text-slate-400">Schedule Window</p>
-                <p className="text-slate-700">
+                <p className="text-ink-muted">
                   {new Date(startLocal).toLocaleString()} → {new Date(endLocal).toLocaleString()}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase text-slate-400">Question Paper</p>
-                <p className="text-slate-700">
+                <p className="text-ink-muted">
                   {attachedCount} attached ({totalSelectedMarks} pts)
                   {useBlueprint ? ` · Blueprint (${blueprint.length} quota rules)` : ""}
                 </p>
@@ -879,8 +879,8 @@ export function CreateExamPanel({
   if (editExamId) {
     if (editQuery.isLoading) {
       return (
-        <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-500">
-          <Spinner className="h-5 w-5 text-blue-600" /> Loading examination configuration…
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-ink-subtle">
+          <Spinner className="h-5 w-5 text-accent" /> Loading examination configuration…
         </div>
       );
     }

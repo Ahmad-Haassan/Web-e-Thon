@@ -48,6 +48,7 @@ import {
   Label,
   Select,
   Spinner,
+  ThemeToggleButton,
 } from "@/components/ui/primitives";
 import { api } from "@/lib/client/api";
 import {
@@ -143,9 +144,9 @@ export default function CandidateDashboardPage() {
 
   if (loading || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f6fb]">
-        <div className="flex items-center gap-3 text-sm text-slate-600">
-          <Spinner className="h-5 w-5 text-blue-600" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-sm text-ink-muted">
+          <Spinner className="h-5 w-5 text-accent" />
           Loading Student Portal…
         </div>
       </div>
@@ -219,7 +220,7 @@ export default function CandidateDashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#f4f6fb] text-slate-900">
+    <div className="flex min-h-screen bg-background text-foreground">
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 bg-slate-950/60 lg:hidden"
@@ -229,7 +230,7 @@ export default function CandidateDashboardPage() {
 
       {/* Left Dark Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#141824] text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col portal-chrome text-slate-200 transition-transform duration-200 lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -246,7 +247,7 @@ export default function CandidateDashboardPage() {
           <button
             type="button"
             onClick={() => setMobileMenuOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:bg-white/10 lg:hidden"
+            className="rounded-lg p-1 text-slate-400 hover:bg-surface/10 lg:hidden"
             aria-label="Close sidebar"
           >
             <X className="h-5 w-5" />
@@ -266,19 +267,43 @@ export default function CandidateDashboardPage() {
                 }}
                 className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all cursor-pointer ${
                   active
-                    ? "bg-gradient-to-r from-[#2563eb] to-[#1d4ed8] text-white shadow-md shadow-blue-950/40"
-                    : "text-slate-300 hover:bg-white/5 hover:text-white"
+                    ? "bg-[var(--portal-chrome-accent)] text-[#241a0b] font-semibold shadow-sm"
+                    : "text-slate-300 hover:bg-surface/5 hover:text-white"
                 }`}
               >
-                <Icon className={`h-4.5 w-4.5 ${active ? "text-white" : "text-slate-400"}`} />
+                <Icon className={`h-4.5 w-4.5 ${active ? "text-[#241a0b]" : "text-[var(--portal-chrome-muted)]"}`} />
                 <span>{label}</span>
               </button>
             );
           })}
+
+          <div className="pt-3 mt-3 border-t border-white/10 space-y-1">
+            <Link
+              href="/candidate/datesheet"
+              className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--portal-chrome-muted)] transition-all hover:bg-white/5 hover:text-white"
+            >
+              <Calendar className="h-4 w-4" />
+              <span>My Datesheet</span>
+            </Link>
+            <Link
+              href="/candidate/admit-card"
+              className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--portal-chrome-muted)] transition-all hover:bg-white/5 hover:text-white"
+            >
+              <Receipt className="h-4 w-4" />
+              <span>Admit Card</span>
+            </Link>
+            <Link
+              href="/profile"
+              className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-medium text-[var(--portal-chrome-muted)] transition-all hover:bg-white/5 hover:text-white"
+            >
+              <Settings className="h-4 w-4" />
+              <span>My Profile</span>
+            </Link>
+          </div>
         </nav>
 
         <div className="space-y-2.5 p-4">
-          <div className="rounded-xl border border-white/10 bg-[#1d2233] p-3.5">
+          <div className="rounded-xl border border-white/10 bg-black/20 p-3.5">
             <div className="flex items-center gap-2 text-xs font-semibold">
               <span
                 className={`h-2.5 w-2.5 rounded-full ${isOnline ? "bg-emerald-400" : "bg-amber-400"}`}
@@ -295,7 +320,7 @@ export default function CandidateDashboardPage() {
           <button
             type="button"
             onClick={handleSignOut}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-[#1d2233] px-3.5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white cursor-pointer"
+            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-3.5 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-surface/10 hover:text-white cursor-pointer"
           >
             <LogOut className="h-4 w-4 text-slate-400" />
             <span>Logout</span>
@@ -306,12 +331,12 @@ export default function CandidateDashboardPage() {
       {/* Main Column */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-slate-200/80 bg-white px-4 sm:px-7">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-border bg-surface px-4 sm:px-7">
           <div className="flex flex-1 items-center gap-3">
             <button
               type="button"
               onClick={() => setMobileMenuOpen(true)}
-              className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+              className="rounded-lg p-2 text-ink-muted hover:bg-surface-muted lg:hidden"
               aria-label="Open menu"
             >
               <Menu className="h-5 w-5" />
@@ -324,12 +349,13 @@ export default function CandidateDashboardPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search exams..."
-                className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm text-slate-800 placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="h-9 w-full rounded-xl border border-border bg-surface-subtle pl-10 pr-4 text-sm text-foreground placeholder:text-slate-400 focus:border-accent focus:bg-surface focus:outline-none focus:ring-2 focus:ring-accent/20"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-3">
+            <ThemeToggleButton />
             {/* Notifications */}
             <div className="relative">
               <button
@@ -338,7 +364,7 @@ export default function CandidateDashboardPage() {
                   setShowNotif((v) => !v);
                   setShowProfile(false);
                 }}
-                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="relative flex h-9 w-9 items-center justify-center rounded-xl text-ink-muted hover:bg-surface-muted cursor-pointer"
                 aria-label="Notifications"
               >
                 <Bell className="h-5 w-5" />
@@ -349,20 +375,20 @@ export default function CandidateDashboardPage() {
                 )}
               </button>
               {showNotif && (
-                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
-                  <p className="border-b border-slate-100 pb-2 text-sm font-semibold text-slate-900">
+                <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-border bg-surface p-4 shadow-xl">
+                  <p className="border-b border-border pb-2 text-sm font-semibold text-foreground">
                     Exam Alerts
                   </p>
                   <div className="mt-3 space-y-2 text-xs">
-                    <p className="text-slate-600">
+                    <p className="text-ink-muted">
                       <strong>{available.length}</strong> exam(s) open right now
                     </p>
-                    <p className="text-slate-600">
+                    <p className="text-ink-muted">
                       <strong>{upcoming.length}</strong> upcoming scheduled exam(s)
                     </p>
                     <Link
                       href="/disputes"
-                      className="inline-flex items-center gap-1 pt-1 font-semibold text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-1 pt-1 font-semibold text-accent hover:underline"
                     >
                       View my disputes <ArrowRight className="h-3 w-3" />
                     </Link>
@@ -379,33 +405,33 @@ export default function CandidateDashboardPage() {
                   setShowProfile((v) => !v);
                   setShowNotif(false);
                 }}
-                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-slate-100 cursor-pointer"
+                className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2.5 hover:bg-surface-muted cursor-pointer"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#312e81] text-xs font-bold text-white">
                   {initialsOf(user.name)}
                 </span>
-                <span className="hidden text-sm font-medium text-slate-700 sm:inline">
+                <span className="hidden text-sm font-medium text-ink-muted sm:inline">
                   {user.name}
                 </span>
                 <ChevronDown className="h-4 w-4 text-slate-400" />
               </button>
 
               {showProfile && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-                  <div className="border-b border-slate-100 px-3 py-2">
-                    <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
-                    <p className="truncate text-xs text-slate-500">{user.email}</p>
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-border bg-surface p-2 shadow-xl">
+                  <div className="border-b border-border px-3 py-2">
+                    <p className="truncate text-sm font-semibold text-foreground">{user.name}</p>
+                    <p className="truncate text-xs text-ink-subtle">{user.email}</p>
                   </div>
                   <div className="mt-1 space-y-0.5">
                     <Link
                       href="/disputes"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle"
                     >
                       <FileCheck2 className="h-4 w-4 text-slate-400" /> Disputes &amp; Appeals
                     </Link>
                     <Link
                       href="/verify"
-                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                      className="flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-ink-muted hover:bg-surface-subtle"
                     >
                       <ShieldCheck className="h-4 w-4 text-emerald-500" /> Public Verifier
                     </Link>
@@ -426,8 +452,8 @@ export default function CandidateDashboardPage() {
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-7">
           {examsQuery.isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-20 text-sm text-slate-500">
-              <Spinner className="h-5 w-5 text-blue-600" /> Loading your exams…
+            <div className="flex items-center justify-center gap-2 py-20 text-sm text-ink-subtle">
+              <Spinner className="h-5 w-5 text-accent" /> Loading your exams…
             </div>
           ) : examsQuery.error ? (
             <div className="mx-auto max-w-4xl rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
@@ -438,13 +464,13 @@ export default function CandidateDashboardPage() {
               {/* Hero Welcome Banner */}
               <div className="relative overflow-hidden rounded-3xl border border-blue-100 bg-gradient-to-r from-[#e8f0ff] via-[#dfe9ff] to-[#d6e4ff] px-6 py-7 sm:px-9 sm:py-8">
                 <div className="relative z-10 max-w-xl">
-                  <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+                  <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
                     Welcome back, {firstName}!
                   </h1>
-                  <p className="mt-2 text-sm text-slate-600">
+                  <p className="mt-2 text-sm text-ink-muted">
                     Give your best. We&apos;re here to ensure a fair and secure exam experience.
                   </p>
-                  <div className="mt-4 h-1 w-14 rounded-full bg-blue-600" />
+                  <div className="mt-4 h-1 w-14 rounded-full bg-accent" />
                 </div>
 
                 {/* Decorative Shield + Laptop Emblem */}
@@ -452,9 +478,9 @@ export default function CandidateDashboardPage() {
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 text-white shadow-lg shadow-teal-500/20">
                     <ShieldCheck className="h-9 w-9" />
                   </div>
-                  <div className="flex h-24 w-32 flex-col items-center justify-center rounded-2xl border border-blue-200/70 bg-white/75 backdrop-blur-xs shadow-sm">
-                    <Laptop className="h-10 w-10 text-blue-700" />
-                    <span className="mt-1 text-[10px] font-semibold text-blue-700">
+                  <div className="flex h-24 w-32 flex-col items-center justify-center rounded-2xl border border-border-strong/70 bg-surface/75 backdrop-blur-xs shadow-sm">
+                    <Laptop className="h-10 w-10 text-accent" />
+                    <span className="mt-1 text-[10px] font-semibold text-accent">
                       Offline-Safe Sync
                     </span>
                   </div>
@@ -466,23 +492,23 @@ export default function CandidateDashboardPage() {
                 {/* Left 2 columns */}
                 <div className="space-y-6 lg:col-span-2">
                   {/* Available Exams */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                  <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
                     <div className="mb-4 flex items-center justify-between">
-                      <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
-                        <Calendar className="h-4.5 w-4.5 text-blue-600" />
+                      <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
+                        <Calendar className="h-4.5 w-4.5 text-accent" />
                         Available Exams
                       </h2>
                       <button
                         type="button"
                         onClick={() => setActiveTab("exams")}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent cursor-pointer"
                       >
                         View All <ArrowRight className="h-3.5 w-3.5" />
                       </button>
                     </div>
 
                     {available.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-6 text-center text-sm text-slate-500">
+                      <div className="rounded-xl border border-dashed border-border bg-surface-subtle p-6 text-center text-sm text-ink-subtle">
                         No exams open right now. Check Upcoming Exams below or your Results tab.
                       </div>
                     ) : (
@@ -492,15 +518,15 @@ export default function CandidateDashboardPage() {
                           return (
                             <div
                               key={exam.id}
-                              className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-slate-50/60 p-4 sm:flex-row sm:items-center sm:justify-between"
+                              className="flex flex-col gap-4 rounded-2xl border border-border bg-surface-subtle/60 p-4 sm:flex-row sm:items-center sm:justify-between"
                             >
                               <div className="flex items-start gap-4">
-                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-600">
+                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-indigo-100 text-accent">
                                   <Laptop className="h-8 w-8" />
                                 </div>
                                 <div>
                                   <div className="flex flex-wrap items-center gap-2">
-                                    <h3 className="text-base font-bold text-slate-900">
+                                    <h3 className="text-base font-bold text-foreground">
                                       {exam.title}
                                     </h3>
                                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
@@ -508,10 +534,10 @@ export default function CandidateDashboardPage() {
                                       {inProgress ? "In Progress" : "Available Now"}
                                     </span>
                                   </div>
-                                  <p className="mt-1 text-xs text-slate-500">
+                                  <p className="mt-1 text-xs text-ink-subtle">
                                     {examTotalMarks(exam)} Marks · Server-Authoritative Timer
                                   </p>
-                                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                                  <div className="mt-2 flex flex-wrap items-center gap-4 text-xs text-ink-subtle">
                                     <span className="inline-flex items-center gap-1">
                                       <Calendar className="h-3.5 w-3.5 text-slate-400" />
                                       Closes {fmtDate(examEndAt(exam))}
@@ -539,7 +565,7 @@ export default function CandidateDashboardPage() {
                                       setAckExam(exam);
                                       setAckChecked(false);
                                     }}
-                                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-blue-700 cursor-pointer"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition hover:bg-accent-hover cursor-pointer"
                                   >
                                     <Play className="h-4 w-4 fill-current" /> Start Exam
                                   </button>
@@ -553,27 +579,27 @@ export default function CandidateDashboardPage() {
                   </div>
 
                   {/* Upcoming Exams */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <Clock className="h-4.5 w-4.5 text-blue-600" />
+                  <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-foreground">
+                      <Clock className="h-4.5 w-4.5 text-accent" />
                       Upcoming Exams
                     </h2>
                     {upcoming.length === 0 ? (
-                      <p className="text-sm text-slate-500">No upcoming scheduled exams right now.</p>
+                      <p className="text-sm text-ink-subtle">No upcoming scheduled exams right now.</p>
                     ) : (
                       <div className="space-y-3">
                         {upcoming.map((exam) => (
                           <div
                             key={exam.id}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3.5"
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle/60 p-3.5"
                           >
                             <div className="flex items-center gap-3.5">
-                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-accent">
                                 <FileText className="h-5 w-5" />
                               </span>
                               <div>
-                                <p className="text-sm font-bold text-slate-900">{exam.title}</p>
-                                <p className="mt-0.5 text-xs text-slate-500">
+                                <p className="text-sm font-bold text-foreground">{exam.title}</p>
+                                <p className="mt-0.5 text-xs text-ink-subtle">
                                   {fmtDate(examStartAt(exam))} · {examDurationMin(exam)} min
                                 </p>
                               </div>
@@ -592,13 +618,13 @@ export default function CandidateDashboardPage() {
                   </div>
 
                   {/* Recent Activity */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <Activity className="h-4.5 w-4.5 text-blue-600" />
+                  <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-foreground">
+                      <Activity className="h-4.5 w-4.5 text-accent" />
                       Recent Activity
                     </h2>
                     {completed.length === 0 ? (
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-ink-subtle">
                         Your completed exams and cryptographic receipts will appear here.
                       </p>
                     ) : (
@@ -609,17 +635,17 @@ export default function CandidateDashboardPage() {
                           return (
                             <div
                               key={exam.id}
-                              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/50 p-3.5"
+                              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle/50 p-3.5"
                             >
                               <div className="flex items-center gap-3.5">
                                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
                                   <CheckCircle2 className="h-5 w-5" />
                                 </span>
                                 <div>
-                                  <p className="text-sm font-bold text-slate-900">
+                                  <p className="text-sm font-bold text-foreground">
                                     Exam submitted successfully
                                   </p>
-                                  <p className="text-xs text-slate-500">
+                                  <p className="text-xs text-ink-subtle">
                                     {exam.title} · {fmtDate(att?.submittedAt ?? examEndAt(exam))}
                                   </p>
                                 </div>
@@ -649,28 +675,28 @@ export default function CandidateDashboardPage() {
                 {/* Right Column */}
                 <div className="space-y-6">
                   {/* Quick Info */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
-                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-slate-900">
-                      <Zap className="h-4.5 w-4.5 text-blue-600" />
+                  <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                    <h2 className="mb-4 flex items-center gap-2 text-base font-bold text-foreground">
+                      <Zap className="h-4.5 w-4.5 text-accent" />
                       Quick Info
                     </h2>
                     <div className="space-y-3.5">
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
                           <ShieldCheck className="h-5 w-5" />
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">Secure &amp; Fair Exam</p>
-                          <p className="text-xs text-slate-500">Your answers are protected</p>
+                          <p className="text-sm font-semibold text-foreground">Secure &amp; Fair Exam</p>
+                          <p className="text-xs text-ink-subtle">Your answers are protected</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
                           <Lock className="h-5 w-5" />
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">Auto-Save Enabled</p>
-                          <p className="text-xs text-slate-500">No data will be lost offline</p>
+                          <p className="text-sm font-semibold text-foreground">Auto-Save Enabled</p>
+                          <p className="text-xs text-ink-subtle">No data will be lost offline</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -678,24 +704,24 @@ export default function CandidateDashboardPage() {
                           <Award className="h-5 w-5" />
                         </span>
                         <div>
-                          <p className="text-sm font-semibold text-slate-900">Verified Results</p>
-                          <p className="text-xs text-slate-500">With signed digital receipt</p>
+                          <p className="text-sm font-semibold text-foreground">Verified Results</p>
+                          <p className="text-xs text-ink-subtle">With signed digital receipt</p>
                         </div>
                       </div>
                     </div>
                   </div>
 
                   {/* My Results Ring Card */}
-                  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-2xs">
+                  <div className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
                     <div className="mb-4 flex items-center justify-between">
-                      <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                      <h2 className="flex items-center gap-2 text-base font-bold text-foreground">
                         <Trophy className="h-4.5 w-4.5 text-amber-500" />
                         My Results
                       </h2>
                       <button
                         type="button"
                         onClick={() => setActiveTab("results")}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent cursor-pointer"
                       >
                         View All <ArrowRight className="h-3.5 w-3.5" />
                       </button>
@@ -725,31 +751,31 @@ export default function CandidateDashboardPage() {
                           />
                         </svg>
                         <div className="absolute text-center">
-                          <p className="text-lg font-bold text-slate-900">
+                          <p className="text-lg font-bold text-foreground">
                             {pctList.length > 0 ? `${avgPct}%` : "—"}
                           </p>
-                          <p className="text-[9px] text-slate-500">Overall Score</p>
+                          <p className="text-[9px] text-ink-subtle">Overall Score</p>
                         </div>
                       </div>
 
                       <div className="flex-1 space-y-2 text-xs">
                         <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-slate-600">
+                          <span className="flex items-center gap-1.5 text-ink-muted">
                             <span className="h-2 w-2 rounded-full bg-emerald-500" /> Passed Exams
                           </span>
-                          <span className="font-bold text-slate-900">{passedCount}</span>
+                          <span className="font-bold text-foreground">{passedCount}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-slate-600">
-                            <span className="h-2 w-2 rounded-full bg-blue-500" /> Total Attempts
+                          <span className="flex items-center gap-1.5 text-ink-muted">
+                            <span className="h-2 w-2 rounded-full bg-accent" /> Total Attempts
                           </span>
-                          <span className="font-bold text-slate-900">{totalAttempts}</span>
+                          <span className="font-bold text-foreground">{totalAttempts}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="flex items-center gap-1.5 text-slate-600">
+                          <span className="flex items-center gap-1.5 text-ink-muted">
                             <span className="h-2 w-2 rounded-full bg-violet-500" /> Average Score
                           </span>
-                          <span className="font-bold text-slate-900">
+                          <span className="font-bold text-foreground">
                             {pctList.length > 0 ? `${avgPct}%` : "Pending"}
                           </span>
                         </div>
@@ -761,23 +787,23 @@ export default function CandidateDashboardPage() {
                   <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-[#f3f0ff] to-[#ebe8ff] p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="flex items-center gap-2 text-sm font-bold text-slate-900">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white">
+                        <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
+                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-accent-ink">
                             <ShieldCheck className="h-4 w-4" />
                           </span>
                           Verify Your Result
                         </h3>
-                        <p className="mt-2 text-xs text-slate-600">
+                        <p className="mt-2 text-xs text-ink-muted">
                           Check the authenticity of any result or hash chain using our public verifier.
                         </p>
                         <Link
                           href={firstVerifyCode ? `/verify/${encodeURIComponent(firstVerifyCode)}` : "/verify"}
-                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl border border-indigo-200 bg-white px-3.5 py-1.5 text-xs font-semibold text-indigo-700 shadow-2xs hover:bg-indigo-50"
+                          className="mt-3.5 inline-flex items-center gap-1.5 rounded-xl border border-border-strong bg-surface px-3.5 py-1.5 text-xs font-semibold text-accent shadow-2xs hover:bg-accent-soft"
                         >
                           Verify Now <ArrowRight className="h-3.5 w-3.5" />
                         </Link>
                       </div>
-                      <div className="shrink-0 rounded-xl bg-white p-2 shadow-2xs">
+                      <div className="shrink-0 rounded-xl bg-surface p-2 shadow-2xs">
                         <QRCodeSVG value={verifyTargetUrl} size={64} />
                       </div>
                     </div>
@@ -788,8 +814,8 @@ export default function CandidateDashboardPage() {
           ) : activeTab === "exams" ? (
             <div className="mx-auto max-w-5xl space-y-6">
               <div>
-                <h1 className="text-xl font-bold text-slate-900">My Enrolled Examinations</h1>
-                <p className="text-sm text-slate-500">
+                <h1 className="text-xl font-bold text-foreground">My Enrolled Examinations</h1>
+                <p className="text-sm text-ink-subtle">
                   All available, upcoming, and completed examinations assigned to your account.
                 </p>
               </div>
@@ -798,10 +824,10 @@ export default function CandidateDashboardPage() {
                 { title: `Upcoming (${upcoming.length})`, items: upcoming, type: "upcoming" as const },
                 { title: `Completed (${completed.length})`, items: completed, type: "completed" as const },
               ].map((sec) => (
-                <div key={sec.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs">
-                  <h2 className="mb-3 text-base font-bold text-slate-900">{sec.title}</h2>
+                <div key={sec.title} className="rounded-2xl border border-border bg-surface p-5 shadow-2xs">
+                  <h2 className="mb-3 text-base font-bold text-foreground">{sec.title}</h2>
                   {sec.items.length === 0 ? (
-                    <p className="text-sm text-slate-500">None in this category.</p>
+                    <p className="text-sm text-ink-subtle">None in this category.</p>
                   ) : (
                     <div className="space-y-3">
                       {sec.items.map((exam) => {
@@ -811,11 +837,11 @@ export default function CandidateDashboardPage() {
                         return (
                           <div
                             key={exam.id}
-                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-4"
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-subtle p-4"
                           >
                             <div>
-                              <p className="font-semibold text-slate-900">{exam.title}</p>
-                              <p className="text-xs text-slate-500">
+                              <p className="font-semibold text-foreground">{exam.title}</p>
+                              <p className="text-xs text-ink-subtle">
                                 {fmtDate(examStartAt(exam))} – {fmtDate(examEndAt(exam))} ·{" "}
                                 {examDurationMin(exam)} min · {examTotalMarks(exam)} marks
                               </p>
@@ -867,8 +893,8 @@ export default function CandidateDashboardPage() {
             <div className="mx-auto max-w-5xl space-y-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h1 className="text-xl font-bold text-slate-900">My Results &amp; Certificates</h1>
-                  <p className="text-sm text-slate-500">
+                  <h1 className="text-xl font-bold text-foreground">My Results &amp; Certificates</h1>
+                  <p className="text-sm text-ink-subtle">
                     Download official QR-verifiable PDF reports or raise a dispute with full evidence timeline.
                   </p>
                 </div>
@@ -888,11 +914,11 @@ export default function CandidateDashboardPage() {
                     const published = examResultsPublished(exam);
                     const code = att ? attemptVerifyCode(att) : "";
                     return (
-                      <div key={exam.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-2xs space-y-3">
+                      <div key={exam.id} className="rounded-2xl border border-border bg-surface p-5 shadow-2xs space-y-3">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h3 className="font-bold text-slate-900">{exam.title}</h3>
-                            <p className="text-xs text-slate-500">
+                            <h3 className="font-bold text-foreground">{exam.title}</h3>
+                            <p className="text-xs text-ink-subtle">
                               Submitted {fmtDate(att?.submittedAt ?? examEndAt(exam))}
                             </p>
                           </div>
@@ -923,7 +949,7 @@ export default function CandidateDashboardPage() {
                             )}
                           </div>
                         ) : (
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-ink-subtle">
                             Waiting for examiner to publish grades.
                           </p>
                         )}
@@ -936,8 +962,8 @@ export default function CandidateDashboardPage() {
           ) : activeTab === "receipts" ? (
             <div className="mx-auto max-w-5xl space-y-5">
               <div>
-                <h1 className="text-xl font-bold text-slate-900">Cryptographic Receipts</h1>
-                <p className="text-sm text-slate-500">
+                <h1 className="text-xl font-bold text-foreground">Cryptographic Receipts</h1>
+                <p className="text-sm text-ink-subtle">
                   Every synced answer generates a server-signed HMAC receipt and links into your SHA-256 hash chain.
                 </p>
               </div>
@@ -957,11 +983,11 @@ export default function CandidateDashboardPage() {
                       return (
                         <div
                           key={exam.id}
-                          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs"
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-4 shadow-2xs"
                         >
                           <div>
-                            <p className="font-semibold text-slate-900">{exam.title}</p>
-                            <p className="font-mono text-xs text-slate-500">
+                            <p className="font-semibold text-foreground">{exam.title}</p>
+                            <p className="font-mono text-xs text-ink-subtle">
                               Attempt ID: {att.id} {code ? `· Code: ${code}` : ""}
                             </p>
                           </div>
@@ -984,12 +1010,12 @@ export default function CandidateDashboardPage() {
               )}
             </div>
           ) : activeTab === "verify" ? (
-            <div className="mx-auto max-w-2xl rounded-2xl border border-slate-200 bg-white p-7 text-center shadow-2xs space-y-4">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
+            <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-surface p-7 text-center shadow-2xs space-y-4">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-accent">
                 <ShieldCheck className="h-7 w-7" />
               </div>
-              <h1 className="text-xl font-bold text-slate-900">Public Cryptographic Verifier</h1>
-              <p className="text-sm text-slate-600">
+              <h1 className="text-xl font-bold text-foreground">Public Cryptographic Verifier</h1>
+              <p className="text-sm text-ink-muted">
                 Independently audit your certificate verification code, SHA-256 answer hash chain, or exam seed commitment.
               </p>
               <div className="pt-2">
@@ -1001,10 +1027,10 @@ export default function CandidateDashboardPage() {
               </div>
             </div>
           ) : (
-            <div className="mx-auto max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-2xs space-y-5">
+            <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-surface p-6 shadow-2xs space-y-5">
               <div>
-                <h1 className="text-xl font-bold text-slate-900">Exam Workspace Preferences</h1>
-                <p className="text-sm text-slate-500">
+                <h1 className="text-xl font-bold text-foreground">Exam Workspace Preferences</h1>
+                <p className="text-sm text-ink-subtle">
                   Saved to your account and applied automatically inside the exam workspace.
                 </p>
               </div>
@@ -1040,7 +1066,7 @@ export default function CandidateDashboardPage() {
                     <option value="bottom">Bottom Bar</option>
                   </Select>
                 </div>
-                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
                   <input
                     type="checkbox"
                     checked={Boolean(user.prefs?.highContrast)}
@@ -1052,7 +1078,7 @@ export default function CandidateDashboardPage() {
                   />
                   High Contrast Mode
                 </label>
-                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+                <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-ink-muted">
                   <input
                     type="checkbox"
                     checked={Boolean(user.prefs?.splitLayout)}

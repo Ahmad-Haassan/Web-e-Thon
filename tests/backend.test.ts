@@ -21,6 +21,7 @@ import {
   type PoolQuestion,
 } from "@/lib/server/randomizer";
 import { gradeMultiQuestion, gradeSingleQuestion } from "@/lib/server/grading";
+import { createExamSchema, enrollSchema, updateProfileSchema } from "@/lib/shared/schemas";
 
 describe("Cryptographic Hash Chain & Receipts", () => {
   it("verifies an intact answer chain and detects any DB tampering", () => {
@@ -165,5 +166,54 @@ describe("Grading Engine (Single & Multi Partial Credit)", () => {
     expect(
       gradeMultiQuestion(["a"], ["a", "b"], 4, { enabled: false, wrongPenalty: true })
     ).toBe(0);
+  });
+});
+
+describe("EMS Feature Schemas (Profile, Class Enrollment, Rules & Inline Questions)", () => {
+  it("validates profile updates with class, section, and phone", () => {
+    const ok = updateProfileSchema.safeParse({
+      name: "Ali Raza",
+      phone: "+92 300 1234567",
+      className: "BSCS-4",
+      section: "A",
+    });
+    expect(ok.success).toBe(true);
+    expect(updateProfileSchema.safeParse({ name: "A" }).success).toBe(false);
+  });
+
+  it("supports enrollment by emails or by class/section", () => {
+    expect(enrollSchema.safeParse({ emails: ["a@uni.edu"] }).success).toBe(true);
+    expect(enrollSchema.safeParse({ className: "BSCS-4", section: "A" }).success).toBe(true);
+    expect(enrollSchema.safeParse({}).success).toBe(false);
+  });
+
+  it("validates exam creation with class assignment, rules, and inline MCQ questions", () => {
+    const now = Date.now();
+    const res = createExamSchema.safeParse({
+      title: "Midterm Systems Exam",
+      category: "Computer Science",
+      className: "BSCS-4",
+      section: "A",
+      autoEnrollClass: true,
+      rules: ["One attempt only", "Timer is server-authoritative"],
+      startAt: new Date(now + 60_000).toISOString(),
+      endAt: new Date(now + 3_600_000).toISOString(),
+      durationMin: 45,
+      inlineQuestions: [
+        {
+          type: "SINGLE",
+          difficulty: 2,
+          text: "Which protocol is connection-oriented?",
+          marks: 2,
+          options: [
+            { text: "UDP", isCorrect: false },
+            { text: "TCP", isCorrect: true },
+            { text: "ICMP", isCorrect: false },
+            { text: "ARP", isCorrect: false },
+          ],
+        },
+      ],
+    });
+    expect(res.success).toBe(true);
   });
 });
