@@ -212,6 +212,25 @@ export async function GET(
       };
     });
 
+    // Challenge 5.2: feed measured difficulty back into the question bank so future papers are
+    // balanced on how hard questions ACTUALLY were, not just the examiner's nominal 1-3 label.
+    // Best-effort: needs >= 3 real attempts and ignores WRITTEN (manual grading) questions.
+    try {
+      const measured = questionAnalytics.filter(
+        (qa) => qa.type !== "WRITTEN" && qa.shownCount >= 3
+      );
+      await Promise.all(
+        measured.map((qa) =>
+          supabase
+            .from("questions")
+            .update({ historical_difficulty_index: qa.difficultyIndex })
+            .eq("id", qa.questionId)
+        )
+      );
+    } catch {
+      // never block analytics if the write-back fails
+    }
+
     const candidates = realAttempts.map((a) => {
       const snap = a.paper_snapshot as ServerPaperSnapshot;
       const qs = snap?.questions ?? [];

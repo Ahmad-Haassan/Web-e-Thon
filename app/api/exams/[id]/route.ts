@@ -11,6 +11,8 @@ import {
 import { getServiceSupabase } from "@/lib/server/supabase";
 import { logAudit } from "@/lib/server/audit";
 import { updateExamSchema, uuidSchema } from "@/lib/shared/schemas";
+import { findBlueprintShortages } from "@/lib/server/randomizer";
+import type { BlueprintRule } from "@/lib/shared/types";
 
 export const runtime = "nodejs";
 
@@ -230,6 +232,38 @@ export async function PATCH(
       if ((!qCount || qCount < 1) && !hasBlueprint) {
         throw new HttpError(400, "Attach at least one question before publishing the exam");
       }
+
+      // Fairness guard (Challenge 5.2): the attached pool must be able to satisfy every
+      // blueprint quota, otherwise some candidates would receive shorter / easier papers.
+      if (hasBlueprint) {
+        const { data: poolRows } = await supabase
+          .from("exam_questions")
+          .select("questions(difficulty, category_id)")
+          .eq("exam_id", id);
+
+        const poolMeta = (poolRows ?? [])
+          .map((r) => (Array.isArray(r.questions) ? r.questions[0] : r.questions) as
+            | { difficulty: number; category_id: string | null }
+            | null)
+          .filter((q): q is { difficulty: number; category_id: string | null } => q !== null)
+          .map((q) => ({
+            difficulty: Number(q.difficulty) as 1 | 2 | 3,
+            categoryId: q.category_id,
+          }));
+
+        const shortages = findBlueprintShortages(
+          poolMeta,
+          (d.blueprint ?? existing.blueprint) as BlueprintRule[]
+        );
+        if (shortages.length > 0) {
+          throw new HttpError(
+            400,
+            `Blueprint cannot be satisfied by the attached question pool — attach more questions or lower the quota. ${shortages.join(
+              "; "
+            )}`
+          );
+        }
+      }
       patch.status = "PUBLISHED";
     } else if (d.status === "DRAFT") {
       patch.status = "DRAFT";
@@ -247,12 +281,26 @@ export async function PATCH(
       patch.seed_reveal = existing.seed_secret;
     }
 
-    const { data: updated, error } = await supabase
+    let { data: updated, error } = await supabase
       .from("exams")
       .update(patch)
       .eq("id", id)
       .select("*")
       .single();
+
+    if (error && (error.code === "42703" || error.message?.includes("does not exist"))) {
+      const { category: _c, class_name: _cn, section: _s, rules: _r, ...fallbackPatch } = patch;
+      void _c;
+      void _cn;
+      void _s;
+      void _r;
+      ({ data: updated, error } = await supabase
+        .from("exams")
+        .update(fallbackPatch)
+        .eq("id", id)
+        .select("*")
+        .single());
+    }
 
     if (error || !updated) throw new HttpError(500, error?.message ?? "Failed updating exam");
 

@@ -200,6 +200,14 @@ export interface FairnessReport {
   seedCommitment?: string | null;
   seedRevealed?: string | null;
   seedReveal?: string | null;
+  // Challenge 5.2 — fairness AND meaningful variation
+  poolSize?: number;
+  hasBlueprint?: boolean;
+  blueprintCompliancePct?: number | null;
+  uniquePapers?: number;
+  avgOverlapPct?: number | null;
+  variationPct?: number | null;
+  verdict?: "NO_DATA" | "FAIR_AND_VARIED" | "FAIR_LOW_VARIATION" | "UNEQUAL_DIFFICULTY";
 }
 
 export interface MonitorAttemptRow {

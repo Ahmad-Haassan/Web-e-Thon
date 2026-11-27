@@ -424,6 +424,26 @@ function ExaminerExamHubInner() {
 
                   {fairness && (
                     <div className="grid grid-cols-2 gap-2 pt-2">
+                      <div className="col-span-2 rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Fairness Verdict (Challenge 5.2)</p>
+                        <p
+                          className={`text-sm font-bold ${
+                            fairness.verdict === "FAIR_AND_VARIED"
+                              ? "text-verified"
+                              : fairness.verdict === "UNEQUAL_DIFFICULTY"
+                                ? "text-danger"
+                                : "text-warning"
+                          }`}
+                        >
+                          {fairness.verdict === "FAIR_AND_VARIED"
+                            ? "Equal difficulty · papers still vary"
+                            : fairness.verdict === "FAIR_LOW_VARIATION"
+                              ? "Equal difficulty · low variation (attach a bigger question pool)"
+                              : fairness.verdict === "UNEQUAL_DIFFICULTY"
+                                ? "Papers differ in difficulty — review blueprint & pool"
+                                : "No papers generated yet"}
+                        </p>
+                      </div>
                       <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
                         <p className="text-ink-subtle">Papers Audited</p>
                         <p className="text-base font-bold font-mono text-foreground">
@@ -439,16 +459,35 @@ function ExaminerExamHubInner() {
                         </p>
                       </div>
                       <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Blueprint Match</p>
+                        <p className="font-mono font-semibold text-foreground">
+                          {fairness.hasBlueprint
+                            ? fairness.blueprintCompliancePct !== null &&
+                              fairness.blueprintCompliancePct !== undefined
+                              ? `${fairness.blueprintCompliancePct}%`
+                              : "—"
+                            : "No blueprint"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Paper Variation</p>
+                        <p className="font-mono font-semibold text-foreground">
+                          {fairness.variationPct !== null && fairness.variationPct !== undefined
+                            ? `${fairness.variationPct}%`
+                            : "—"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
+                        <p className="text-ink-subtle">Unique Papers / Pool</p>
+                        <p className="font-mono font-semibold text-foreground">
+                          {fairness.uniquePapers ?? 0} / {fairness.poolSize ?? 0} Qs
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
                         <p className="text-ink-subtle">Min / Max Balance</p>
                         <p className="font-mono font-semibold text-foreground">
                           {fairness.min !== null ? Number(fairness.min).toFixed(2) : "—"} /{" "}
                           {fairness.max !== null ? Number(fairness.max).toFixed(2) : "—"}
-                        </p>
-                      </div>
-                      <div className="rounded-xl border border-border bg-surface-subtle p-2.5">
-                        <p className="text-ink-subtle">Mean Balance</p>
-                        <p className="font-mono font-semibold text-foreground">
-                          {fairness.mean !== null ? Number(fairness.mean).toFixed(2) : "—"}
                         </p>
                       </div>
                     </div>

@@ -44,6 +44,78 @@ export function computeBalanceScore(questions: Pick<PoolQuestion, "difficulty" |
   return Number((total / questions.length).toFixed(4));
 }
 
+/**
+ * Expected balance score of ANY paper drawn from this blueprint (Challenge 5.2).
+ * For every quota rule we take the mean blended difficulty of the pool questions that
+ * the rule can pick from, then weight it by the rule's question count. A drawn paper
+ * whose balance score is close to this target has the "fair" difficulty profile.
+ */
+export function computeBlueprintTargetMean(
+  pool: PoolQuestion[],
+  blueprint: BlueprintRule[]
+): number | null {
+  let weighted = 0;
+  let total = 0;
+  for (const rule of blueprint) {
+    const matching = pool.filter(
+      (q) =>
+        q.difficulty === rule.difficulty && (!rule.categoryId || q.categoryId === rule.categoryId)
+    );
+    if (matching.length === 0 || rule.count <= 0) continue;
+    weighted += computeBalanceScore(matching) * Math.min(rule.count, matching.length);
+    total += Math.min(rule.count, matching.length);
+  }
+  return total > 0 ? Number((weighted / total).toFixed(4)) : null;
+}
+
+/**
+ * Checks that the question pool can satisfy every blueprint quota. If a quota cannot be met
+ * the drawn papers would silently be shorter / easier / harder than others, which is exactly
+ * the unfairness Challenge 5.2 asks us to prevent. Returns human-readable shortages.
+ */
+export function findBlueprintShortages(
+  pool: Pick<PoolQuestion, "difficulty" | "categoryId">[],
+  blueprint: BlueprintRule[]
+): string[] {
+  const labels: Record<number, string> = { 1: "Easy", 2: "Medium", 3: "Hard" };
+  const shortages: string[] = [];
+  const consumed = new Set<number>();
+  for (const rule of blueprint) {
+    if (rule.count <= 0) continue;
+    let available = 0;
+    pool.forEach((q, idx) => {
+      if (
+        !consumed.has(idx) &&
+        q.difficulty === rule.difficulty &&
+        (!rule.categoryId || q.categoryId === rule.categoryId)
+      ) {
+        available++;
+      }
+    });
+    if (available < rule.count) {
+      shortages.push(
+        `${labels[rule.difficulty] ?? `Level ${rule.difficulty}`}${
+          rule.categoryId ? " (selected category)" : ""
+        }: needs ${rule.count}, only ${available} attached`
+      );
+    }
+    // reserve questions this rule would use so later rules cannot double-count them
+    let reserve = rule.count;
+    pool.forEach((q, idx) => {
+      if (
+        reserve > 0 &&
+        !consumed.has(idx) &&
+        q.difficulty === rule.difficulty &&
+        (!rule.categoryId || q.categoryId === rule.categoryId)
+      ) {
+        consumed.add(idx);
+        reserve--;
+      }
+    });
+  }
+  return shortages;
+}
+
 function drawFromBlueprint(
   pool: PoolQuestion[],
   blueprint: BlueprintRule[],
@@ -101,9 +173,15 @@ export function generateFairPaperSnapshot(params: {
   const baseSeed = `${seedSecret}:${examId}:${candidateId}`;
   const hasBlueprint = Array.isArray(blueprint) && blueprint.length > 0;
 
-  // Target mean defaults to the pool's expected mean if not explicitly provided
+  // Target mean: for blueprint exams it is the expected balance of a blueprint draw
+  // (not the whole-pool mean, which would be skewed by unused questions).
+  const blueprintTarget = hasBlueprint
+    ? computeBlueprintTargetMean(pool, blueprint as BlueprintRule[])
+    : null;
   const expectedMean =
-    targetBalanceMean ?? (pool.length > 0 ? computeBalanceScore(pool) : 2.0);
+    targetBalanceMean ??
+    blueprintTarget ??
+    (pool.length > 0 ? computeBalanceScore(pool) : 2.0);
 
   let bestPicked: PoolQuestion[] = [];
   let bestScore = 0;
