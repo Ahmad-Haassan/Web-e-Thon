@@ -15,6 +15,8 @@ import type {
   DisputeType,
   EnrollmentRecord,
   ExamAnalyticsResponse,
+  ExaminerIntegrityReport,
+  ExaminerOverviewResponse,
   ExamRecord,
   FairnessReport,
   LockEventType,
@@ -341,6 +343,21 @@ export const api = {
         body: { message },
       }),
     analytics: (id: string) => apiFetch<ExamAnalyticsResponse>(`/api/exams/${id}/analytics`),
+  },
+
+  examiner: {
+    overview: (params?: { days?: 7 | 30; examId?: string }) => {
+      const qs = new URLSearchParams();
+      if (params?.days) qs.set("days", String(params.days));
+      if (params?.examId) qs.set("examId", params.examId);
+      const query = qs.toString() ? `?${qs.toString()}` : "";
+      return apiFetch<ExaminerOverviewResponse>(`/api/examiner/overview${query}`);
+    },
+    integrityCheck: (examId?: string) =>
+      apiFetch<ExaminerIntegrityReport>("/api/examiner/integrity-check", {
+        method: "POST",
+        body: examId ? { examId } : {},
+      }),
   },
 
   attempts: {

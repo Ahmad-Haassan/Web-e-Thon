@@ -239,6 +239,8 @@ export interface ExamAnalyticsResponse {
   summary: {
     avg: number | null;
     passRate: number | null;
+    averagePct?: number;
+    passRatePct?: number;
     distribution: Array<{ bucket?: string; label?: string; range?: string; count: number }>;
     totalSubmitted: number;
   };
@@ -272,6 +274,155 @@ export interface ExamAnalyticsResponse {
     ambiguityFlag?: boolean;
     ambiguityFlags?: string[];
   }>;
+  writtenSimilarityFlags?: Array<{
+    questionId: string;
+    attemptA: string;
+    candidateA: string;
+    attemptB: string;
+    candidateB: string;
+    similarityPct: number;
+    disclaimer: string;
+  }>;
+}
+
+export interface ExaminerExamSummary {
+  id: string;
+  title: string;
+  status: ExamStatus;
+  lifecycle: ComputedExamLifecycle;
+  startAt: string;
+  endAt: string;
+  durationMin: number;
+  totalMarks: number;
+  resultsPublished: boolean;
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
+  noBacktrack: boolean;
+  graceSec: number;
+  hasBlueprint: boolean;
+  seedCommitment?: string | null;
+  seedRevealed?: boolean;
+  checkpointHash?: string | null;
+  enrolledCount: number;
+  inProgressCount: number;
+  submittedCount: number;
+  notStartedCount: number;
+  flaggedCount: number;
+  pendingManualCount: number;
+  avgPct: number | null;
+  passRate: number | null;
+}
+
+export interface ExaminerLiveFeedItem {
+  id: string;
+  kind: "submit" | "connection" | "announcement" | "alert" | "start";
+  message: string;
+  at: string;
+  examId: string;
+  attemptId?: string;
+}
+
+export interface ExaminerInsightPoint {
+  label: string;
+  date: string;
+  attempts: number;
+  submitted: number;
+  passRate: number;
+  avgScorePct: number;
+}
+
+export interface ExaminerCandidateSearchItem {
+  id: string;
+  name: string;
+  email: string;
+  examIds: string[];
+  latestExamId: string;
+  latestExamTitle: string;
+  latestAttemptId?: string;
+  latestStatus?: AttemptStatus | string;
+  latestScorePct?: number | null;
+}
+
+export interface ExaminerNotificationItem {
+  id: string;
+  kind: "dispute" | "flag" | "grading";
+  title: string;
+  subtitle: string;
+  at: string;
+  examId?: string;
+  attemptId?: string;
+  disputeId?: string;
+}
+
+export interface ExaminerOverviewResponse {
+  stats: {
+    totalExams: number;
+    examsCreatedLast30Days: number;
+    ongoingExams: number;
+    scheduledExams: number;
+    draftExams: number;
+    completedExams: number;
+    enrolledCandidates: number;
+    totalEnrollments: number;
+    recentEnrollmentsCount: number;
+    totalSubmitted: number;
+    totalInProgress: number;
+    totalQuestions: number;
+    avgPerformancePct: number | null;
+    passRatePct: number | null;
+    pendingManualGrades: number;
+    openDisputes: number;
+    flaggedAttemptsCount: number;
+    liveBadgeCount: number;
+  };
+  exams: ExaminerExamSummary[];
+  liveMonitoring: {
+    examId: string;
+    examTitle: string;
+    lifecycle: ComputedExamLifecycle;
+    enrolled: number;
+    inProgress: number;
+    submitted: number;
+    notStarted: number;
+    inProgressPct: number;
+    feed: ExaminerLiveFeedItem[];
+  } | null;
+  insightsSeries: ExaminerInsightPoint[];
+  candidatesSummary: ExaminerCandidateSearchItem[];
+  notifications: {
+    unreadCount: number;
+    openDisputes: number;
+    pendingManualGrades: number;
+    flaggedAttemptsCount: number;
+    items: ExaminerNotificationItem[];
+  };
+  serverNow: number;
+}
+
+export interface ExaminerIntegrityReport {
+  allValid: boolean;
+  checkedAt: string;
+  examsChecked: number;
+  attemptsChecked: number;
+  answersChecked: number;
+  eventsChecked: number;
+  lockEventsChecked: number;
+  perExam: Array<{
+    examId: string;
+    title: string;
+    attemptsChecked: number;
+    checkpointValid: boolean;
+    seedValid: boolean;
+    valid: boolean;
+  }>;
+  tamperedAttempts: Array<{
+    attemptId: string;
+    examId: string;
+    verifyCode: string;
+    chain: "answers" | "events" | "lock_events";
+    brokenAt: number;
+  }>;
+  invalidCheckpoints: Array<{ examId: string; title: string }>;
 }
 
 export interface AttemptGradeRecord {
