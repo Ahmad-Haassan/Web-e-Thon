@@ -12,8 +12,6 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
   serverExternalPackages: ["pdfkit"],
   turbopack: {
     rules: {
